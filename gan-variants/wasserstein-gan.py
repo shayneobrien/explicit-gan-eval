@@ -63,9 +63,11 @@ class Trainer:
             model: initialized GAN module instance
             num_epochs: int, number of epochs to train for
             G_lr: learning rate for generator's Adam optimizer (default 5e-5)
-            D_lr: learning rate for discriminator's Adam optimizer (
+            D_lr: learning rate for discriminator's Adam optimizer (default 5e-5)
+            D_steps: training step ratio for how often to train D compared to G (default 5)
+            clip: bound for parameters [-c, c] to crudely ensure K-Lipschitz (default 0.01, or range [-0.01, 0.01])
         Outputs:
-            model: trained GAN instance """
+            model: trained WGAN instance """
         G_optimizer = torch.optim.RMSprop(params=[p for p in model.G.parameters() if p.requires_grad], lr=G_lr)
         D_optimizer = torch.optim.RMSprop(params=[p for p in model.D.parameters() if p.requires_grad], lr=D_lr)
         criterion = nn.BCELoss()
