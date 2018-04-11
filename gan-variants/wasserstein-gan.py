@@ -70,7 +70,6 @@ class Trainer:
             model: trained WGAN instance """
         G_optimizer = torch.optim.RMSprop(params=[p for p in model.G.parameters() if p.requires_grad], lr=G_lr)
         D_optimizer = torch.optim.RMSprop(params=[p for p in model.D.parameters() if p.requires_grad], lr=D_lr)
-        criterion = nn.BCELoss()
         
         # Approximate steps/epoch given D_steps per epoch --> roughly train in the same way as if D_step (1) == G_step (1)
         epoch_steps = int(np.ceil(len(train_iter) / (D_steps))) 
