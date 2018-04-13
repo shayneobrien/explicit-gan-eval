@@ -1,14 +1,24 @@
-""" Vanilla GAN using MLP architecture """
+""" Vanilla GAN using MLP architecture, as laid out in the original paper. (GAN)
+https://arxiv.org/abs/1406.2661
+
+
+From the abstract: 'We propose a new framework for estimating generative models via an adversarial
+process, in which we simultaneously train two models: a generative model G
+that captures the data distribution, and a discriminative model D that estimates
+the probability that a sample came from the training data rather than G. The training
+procedure for G is to maximize the probability of D making a mistake.'
+
+"""
 import torch, torchvision
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 from itertools import product
 from tqdm import tqdm_notebook
-from IPython.display import clear_output
 from load_data import get_data
 
 def to_var(x):
@@ -29,12 +39,12 @@ class Generator(nn.Module):
         
     def forward(self, x):
         activated = F.relu(self.linear(x))
-        generation = F.tanh(self.generate(activated))
+        generation = F.sigmoid(self.generate(activated))
         return generation
         
 class Discriminator(nn.Module):
     def __init__(self, image_size, hidden_dim, output_dim):
-        """ Discriminator / Critic. Input is an image (real or generated), output is P(generated). """
+        """ Discriminator. Input is an image (real or generated), output is P(generated). """
         super(Discriminator, self).__init__()
         self.linear = nn.Linear(image_size, hidden_dim)
         self.discriminate = nn.Linear(hidden_dim, output_dim)     
@@ -53,7 +63,7 @@ class GAN(nn.Module):
     
 class Trainer:
     def __init__(self, train_iter, val_iter, test_iter):
-        """ Object to hold data iterators, train a vanilla GAN (MLP) """
+        """ Object to hold data iterators, train a GAN variant """
         self.train_iter = train_iter
         self.val_iter = val_iter
         self.test_iter = test_iter
@@ -100,7 +110,7 @@ class Trainer:
                 G_optimizer.zero_grad()
 
                 # Train the generator using predictions from D on the noise compared to true image labels
-                G_loss, G_noise = self.train_G(model, images, criterion)
+                G_loss = self.train_G(model, images, criterion)
                 
                 # Log results, backpropagate the generator network
                 G_losses.append(G_loss)
@@ -113,8 +123,8 @@ class Trainer:
                      torch.stack(D_scores).data.mean(), torch.stack(G_scores).data.mean())) 
             
             # Visualize generator progress
-            fig = self.generate_images(model, G_noise, epoch)
-            display(plt.gcf())
+            fig = self.generate_images(model, epoch)
+            plt.show()
             
         return model
     
@@ -161,25 +171,29 @@ class Trainer:
         
         # Compute the loss for how D did versus the generations of G
         G_loss = criterion(D_output.squeeze(), images_labels)
-        return G_loss, G_noise
+        return G_loss
     
     def compute_noise(self, batch_size, image_size):
         """ Compute random noise for the generator to learn to make images from """
         return to_var(torch.randn(batch_size, image_size))
     
-    def generate_images(self, model, noise, epoch, num_outputs = 16, save = True):
+    def generate_images(self, model, epoch, num_outputs = 36, save = True):
         """ Visualize progress of generator learning """
+        noise = self.compute_noise(num_outputs, 784)
         images = model.G(noise)
+        images = images.view(images.shape[0], 28, 28)
         size_figure_grid = int(num_outputs**0.5)
         fig, ax = plt.subplots(size_figure_grid, size_figure_grid, figsize=(5, 5))
-        for i, j in itertools.product(range(size_figure_grid), range(size_figure_grid)):
+        for i, j in product(range(size_figure_grid), range(size_figure_grid)):
             ax[i,j].get_xaxis().set_visible(False)
             ax[i,j].get_yaxis().set_visible(False)
             ax[i,j].cla()
-            ax[i,j].imshow(images[i+j,:].data.cpu().numpy().reshape(28, 28), cmap='Greys') 
-            
+            ax[i,j].imshow(images[i+j].data.numpy(), cmap='gray') 
+        
         if save:
-            plt.savefig('../viz/gan-viz/reconst_%d.png' %(epoch))
+            if not os.path.exists('../viz/vanilla-gan/'):
+                os.makedirs('../viz/vanilla-gan/')
+            torchvision.utils.save_image(images.unsqueeze(1).data.cpu(), '../viz/vanilla-gan/reconst_%d.png' %(epoch), nrow = 5)
         return fig
     
     def save_model(self, model, savepath):
@@ -194,9 +208,9 @@ class Trainer:
         model.load_state_dict(state)
         return model
 
-
 model = GAN(784, 400)
 if torch.cuda.is_available():
     model = model.cuda()
 trainer = Trainer(train_iter, val_iter, test_iter)
 model = trainer.train(model, 200)
+
