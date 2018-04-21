@@ -4,6 +4,7 @@ Variational Autoencoder
 https://arxiv.org/pdf/1312.6114.pdf
 
 From the abstract:
+
 "We introduce a stochastic variational inference and learning algorithm that scales to large datasets
 and, under some mild differentiability conditions, even works in the intractable case. Our contributions 
 is two-fold. First, we show that a reparameterization of the variational lower bound yields a lower bound 
@@ -12,22 +13,26 @@ show that for i.i.d. datasets with continuous latent variables per datapoint, po
 made especially efficient by fitting an approximate inference model (also called a recognition model) to 
 the intractable posterior using the proposed lower bound estimator."
 
-Basically encodes an input into a given dimension z, reparametrizes that z using it's mean and std, and 
-then reconstructs the image from that. This lets us tractably model latent representations that we may 
-not be explicitly aware of that are in the data. For a simple example of what this may look like, read
+Basically VAEs encode an input into a given dimension z, reparametrize that z using it's mean and std, and 
+then reconstruct the image from reparametrized z. This lets us tractably model latent representations that we 
+may not be explicitly aware of that are in the data. For a simple example of what this may look like, read
 up on "Karl Pearson's Crabs." The basic idea was that a scientist collected data on a population of crabs,
 noticed that the distribution was non-normal, and Pearson postulated it was because there were likely
 more than one population of crabs studied. This would've been a latent variable, since the data colllector
 did not know.
 
 """
+
 import torch, torchvision
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
+from torchvision.transforms import ToPILImage
+from torchvision.utils import make_grid
 
 import os
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm_notebook
 from itertools import product
@@ -51,7 +56,7 @@ class Encoder(nn.Module):
         self.log_var = nn.Linear(hidden_dim, z_dim)
         
     def forward(self, x):
-        activated = F.relu(self.linear(x))
+        activated = F.relu(self.linear(x)) #leaky relu?
         mu, log_var = self.mu(activated), self.log_var(activated)
         return mu, log_var
 
@@ -215,10 +220,73 @@ class Trainer:
         state = torch.load(loadpath)
         model.load_state_dict(state)
         return model
+
+class Viz:
+    def __init__(self, model = None):
+        self.model = model
+        
+    def sample_images(self, model, num_images = 64):
+        """ Viz method 1: generate images by sampling z ~ p(z), x ~ p(x|z,θ) """
+        sample = to_var(torch.randn(num_images, model.decoder.linear.in_features))
+        sample = model.decoder(sample)
+        to_img = ToPILImage()
+        img = to_img(make_grid(sample.data.view(num_images, 1, 28, 28)))
+        display(img)
+        
+    def sample_interpolated_images(self, model):
+        """ Viz method 2: sample two random latent vectors from p(z), 
+            then sample from their interpolated values"""
+        z1 = torch.normal(torch.zeros(model.decoder.linear.in_features), 1)
+        z2 = torch.normal(torch.zeros(model.decoder.linear.in_features), 1)
+        to_img = ToPILImage()
+        for alpha in np.linspace(0, 1, model.decoder.linear.in_features):
+            z = to_var(alpha*z1 + (1-alpha)*z2)
+            sample = model.decoder(z)
+            display(to_img(make_grid(sample.data.view(28, 28).unsqueeze(0))))
+            
+    def means_scatterplot(self, num_epochs = 10):
+        """ Viz method 3: train a VAE with 2 latent variables, compare variational means """
+        model = VAE(image_size = 784, hidden_dim = 400, z_dim = 2)
+        if torch.cuda.is_available():
+            vae.cuda()
+        trainer = Trainer(train_iter, val_iter, test_iter)
+        model = trainer.train(model, num_epochs)
+
+        data = []
+        for batch in train_iter:
+            images, labels = batch
+            images = to_var(images.view(images.shape[0], -1))
+            mu, log_var = model.encoder(images)
+
+            for label, (m1, m2) in zip(labels, mu):
+                data.append((label, m1.data[0], m2.data[0]))
+
+        df = pd.DataFrame(data, columns=('label', 'm1', 'm2'))
+        plt.figure(figsize=(10,10))
+        plt.scatter(df['m1'], df['m2'], c=df['label'])
+        return model
+
+    def explore_latent_space(self, model):
+        """ Viz method 4: explore the latent space representations """
+        mu = torch.stack([torch.FloatTensor([m1, m2]) for m1 in np.linspace(-2, 2, 10) for m2 in np.linspace(-2, 2, 10)])
+        samples = model.decoder(to_var(mu))
+        to_img = ToPILImage()
+        display(to_img(make_grid(samples.data.view(-1, 1, 28, 28), nrow=10)))
+        
+    def make_all(self):
+        """ Execute all viz methods outlined in this class """
+        self.sample_images(self.model)
+        self.sample_interpolated_images(self.model)
+        self.model = self.means_scatterplot(num_epochs = 3)
+        self.explore_latent_space(self.model)
     
+# Train VAE on binary MNIST
 model = VAE(image_size = 784, hidden_dim = 400, z_dim = 20)
 if torch.cuda.is_available():
     model.cuda()
 trainer = Trainer(train_iter, val_iter, test_iter)
 model = trainer.train(model, 40)
 
+# Explore latent space
+viz = Viz(model)
+viz.make_all()
