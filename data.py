@@ -216,62 +216,121 @@ class MixtureDistribution:
 #
 #     return images
 
-def generate_circles_dataset(n_samples, size=28, n_circles=1, random_colors=True, random_sizes=True, modes=1, output_directory=None):
+class CirclesDatasetGenerator:
 
-    n_vars = n_circles*2
-    if random_colors:
-        n_vars+= n_circles*3
-    if random_sizes:
-        n_vars+= n_circles
+    def __init__(self, size=28, n_circles=1, random_colors=True, random_sizes=True, modes=1):
 
-    if output_directory:
-        if not os.path.exists(output_directory):
-            os.makedirs(output_directory)
+        self.size = size
+        self.circles = n_circles
+        self.has_random_colors = random_colors
+        self.has_random_sizes = random_sizes
+        self.modes = modes
 
-    generator = MixtureDistribution('normal', 'uniform', modes, n_vars)
-    images = []
+        n_vars = n_circles * 2
+        if random_colors:
+            n_vars += n_circles * 3
+        if random_sizes:
+            n_vars += n_circles
 
-    random_color = [(np.random.randint(0,255), np.random.randint(0,255), np.random.randint(0,255)) for i in range(n_circles)]
-    random_size = [np.random.randint(0, int(size*0.25)) for i in range(n_circles)]
-    samples = generator.generate_samples(n_samples)
-    samples = (samples - np.min(samples, axis=0))/(np.max(samples, axis=0)-np.min(samples, axis=0))
+        self.generator = MixtureDistribution('normal', 'uniform', modes, n_vars)
 
-    for i in range(n_samples):
+        self.random_color = [(np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)) for i in
+                        range(n_circles)]
+        self.random_size = [np.random.randint(0, int(size * 0.25)) for i in range(n_circles)]
 
-        this_image = np.ones((size, size, 3))*255
-        for k in range(n_circles):
-            sample = samples[i]
+    def generate_samples(self, n_samples):
 
-            if random_colors and random_sizes:
-                color = (int(size*sample[6*k+3]), int(size*sample[6*k+4]), int(size*sample[6*k+5]))
-                circle_size = int(size*0.25*sample[6*k+2])
-                location = (int(size*sample[6*k]), int(size*sample[6*k+1]))
+        images = []
 
-            elif random_sizes:
-                color = random_color[k]
-                circle_size = int(size*0.25*sample[3*k+2])
-                location = (int(size*sample[3*k]), int(size*sample[3*k+1]))
+        samples = self.generator.generate_samples(n_samples)
+        samples = (samples - np.min(samples, axis=0)) / (np.max(samples, axis=0) - np.min(samples, axis=0))
 
-            elif random_colors:
-                color = (int(size * sample[5* k + 2]), int(size * sample[5 * k + 3]), int(size * sample[5 * k + 4]))
-                circle_size = random_size[k]
-                location = (int(size*sample[5*k]), int(size*sample[5*k+1]))
+        for i in range(n_samples):
 
-            else:
-                color = random_color[k]
-                circle_size = random_size[k]
-                location = (int(size*sample[2*k]), int(size*sample[2*k+1]))
+            this_image = np.ones((self.size, self.size, 3)) * 255
+            for k in range(self.circles):
+                sample = samples[i]
 
-            cv.circle(this_image, location, circle_size, color, -1)
+                if self.has_random_colors and self.has_random_sizes:
+                    color = (
+                    int(self.size * sample[6 * k + 3]), int(self.size * sample[6 * k + 4]), int(self.size * sample[6 * k + 5]))
+                    circle_size = int(self.size * 0.25 * sample[6 * k + 2])
+                    location = (int(self.size * sample[6 * k]), int(self.size * sample[6 * k + 1]))
 
-            cv.imwrite(os.path.join(output_directory, '%d.jpg' % (i)), this_image)
-        images.append(this_image)
+                elif self.has_random_sizes:
+                    color = self.random_color[k]
+                    circle_size = int(self.size * 0.25 * sample[3 * k + 2])
+                    location = (int(self.size * sample[3 * k]), int(self.size * sample[3 * k + 1]))
 
-    return images
+                elif self.has_random_colors:
+                    color = (
+                    int(self.size * sample[5 * k + 2]), int(self.size * sample[5 * k + 3]), int(self.size * sample[5 * k + 4]))
+                    circle_size = self.random_size[k]
+                    location = (int(self.size * sample[5 * k]), int(self.size * sample[5 * k + 1]))
+
+                else:
+                    color = self.random_color[k]
+                    circle_size = self.random_size[k]
+                    location = (int(self.size * sample[2 * k]), int(self.size * sample[2 * k + 1]))
+
+                cv.circle(this_image, location, circle_size, color, -1)
+
+        return images
+
+    def generate_samples_to_directory(self, n_samples, output_directory):
+
+        if output_directory:
+            if not os.path.exists(output_directory):
+                os.makedirs(output_directory)
+
+        samples = self.generator.generate_samples(n_samples)
+        samples = (samples - np.min(samples, axis=0)) / (np.max(samples, axis=0) - np.min(samples, axis=0))
+
+        for i in range(n_samples):
+
+            this_image = np.ones((self.size, self.size, 3)) * 255
+            for k in range(self.circles):
+                sample = samples[i]
+
+                if self.has_random_colors and self.has_random_sizes:
+                    color = (
+                        int(self.size * sample[6 * k + 3]), int(self.size * sample[6 * k + 4]),
+                        int(self.size * sample[6 * k + 5]))
+                    circle_size = int(self.size * 0.25 * sample[6 * k + 2])
+                    location = (int(self.size * sample[6 * k]), int(self.size * sample[6 * k + 1]))
+
+                elif self.has_random_sizes:
+                    color = self.random_color[k]
+                    circle_size = int(self.size * 0.25 * sample[3 * k + 2])
+                    location = (int(self.size * sample[3 * k]), int(self.size * sample[3 * k + 1]))
+
+                elif self.has_random_colors:
+                    color = (
+                        int(self.size * sample[5 * k + 2]), int(self.size * sample[5 * k + 3]),
+                        int(self.size * sample[5 * k + 4]))
+                    circle_size = self.random_size[k]
+                    location = (int(self.size * sample[5 * k]), int(self.size * sample[5 * k + 1]))
+
+                else:
+                    color = self.random_color[k]
+                    circle_size = self.random_size[k]
+                    location = (int(self.size * sample[2 * k]), int(self.size * sample[2 * k + 1]))
+
+                cv.circle(this_image, location, circle_size, color, -1)
+
+                cv.imwrite(os.path.join(output_directory, '%d.jpg' % (i)), this_image)
+
+    def save_generator(self, out_file):
+
+        with open(out_file, 'wb') as of:
+            pickle.dump(self, of, pickle.HIGHEST_PROTOCOL)
 
 if __name__ == "__main__":
 
-    im = generate_circles_dataset(500, 256, 3, False, True, 15, './set1')
+    generator = CirclesDatasetGenerator(size=256, n_circles=4, random_colors=True, random_sizes=True, modes=20)
+    x = generator.generate_samples(100)
+    generator.generate_samples_to_directory(50, './dataset_1')
+    generator.save_generator('./generator1.pickle')
 
 
 
