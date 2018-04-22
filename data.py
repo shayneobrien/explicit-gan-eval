@@ -274,6 +274,7 @@ class CirclesDatasetGenerator:
                     location = (int(self.size * sample[2 * k]), int(self.size * sample[2 * k + 1]))
 
                 cv.circle(this_image, location, circle_size, color, -1)
+            images.append(this_image)
 
         return images
 
@@ -329,6 +330,7 @@ if __name__ == "__main__":
 
     generator = CirclesDatasetGenerator(size=256, n_circles=4, random_colors=True, random_sizes=True, modes=20)
     x = generator.generate_samples(100)
+    print(x)
     generator.generate_samples_to_directory(50, './dataset_1')
     generator.save_generator('./generator1.pickle')
 
