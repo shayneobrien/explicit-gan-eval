@@ -1,6 +1,9 @@
 import numpy as np
 from sklearn.datasets import make_spd_matrix
-import cPickle as pickle
+try:
+   import cPickle as pickle
+except:
+   import pickle
 import scipy.stats as st
 import os
 
