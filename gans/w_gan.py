@@ -28,13 +28,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm_notebook
 from itertools import product
+from .utils import to_var
 
-
-def to_var(x):
-    """ function to automatically cudarize.. """
-    if torch.cuda.is_available():
-        x = x.cuda()
-    return Variable(x)
 
 
 class Generator(nn.Module):
@@ -67,13 +62,13 @@ class Discriminator(nn.Module):
         return discrimination
 
 
-class WGAN(nn.Module):
+class GAN(nn.Module):
     def __init__(self, image_size, hidden_dim, z_dim, output_dim=1):
         """
         Super class to contain both Discriminator / Critic (D)
         and Generator (G)
         """
-        super(WGAN, self).__init__()
+        super(GAN, self).__init__()
         self.G = Generator(image_size, hidden_dim, z_dim)
         self.D = Discriminator(image_size, hidden_dim, output_dim)
 
@@ -253,7 +248,7 @@ class Trainer:
     def load_model(self, loadpath,  model = None):
         """ Load state dictionary into model. If model not specified, instantiate it """
         if not model:
-            model = WGAN()
+            model = GAN()
         state = torch.load(loadpath)
         model.load_state_dict(state)
         return model

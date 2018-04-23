@@ -37,13 +37,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm_notebook
 from itertools import product
-
-
-def to_var(x):
-    """ Utility function to automatically cudarize """
-    if torch.cuda.is_available():
-        x = x.cuda()
-    return Variable(x)
+from .utils import to_var
 
 
 class Encoder(nn.Module):
@@ -71,6 +65,7 @@ class Decoder(nn.Module):
         activated = F.relu(self.linear(z))
         reconstructed = F.sigmoid(self.recon(activated))
         return reconstructed
+
 
 class VAE(nn.Module):
     def __init__(self, image_size=784, hidden_dim=400, z_dim=20):
@@ -224,8 +219,11 @@ class Trainer:
 
 
 class Viz:
-    def __init__(self, model = None):
+    def __init__(self, train_iter, val_iter, test_iter, model=None):
         self.model = model
+        self.train_iter = train_iter
+        self.val_iter = val_iter
+        self.test_iter = test_iter
 
     def sample_images(self, model, num_images = 64):
         """ Viz method 1: generate images by sampling z ~ p(z), x ~ p(x|z,θ) """
@@ -251,11 +249,11 @@ class Viz:
         model = VAE(image_size = 784, hidden_dim = 400, z_dim = 2)
         if torch.cuda.is_available():
             vae.cuda()
-        trainer = Trainer(train_iter, val_iter, test_iter)
+        trainer = Trainer(self.train_iter, self.val_iter, self.test_iter)
         model = trainer.train(model, num_epochs)
 
         data = []
-        for batch in train_iter:
+        for batch in self.train_iter:
             images, labels = batch
             images = to_var(images.view(images.shape[0], -1))
             mu, log_var = model.encoder(images)

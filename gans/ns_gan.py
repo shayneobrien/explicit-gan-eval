@@ -25,14 +25,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from itertools import product
 from tqdm import tqdm_notebook
-
-
-
-def to_var(x):
-    """ Utility function to automatically cudarize when converting to Variable """
-    if torch.cuda.is_available():
-        x = x.cuda()
-    return Variable(x)
+from .utils import to_var
 
 
 class Generator(nn.Module):
@@ -59,10 +52,10 @@ class Discriminator(nn.Module):
         discrimination = F.sigmoid(self.discriminate(activated))
         return discrimination
     
-class NSGAN(nn.Module):
+class GAN(nn.Module):
     def __init__(self, image_size, hidden_dim, z_dim, output_dim = 1):
         """ Super class to contain both Discriminator (D) and Generator (G) """
-        super(NSGAN, self).__init__()
+        super(GAN, self).__init__()
         self.G = Generator(image_size, hidden_dim, z_dim)
         self.D = Discriminator(image_size, hidden_dim, output_dim)
         
@@ -233,7 +226,7 @@ class Trainer:
     def load_model(self, loadpath,  model = None):
         """ Load state dictionary into model. If model not specified, instantiate it """
         if not model:
-            model = NSGAN()
+            model = GAN()
         state = torch.load(loadpath)
         model.load_state_dict(state)
         return model
