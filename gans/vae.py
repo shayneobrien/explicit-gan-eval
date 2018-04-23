@@ -23,7 +23,8 @@ did not know.
 
 """
 
-import torch, torchvision
+import torch
+import torchvision
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -36,7 +37,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm_notebook
 from itertools import product
-from load_data import get_data
+
 
 def to_var(x):
     """ Utility function to automatically cudarize """
@@ -44,8 +45,6 @@ def to_var(x):
         x = x.cuda()
     return Variable(x)
 
-# Load in binzarized MNIST data, separate into data loaders
-train_iter, val_iter, test_iter = get_data()
 
 class Encoder(nn.Module):
     def __init__(self, image_size, hidden_dim, z_dim):
@@ -59,6 +58,7 @@ class Encoder(nn.Module):
         activated = F.relu(self.linear(x)) #leaky relu?
         mu, log_var = self.mu(activated), self.log_var(activated)
         return mu, log_var
+
 
 class Decoder(nn.Module):
     """ MLP decoder for VAE. Input is a reparametrized latent representation, output is reconstructed image """
@@ -90,6 +90,7 @@ class VAE(nn.Module):
         epsilon = to_var(torch.randn(mu.size(0), mu.size(1)))
         z = mu + epsilon * torch.exp(log_var/2)    # 2 for convert var to std
         return z
+
 
 class Trainer:
     def __init__(self, train_iter, val_iter, test_iter):
@@ -221,10 +222,11 @@ class Trainer:
         model.load_state_dict(state)
         return model
 
+
 class Viz:
     def __init__(self, model = None):
         self.model = model
-        
+
     def sample_images(self, model, num_images = 64):
         """ Viz method 1: generate images by sampling z ~ p(z), x ~ p(x|z,θ) """
         sample = to_var(torch.randn(num_images, model.decoder.linear.in_features))
@@ -232,7 +234,7 @@ class Viz:
         to_img = ToPILImage()
         img = to_img(make_grid(sample.data.view(num_images, 1, 28, 28)))
         display(img)
-        
+
     def sample_interpolated_images(self, model):
         """ Viz method 2: sample two random latent vectors from p(z), 
             then sample from their interpolated values"""
@@ -243,8 +245,8 @@ class Viz:
             z = to_var(alpha*z1 + (1-alpha)*z2)
             sample = model.decoder(z)
             display(to_img(make_grid(sample.data.view(28, 28).unsqueeze(0))))
-            
-    def means_scatterplot(self, num_epochs = 10):
+
+    def means_scatterplot(self, num_epochs=10):
         """ Viz method 3: train a VAE with 2 latent variables, compare variational means """
         model = VAE(image_size = 784, hidden_dim = 400, z_dim = 2)
         if torch.cuda.is_available():
@@ -272,21 +274,10 @@ class Viz:
         samples = model.decoder(to_var(mu))
         to_img = ToPILImage()
         display(to_img(make_grid(samples.data.view(-1, 1, 28, 28), nrow=10)))
-        
+
     def make_all(self):
         """ Execute all viz methods outlined in this class """
         self.sample_images(self.model)
         self.sample_interpolated_images(self.model)
-        self.model = self.means_scatterplot(num_epochs = 3)
+        self.model = self.means_scatterplot(num_epochs=3)
         self.explore_latent_space(self.model)
-    
-# Train VAE on binary MNIST
-model = VAE(image_size = 784, hidden_dim = 400, z_dim = 20)
-if torch.cuda.is_available():
-    model.cuda()
-trainer = Trainer(train_iter, val_iter, test_iter)
-model = trainer.train(model, 40)
-
-# Explore latent space
-viz = Viz(model)
-viz.make_all()

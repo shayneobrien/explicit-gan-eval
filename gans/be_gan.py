@@ -30,17 +30,19 @@ the authors introduce a variable kt ∈ [0,1] to control how much emphasis to pu
 descent. 
 
 """
-import torch, torchvision
+import torch
+import torchvision
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-import os, copy
+import os
+import copy
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm_notebook
 from itertools import product
-from load_data import get_data
+
 
 def to_var(x):
     """ function to automatically cudarize.. """
@@ -48,8 +50,6 @@ def to_var(x):
         x = x.cuda()
     return Variable(x)
 
-# Load in data, separate into data loaders
-train_iter, val_iter, test_iter = get_data()
 
 class Generator(nn.Module):
     def __init__(self, image_size, hidden_dim, z_dim):
@@ -115,11 +115,11 @@ class Trainer:
         D_optimizer = torch.optim.Adam(params=[p for p in model.D.parameters() if p.requires_grad], lr=D_lr)
  
         # Reduce learning rate by factor of 2 if convergence_metric stops decreasing by a threshold within a range of at least five epochs
-        G_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(G_optimizer, factor = 0.50, threshold = 0.01, patience = 5 * len(train_iter))
-        D_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(D_optimizer, factor = 0.50, threshold = 0.01, patience = 5 * len(train_iter))
+        G_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(G_optimizer, factor = 0.50, threshold = 0.01, patience = 5 * len(self.train_iter))
+        D_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(D_optimizer, factor = 0.50, threshold = 0.01, patience = 5 * len(self.train_iter))
         
         # Approximate steps/epoch given D_steps per epoch --> roughly train in the same way as if D_step (1) == G_step (1)
-        epoch_steps = int(np.ceil(len(train_iter) / (D_steps))) 
+        epoch_steps = int(np.ceil(len(self.train_iter) / (D_steps))) 
         
         # Begin training
         for epoch in tqdm_notebook(range(1, num_epochs + 1)):
@@ -271,14 +271,3 @@ class Trainer:
         state = torch.load(loadpath)
         model.load_state_dict(state)
         return model
-
-
-# In[ ]:
-
-
-model = BEGAN(image_size = 784, hidden_dim = 256, z_dim = 128)
-if torch.cuda.is_available():
-    model = model.cuda()
-trainer = Trainer(train_iter, val_iter, test_iter)
-model = trainer.train(model = model, num_epochs = 100, G_lr = 1e-4, D_lr = 1e-4, D_steps = 1)
-
