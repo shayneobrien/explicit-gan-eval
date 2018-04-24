@@ -82,7 +82,7 @@ class GAN(nn.Module):
         self.z_dim = z_dim
 
 class Trainer:
-    def __init__(self, train_iter, val_iter, test_iter, image_data):
+    def __init__(self, train_iter, val_iter, test_iter, image_data=False):
         """ Object to hold data iterators, train a GAN variant """
         self.train_iter = train_iter
         self.val_iter = val_iter
