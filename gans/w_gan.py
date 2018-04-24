@@ -76,11 +76,12 @@ class GAN(nn.Module):
 
 
 class Trainer:
-    def __init__(self, train_iter, val_iter, test_iter):
+    def __init__(self, train_iter, val_iter, test_iter, image_data=False):
         """ Object to hold data iterators, train a GAN variant """
         self.train_iter = train_iter
         self.val_iter = val_iter
         self.test_iter = test_iter
+        self.image_data = image_data
 
     def train(self, model, num_epochs, G_lr=5e-5, D_lr=5e-5, D_steps=5, clip=0.01):
         """ Train a Wasserstein GAN
@@ -161,8 +162,9 @@ class Trainer:
                    %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses))) 
 
             # Visualize generator progress
-            fig = self.generate_images(model, epoch)
-            plt.show()
+            if self.image_data is True:
+                fig = self.generate_images(model, epoch)
+                plt.show()
 
         return model
 
@@ -211,6 +213,8 @@ class Trainer:
     def compute_noise(self, batch_size, z_dim):
         """ Compute random noise for the generator to learn to make images from """
         return to_var(torch.randn(batch_size, z_dim))
+
+    ### GENERATE HISTOGRAMS INSTEAD OF IMAGES..... make sure agnostic!
 
     def generate_images(self, model, epoch, num_outputs = 25, save = True):
         """ Visualize progress of generator learning """

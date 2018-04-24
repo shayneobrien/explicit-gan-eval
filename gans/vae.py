@@ -88,12 +88,12 @@ class VAE(nn.Module):
 
 
 class Trainer:
-    def __init__(self, train_iter, val_iter, test_iter):
+    def __init__(self, train_iter, val_iter, test_iter, image_data=False):
         """ Object to hold data iterators, train the model """
         self.train_iter = train_iter
         self.val_iter = val_iter
         self.test_iter = test_iter
-        
+        self.image_data = image_data
         self.debugging_image, _ = next(iter(val_iter))
     
     def train(self, model, num_epochs, lr = 1e-3, weight_decay = 1e-5):
@@ -151,8 +151,9 @@ class Trainer:
                    %(epoch, num_epochs, np.mean(epoch_loss), np.mean(epoch_recon), np.mean(epoch_kl), val_loss))
             
             # Debugging and visualization purposes
-            fig = self.reconstruct_images(self.debugging_image, epoch, model)
-            plt.show()
+            if self.image_data is True:
+                fig = self.reconstruct_images(self.debugging_image, epoch, model)
+                plt.show()
             
         return best_model  
     

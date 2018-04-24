@@ -66,11 +66,12 @@ class GAN(nn.Module):
         self.z_dim = z_dim
     
 class Trainer:
-    def __init__(self, train_iter, val_iter, test_iter):
+    def __init__(self, train_iter, val_iter, test_iter, image_data=False):
         """ Object to hold data iterators, train a GAN variant """
         self.train_iter = train_iter
         self.val_iter = val_iter
         self.test_iter = test_iter
+        self.image_data = image_data
     
     def train(self, model, num_epochs, G_lr = 2e-4, D_lr = 2e-4, G_init = 5, D_steps = 1):
         """ Train a vanilla GAN using the mini-max loss for the generator (hard to train early-on, unrecommended usage). 
@@ -158,8 +159,9 @@ class Trainer:
                    %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses))) 
             
             # Visualize generator progress
-            fig = self.generate_images(model, epoch)
-            plt.show()
+            if self.image_data is True:
+                fig = self.generate_images(model, epoch)
+                plt.show()
         
         return model
     
