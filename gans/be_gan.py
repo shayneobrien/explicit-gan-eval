@@ -35,14 +35,14 @@ import torchvision
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-
+from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
 import os
 import copy
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm_notebook
 from itertools import product
-from .utils import to_var
+from .utils import to_var, get_pdf
 
 
 class Generator(nn.Module):
@@ -88,6 +88,11 @@ class Trainer:
         self.val_iter = val_iter
         self.test_iter = test_iter
         self.image_data = image_data
+        self.kl = []
+        self.js = []
+        self.ks = []
+        self.wd = []
+        self.ed = []
     
     def train(self, model, num_epochs, G_lr = 1e-4, D_lr = 1e-4, D_steps = 1, GAMMA = 0.50, LAMBDA = 1e-3, K = 0.00):
         """ Train a Least Squares GAN
@@ -168,6 +173,17 @@ class Trainer:
                 # Learning rate scheduler
                 D_scheduler.step(convergence_measure)
                 G_scheduler.step(convergence_measure)
+            noise = self.compute_noise(images.shape[0], model.z_dim)
+            a = np.array(self.train_iter.dataset.data_tensor)
+            b = model.G(noise).data.numpy()
+            a = get_pdf(a)
+            b = get_pdf(b)
+            m = (np.array(a)+np.array(b))/2
+            self.ks.append((ks_2samp(a, b)[1]))
+            self.kl.append((entropy(pk=a, qk=b)))
+            self.js.append((.5*(entropy(pk=a, qk=m)+entropy(pk=b, qk=m))))
+            self.wd.append(wasserstein_distance(a, b))
+            self.ed.append(energy_distance(a, b))
                                 
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f, K: %.4f, Convergence Measure: %.4f"
@@ -178,7 +194,7 @@ class Trainer:
                 fig = self.generate_images(model, epoch)
                 plt.show()
             
-        return model
+        return model, self.kl, self.ks, self.js, self.wd, self.ed
     
     def train_D(self, model, images, K):
         """ Run 1 step of training for discriminator

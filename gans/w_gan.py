@@ -23,21 +23,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
-import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm_notebook
 from itertools import product
-from .utils import to_var
-
-def get_pdf(data):
-    x = []
-    for i in range(data.shape[0]):
-        x.append(list(np.histogram(data[i], bins=100, density=True)[0]))
-    df = pd.DataFrame(x)
-    pdf = list(df.mean(axis=0))
-    return pdf
+from .utils import to_var, get_pdf
 
 
 class Generator(nn.Module):
