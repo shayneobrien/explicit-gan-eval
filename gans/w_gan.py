@@ -22,7 +22,7 @@ import torchvision
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-from scipy.stats import ks_2samp, entropy
+from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
@@ -93,6 +93,8 @@ class Trainer:
         self.kl = []
         self.js = []
         self.ks = []
+        self.wd = []
+        self.ed = []
 
     def train(self, model, num_epochs, G_lr=5e-5, D_lr=5e-5, D_steps=5, clip=0.01):
         """ Train a Wasserstein GAN
@@ -176,6 +178,8 @@ class Trainer:
             self.ks.append((ks_2samp(a, b)[1]))
             self.kl.append((entropy(pk=a, qk=b)))
             self.js.append((.5*(entropy(pk=a, qk=m)+entropy(pk=b, qk=m))))
+            self.wd.append(wasserstein_distance(a, b))
+            self.ed.append(energy_distance(a, b))
 
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
@@ -186,7 +190,7 @@ class Trainer:
                 fig = self.generate_images(model, epoch)
                 plt.show()
 
-        return model, self.kl, self.ks, self.js
+        return model, self.kl, self.ks, self.js, self.wd, self.ed
 
     def train_D(self, model, images):
         """ Run 1 step of training for discriminator
