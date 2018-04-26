@@ -22,7 +22,8 @@ import torchvision
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-
+from scipy.stats import ks_2samp, entropy
+import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,6 +31,13 @@ from tqdm import tqdm_notebook
 from itertools import product
 from .utils import to_var
 
+def get_pdf(data):
+    x = []
+    for i in range(data.shape[0]):
+        x.append(list(np.histogram(data[i], bins=100, density=True)[0]))
+    df = pd.DataFrame(x)
+    pdf = list(df.mean(axis=0))
+    return pdf
 
 
 class Generator(nn.Module):
@@ -82,6 +90,9 @@ class Trainer:
         self.val_iter = val_iter
         self.test_iter = test_iter
         self.image_data = image_data
+        self.kl = []
+        self.js = []
+        self.ks = []
 
     def train(self, model, num_epochs, G_lr=5e-5, D_lr=5e-5, D_steps=5, clip=0.01):
         """ Train a Wasserstein GAN
@@ -156,6 +167,15 @@ class Trainer:
 
                 # Save relevant output for progress logging
                 G_losses.append(G_loss)
+            noise = self.compute_noise(images.shape[0], model.z_dim)
+            a = np.array(self.train_iter.dataset.data_tensor)
+            b = model.G(noise).data.numpy()
+            a = get_pdf(a)
+            b = get_pdf(b)
+            m = (np.array(a)+np.array(b))/2
+            self.ks.append((ks_2samp(a, b)[1]))
+            self.kl.append((entropy(pk=a, qk=b)))
+            self.js.append((.5*(entropy(pk=a, qk=m)+entropy(pk=b, qk=m))))
 
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
@@ -166,7 +186,7 @@ class Trainer:
                 fig = self.generate_images(model, epoch)
                 plt.show()
 
-        return model
+        return model, self.kl, self.ks, self.js
 
     def train_D(self, model, images):
         """ Run 1 step of training for discriminator
