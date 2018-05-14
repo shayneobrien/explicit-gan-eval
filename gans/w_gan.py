@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm_notebook
 from itertools import product
-from .utils import to_var, get_pdf
+from .utils import to_var, get_pdf, get_metrics
 
 
 class Generator(nn.Module):
@@ -163,15 +163,11 @@ class Trainer:
             noise = self.compute_noise(images.shape[0], model.z_dim)
             a = np.array(self.train_iter.dataset.data_tensor)
             b = model.G(noise).data.numpy()
-            a = get_pdf(a)
-            b = get_pdf(b)
-            m = (np.array(a)+np.array(b))/2
-            self.ks.append((ks_2samp(a, b)[1]))
-            self.kl.append((entropy(pk=a, qk=b)))
-            self.js.append((.5*(entropy(pk=a, qk=m)+entropy(pk=b, qk=m))))
-            self.wd.append(wasserstein_distance(a, b))
-            self.ed.append(energy_distance(a, b))
-
+            kl, js, wd, ed = get_metrics(a, b, 100)
+            self.kl.append(kl)
+            self.wd.append(wd)
+            self.js.append(js)
+            self.ed.append(ed)
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
                    %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses))) 

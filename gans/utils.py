@@ -3,6 +3,7 @@ from torch.autograd import Variable
 import pandas as pd
 import numpy as np
 from torch.utils.data import TensorDataset
+from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
 
 
 def to_var(x):
@@ -12,13 +13,13 @@ def to_var(x):
     return Variable(x)
 
 
-def get_pdf(data):
+def get_pdf(data, bins):
     x = []
     for i in range(data.shape[1]):
-        x.append(list(np.histogram(data[:, i], bins=100, density=True)[0]))
-    df = pd.DataFrame(x)
-    pdf = list(df.mean(axis=0))
-    return pdf
+        x.append(list(np.histogram(data[:, i], bins=bins, density=True)[0]))
+    res = np.array(x).T
+    res[res == 0] = .00001
+    return res
 
 
 def get_the_data(generator, samples, BATCH_SIZE=100):
@@ -34,3 +35,18 @@ def preprocess(generator, samples, BATCH_SIZE=100):
     val_iter = get_the_data(generator, samples, BATCH_SIZE)
     test_iter = get_the_data(generator, samples, BATCH_SIZE)
     return train_iter, val_iter, test_iter
+
+
+def get_metrics(a, b, bins):
+    a = get_pdf(a, bins)
+    b = get_pdf(b, bins)
+    m = (np.array(a)+np.array(b))/2
+    kl = entropy(pk=a, qk=b).sum()/a.shape[1]
+    jshannon = .5*(entropy(pk=a, qk=m)+entropy(pk=b, qk=m)).sum()/a.shape[1]
+    wd = 0
+    for i in range(a.shape[1]):
+        wd += wasserstein_distance(a[:,i],b[:,i])
+    ed = 0
+    for i in range(a.shape[1]):
+        ed += energy_distance(a[:,i],b[:,i])
+    return kl, jshannon, wd, ed

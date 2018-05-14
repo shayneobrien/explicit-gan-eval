@@ -30,14 +30,14 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torchvision.transforms import ToPILImage
 from torchvision.utils import make_grid
-
+from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
 import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm_notebook
 from itertools import product
-from .utils import to_var
+from .utils import to_var, get_pdf, get_metrics
 
 
 class Encoder(nn.Module):
@@ -68,11 +68,12 @@ class Decoder(nn.Module):
 
 
 class VAE(nn.Module):
-    def __init__(self, image_size=784, hidden_dim=400, z_dim=20):
+    def __init__(self, image_size=784, hidden_dim=400, z_dim=200):
         """ VAE super class to reconstruct an image. Contains reparametrization method """
         super(VAE, self).__init__()
         self.encoder = Encoder(image_size = image_size, hidden_dim = hidden_dim, z_dim = z_dim)
         self.decoder = Decoder(z_dim = z_dim, hidden_dim = hidden_dim, image_size = image_size)
+        self.z_dim = z_dim
                      
     def forward(self, x):
         mu, log_var = self.encoder(x)
@@ -95,6 +96,11 @@ class Trainer:
         self.test_iter = test_iter
         self.image_data = image_data
         self.debugging_image, _ = next(iter(val_iter))
+        self.kl = []
+        self.js = []
+        self.ks = []
+        self.wd = []
+        self.ed = []
     
     def train(self, model, num_epochs, lr = 1e-3, weight_decay = 1e-5):
         """ Train a Variational Autoencoder
@@ -125,7 +131,7 @@ class Trainer:
                 
                 # Zero out gradients
                 optimizer.zero_grad()
-                
+                images = self.process_batch(self.train_iter)
                 # Compute reconstruction loss, Kullback-Leibler divergence for a batch
                 recon_loss, kl_diverge = self.compute_batch(batch, criterion, model)
                 batch_loss = recon_loss + kl_diverge # ELBO
@@ -145,7 +151,15 @@ class Trainer:
             if val_loss < best_val_loss:
                 best_model = model
                 best_val_loss = val_loss
-                
+            noise = to_var(torch.randn(images.shape[0], 10*model.z_dim))
+            a = np.array(self.train_iter.dataset.data_tensor)
+            # print(model.encoder(noise)[0].data)
+            b = model.encoder(noise)[0].data.numpy()
+            kl, js, wd, ed = get_metrics(a, b, 100)
+            self.kl.append(kl)
+            self.wd.append(wd)
+            self.js.append(js)
+            self.ed.append(ed)   
             # Progress logging
             print ("Epoch[%d/%d], Total Loss: %.4f, Reconst Loss: %.4f, KL Div: %.7f, Val Loss: %.4f" 
                    %(epoch, num_epochs, np.mean(epoch_loss), np.mean(epoch_recon), np.mean(epoch_kl), val_loss))
@@ -155,7 +169,7 @@ class Trainer:
                 fig = self.reconstruct_images(self.debugging_image, epoch, model)
                 plt.show()
             
-        return best_model  
+        return best_model, self.kl, self.ks, self.js, self.wd, self.ed
     
     def compute_batch(self, batch, criterion, model):
         """ Compute loss for a batch of examples """
@@ -168,6 +182,12 @@ class Trainer:
         kl_diverge = self.kl_divergence(mu, log_var)
         
         return recon_loss, kl_diverge
+
+    def process_batch(self, iterator):
+        """ Generate a process batch to be input into the discriminator D """
+        images, _ = next(iter(iterator))
+        images = to_var(images.view(images.shape[0], -1))
+        return images
     
     def evaluate(self, iterator, criterion, model):
         """ Evaluate on a given dataset """
