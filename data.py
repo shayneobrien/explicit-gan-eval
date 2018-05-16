@@ -279,7 +279,7 @@ class CirclesDatasetGenerator:
                 cv.circle(this_image, location, circle_size, color, -1)
             images.append(this_image)
 
-        return images
+        return np.array(images)
 
     def generate_samples_to_directory(self, n_samples, output_directory):
 
@@ -336,15 +336,3 @@ if __name__ == "__main__":
     print(x)
     generator.generate_samples_to_directory(50, './dataset_1')
     generator.save_generator('./generator1.pickle')
-
-
-
-
-
-
-
-
-
-
-
-
