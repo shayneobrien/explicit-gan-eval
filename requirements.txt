@@ -3,7 +3,7 @@ jupyter
 torchvision
 matplotlib
 tqdm
-torch
+torch==0.3.1
 torchvision
 heatmappy
 sklearn
