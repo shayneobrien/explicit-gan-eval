@@ -20,32 +20,41 @@ import gans.be_gan as began
 from gans.load_data import get_data
 from gans.utils import to_var, get_pdf, get_the_data, preprocess
 
+import json
+import itertools
 
-def get_multivariate_results(gans, gans_index, distributions, dimensions, epochs, samples):
+
+def get_multivariate_results(gans, gans_index, distributions, dimensions, epochs, samples, hyperparameters):
     res = {}
+    lr, dim, step, bsize = hyperparameters
     for index, gan in enumerate(gans[:-1]):
         res[gans_index[index]] = {}
         print(gans_index[index])
         for dist in distributions:
             res[gans_index[index]][dist] = {}
             gen = data.Distribution(dist, dimensions)
-            train_iter, val_iter, test_iter = preprocess(gen, samples)
+            train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
             if gans_index[index] == "vae":
-                model = vae.VAE(image_size=dimensions, hidden_dim=400, z_dim=20)
+                model = vae.VAE(image_size=dimensions, hidden_dim=dim, z_dim=20)
                 if torch.cuda.is_available():
                     model.cuda()
                 trainer = vae.Trainer(train_iter, val_iter, test_iter)
                 model, kl, ks, js, wd, ed = trainer.train(model, num_epochs=epochs)
             else:
-                model = gan.GAN(image_size=dimensions, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
+                model = gan.GAN(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
                 if torch.cuda.is_available():
                     model = model.cuda()
                 trainer = gan.Trainer(train_iter, val_iter, test_iter)
-                model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)
+                model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs, G_lr=lr, D_lr=lr, D_steps=step)
             res[gans_index[index]][dist]["KL-Divergence"] = kl
             res[gans_index[index]][dist]["Jensen-Shannon"] = js
             res[gans_index[index]][dist]["Wasserstein-Distance"] = wd
             res[gans_index[index]][dist]["Energy-Distance"] = ed
+            # Hyperparams
+            res[gans_index[index]][dist]["LR"] = lr
+            res[gans_index[index]][dist]["HDIM"] = dim
+            res[gans_index[index]][dist]["DSTEP"] = step
+            res[gans_index[index]][dist]["BSIZE"] = bsize
     return res
 
 
@@ -150,7 +159,16 @@ def get_mixture_graphs(res, gans_index, distance_metrics):
             plt.clf()
 
 
+
+
 if __name__ == "__main__":
+
+    hyperparam = [5e-3, 256, 5, 10]
+    learning_rates = [1e-2, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5, 1e-5]
+    hidden_dims = [16, 32, 64, 128, 256]
+    D_steps = [1, 2, 3, 4, 5]
+    BATCH_SIZE = [10, 25, 50, 75, 100, 150, 200, 250]
+
     print("Choose a dataset: multivariate, mixture, or circles")
     print("e.g. python gan_in_a_box.py multivariate n_dimensions n_epochs n_samples")
     data_type = sys.argv[1]
@@ -163,10 +181,15 @@ if __name__ == "__main__":
     print("python gan_in_a_box.py {0} {1} {2}".format(dimensions, epochs, samples))
     distributions = ['normal', 'beta', 'exponential', 'gamma', 'gumbel', 'laplace']
     gans = [wgan, wgpgan, nsgan, lsgan, mmgan, dragan, began, vae]
-    gans_index = ["wgan", "wgpgan", "nsgan", "lsgan", "mmgan", "dragan", "began", "vae"]
+    gans_index = ["wgan",  "wgpgan", "nsgan", "lsgan", "mmgan", "dragan", "began", "vae"]
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
     if data_type == "multivariate":
-        res = get_multivariate_results(gans, gans_index, distributions, dimensions, epochs, samples)
+        # for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, D_steps, BATCH_SIZE])):
+            # lr, dim, step, bsize = hyperparam
+        res = get_multivariate_results(gans, gans_index, distributions, dimensions, epochs, samples, hyperparam)
+            # print(type(res))
+            # with open('hypertuning/data{0}.json'.format(str(hyperparam)), 'w') as outfile:
+            #     json.dump(res, outfile)
         get_multivariate_graphs(res, gans_index, distance_metrics)
     elif data_type == "mixture":
         res = get_mixture_results(gans, gans_index, distributions, dimensions, epochs, samples, n_mixtures)
