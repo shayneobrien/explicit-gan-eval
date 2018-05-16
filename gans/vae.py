@@ -102,7 +102,7 @@ class Trainer:
         self.wd = []
         self.ed = []
     
-    def train(self, model, num_epochs, lr = 1e-3, weight_decay = 1e-5):
+    def train(self, model, num_epochs, lr = 1e-6, weight_decay = 1e-5):
         """ Train a Variational Autoencoder
             Logs progress using total loss, reconstruction loss, kl_divergence, and validation loss
 
@@ -128,10 +128,10 @@ class Trainer:
             epoch_loss, epoch_recon, epoch_kl = [], [], []
             
             for batch in self.train_iter:
-                
+
                 # Zero out gradients
                 optimizer.zero_grad()
-                images = self.process_batch(self.train_iter)
+                # images = self.process_batch(self.train_iter)
                 # Compute reconstruction loss, Kullback-Leibler divergence for a batch
                 recon_loss, kl_diverge = self.compute_batch(batch, criterion, model)
                 batch_loss = recon_loss + kl_diverge # ELBO
@@ -151,15 +151,28 @@ class Trainer:
             if val_loss < best_val_loss:
                 best_model = model
                 best_val_loss = val_loss
-            noise = to_var(torch.randn(images.shape[0], 10*model.z_dim))
-            a = np.array(self.train_iter.dataset.data_tensor)
+
+            # noise = to_var(torch.randn(images.shape[0], 10*model.z_dim))
+            # a = np.array(self.train_iter.dataset.data_tensor)
             # print(model.encoder(noise)[0].data)
-            b = model.encoder(noise)[0].data.numpy()
-            kl, js, wd, ed = get_metrics(a, b, 100)
-            self.kl.append(kl)
-            self.wd.append(wd)
-            self.js.append(js)
-            self.ed.append(ed)   
+            # b = model.encoder(noise)[0].data.numpy()
+            # b, _, _ = model(to_var(torch.FloatTensor(a)))
+            # b = b.data.numpy()
+            # b[b == 0] = .00001
+            # a[a == 0] = .00001
+            # print("a")
+            # a = a/np.max(a)
+            # print(np.max(a))
+
+            # print(np.min(a))
+            # print("b")
+            # print(np.max(b))
+            # print(np.min(b))
+            # kl, js, wd, ed = get_metrics(a, b, 100)
+            # self.kl.append(kl)
+            # self.wd.append(wd)
+            # self.js.append(js)
+            # self.ed.append(ed)   
             # Progress logging
             print ("Epoch[%d/%d], Total Loss: %.4f, Reconst Loss: %.4f, KL Div: %.7f, Val Loss: %.4f" 
                    %(epoch, num_epochs, np.mean(epoch_loss), np.mean(epoch_recon), np.mean(epoch_kl), val_loss))
@@ -175,9 +188,11 @@ class Trainer:
         """ Compute loss for a batch of examples """
         images, _ = batch
         images = to_var(images.view(images.shape[0], -1))
-        
+        # The output is NAN'ing after the 3rd epoch... this is our issue!
         output, mu, log_var = model(images)
-        
+
+        print(output, images)
+
         recon_loss = criterion(output, images)
         kl_diverge = self.kl_divergence(mu, log_var)
         

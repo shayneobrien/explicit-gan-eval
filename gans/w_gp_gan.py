@@ -137,14 +137,14 @@ class Trainer:
 
                 # Save relevant output for progress logging
                 G_losses.append(G_loss)
-            noise = self.compute_noise(images.shape[0], model.z_dim)
-            a = np.array(self.train_iter.dataset.data_tensor)
-            b = model.G(noise).data.numpy()
-            kl, js, wd, ed = get_metrics(a, b, 100)
-            self.kl.append(kl)
-            self.wd.append(wd)
-            self.js.append(js)
-            self.ed.append(ed)
+                noise = self.compute_noise(images.shape[0], model.z_dim)
+                a = np.array(self.train_iter.dataset.data_tensor)
+                b = model.G(noise).data.numpy()
+                kl, js, wd, ed = get_metrics(a, b, 100)
+                self.kl.append(kl)
+                self.wd.append(wd)
+                self.js.append(js)
+                self.ed.append(ed)
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
                    %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses)))
