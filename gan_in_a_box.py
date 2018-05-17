@@ -225,7 +225,7 @@ if __name__ == "__main__":
     gans_index = ["wgpgan", "vae"]
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
     if data_type == "multivariate":
-        for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, D_steps, BATCH_SIZE])):
+        for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
             lr, dim, step, bsize = hyperparam
             print(hyperparam)
             res = get_multivariate_results(gans, gans_index, distributions, dimensions, epochs, samples, hyperparam)
