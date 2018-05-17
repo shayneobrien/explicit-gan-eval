@@ -181,10 +181,13 @@ class Trainer:
         
         # GRADIENT PENALTY STEPS:
         # Uniformly sample along one straight line per each batch entry. 
-        delta = torch.rand(images.shape[0], 1).expand(images.size())
+        delta = to_var(torch.rand(images.shape[0], 1).expand(images.size()))
+        delta.requires_grad = True
+        noise2 = to_var(torch.rand(images.size()))
+        noise2.requires_grad = True
 
         # Generate images from the noise, ensure unit 
-        G_interpolation = delta * images + (1 - delta) * (images + C * images.std() * to_var(torch.rand(images.size())))
+        G_interpolation = delta * images + (1 - delta) * (images + C * images.std() * noise2)
 
         D_interpolation = model.D(G_interpolation)
 
