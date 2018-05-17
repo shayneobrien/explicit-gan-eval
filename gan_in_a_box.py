@@ -154,7 +154,6 @@ def get_multivariate_graphs(res, gans_index, distance_metrics):
         gamma = pd.DataFrame(res[gan]['gamma'])
         gumbel = pd.DataFrame(res[gan]['gumbel'])
         for dist in distance_metrics:
-            print(range(len(normal[dist]))
             plt.plot(range(len(normal[dist])), normal[dist], label="Normal")
             plt.plot(range(len(normal[dist])), beta[dist], label="Beta")
             plt.plot(range(len(normal[dist])), exponential[dist], label="Exponential")
