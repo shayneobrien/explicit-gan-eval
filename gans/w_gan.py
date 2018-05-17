@@ -164,11 +164,9 @@ class Trainer:
                 # model.eval()
                 noise = self.compute_noise(1000, model.z_dim) # images.shape[0] add sys.argv[1]
                 a = np.array(self.train_iter.dataset.data_tensor)
-                tensor = model.G(noise).data
-
-                b = deepcopy(tensor)
-                b = b.cpu().numpy()
-
+                tensor = model.G(noise)
+                b = tensor.data.tolist()
+                b = np.array(b)
                 # print(np.max(a))
                 # print(np.min(a))
                 # print(a)
