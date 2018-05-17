@@ -19,7 +19,7 @@ import gans.dra_gan as dragan
 import gans.be_gan as began
 from gans.load_data import get_data
 from gans.utils import to_var, get_pdf, get_the_data, preprocess
-
+from gans.load_data import get_data
 import json
 import itertools
 
@@ -34,6 +34,7 @@ def get_multivariate_results(gans, gans_index, distributions, dimensions, epochs
             res[gans_index[index]][dist] = {}
             gen = data.Distribution(dist, dimensions)
             train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
+            # train_iter, val_iter, test_iter = preprocess(gen, samples, 100)  # Default batch size
             if gans_index[index] == "vae":
                 model = vae.VAE(image_size=dimensions, hidden_dim=dim, z_dim=20)
                 if torch.cuda.is_available():
@@ -46,6 +47,7 @@ def get_multivariate_results(gans, gans_index, distributions, dimensions, epochs
                     model = model.cuda()
                 trainer = gan.Trainer(train_iter, val_iter, test_iter)
                 model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs, G_lr=lr, D_lr=lr, D_steps=step)
+                # model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)  ## Default lr and step size
             res[gans_index[index]][dist]["KL-Divergence"] = kl
             res[gans_index[index]][dist]["Jensen-Shannon"] = js
             res[gans_index[index]][dist]["Wasserstein-Distance"] = wd
@@ -117,6 +119,32 @@ def get_circle_results(gans, gans_index, dimensions, epochs, samples):
     return res
 
 
+def get_mnist_results(gans, gans_index, epochs):
+    res = {}
+    for index, gan in enumerate(gans[:-1]):
+        res[gans_index[index]] = {}
+        print(gans_index[index])
+        res[gans_index[index]]["mnist"] = {}
+        train_iter, val_iter, test_iter = get_data(100)
+        if gans_index[index] == "vae":
+            model = vae.VAE(image_size=784, hidden_dim=400, z_dim=20)
+            if torch.cuda.is_available():
+                model.cuda()
+            trainer = vae.Trainer(train_iter, val_iter, test_iter)
+            model, kl, ks, js, wd, ed = trainer.train(model, num_epochs=epochs)
+        else:
+            model = gan.GAN(image_size=784, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
+            if torch.cuda.is_available():
+                model = model.cuda()
+            trainer = gan.Trainer(train_iter, val_iter, test_iter)
+            model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)
+        res[gans_index[index]]["mnist"]["KL-Divergence"] = kl
+        res[gans_index[index]]["mnist"]["Jensen-Shannon"] = js
+        res[gans_index[index]]["mnist"]["Wasserstein-Distance"] = wd
+        res[gans_index[index]]["mnist"]["Energy-Distance"] = ed
+    return res
+
+
 def get_multivariate_graphs(res, gans_index, distance_metrics):
     for gan in gans_index[:-1]:
         normal = pd.DataFrame(res[gan]['normal'])
@@ -159,6 +187,17 @@ def get_mixture_graphs(res, gans_index, distance_metrics):
             plt.clf()
 
 
+def get_mnist_graphs(res, gans_index, distance_metrics):
+    for gan in gans_index[:-1]:
+        normal = pd.DataFrame(res[gan]['mnist'])
+        for dist in distance_metrics:
+            plt.plot(range(len(normal['mnist'])), normal['mnist'], label="MNIST")
+            plt.xlabel("Epoch")
+            plt.ylabel(dist)
+            plt.title("{0}: {1}".format(gan.upper(), dist))
+            plt.legend()
+            plt.savefig('graphs/{0}_{1}.png'.format(gan, dist), dpi=100)
+            plt.clf()
 
 
 if __name__ == "__main__":
@@ -197,5 +236,9 @@ if __name__ == "__main__":
         get_mixture_graphs(res, gans_index, distance_metrics)
     elif data_type == "circles":
         res = get_circle_results(gans, gans_index, dimensions, epochs, samples)
+        print("to do: graph circles")
+    elif data_type == "mnist":
+        res = get_mnist_results(gans, gans_index, epochs)
+        get_mnist_graphs(res, gans_index, distance_metrics)
         print("to do: graph circles")
     print("Le Fin.")

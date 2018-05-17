@@ -29,7 +29,7 @@ import numpy as np
 from tqdm import tqdm_notebook
 from itertools import product
 from .utils import to_var, get_pdf, get_metrics
-
+from copy import deepcopy
 
 class Generator(nn.Module):
     def __init__(self, image_size, hidden_dim, z_dim):
@@ -164,7 +164,16 @@ class Trainer:
                 # model.eval()
                 noise = self.compute_noise(1000, model.z_dim) # images.shape[0] add sys.argv[1]
                 a = np.array(self.train_iter.dataset.data_tensor)
-                b = model.G(noise).data.cpu().numpy()
+                tensor = model.G(noise)
+                b = deepcopy(tensor)
+                b = b.data.cpu().numpy()
+
+                # print(np.max(a))
+                # print(np.min(a))
+                # print(a)
+                # print(np.max(b))
+                # print(np.min(b))
+                # print(b)
                 kl, js, wd, ed = get_metrics(a, b)
                 self.kl.append(kl)
                 self.wd.append(wd)

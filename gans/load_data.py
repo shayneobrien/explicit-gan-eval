@@ -3,7 +3,7 @@ import torch
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
     
-def get_data():
+def get_data(BATCH_SIZE):
     """ Load data for binared MNIST """
     torch.manual_seed(3435)
 
@@ -35,7 +35,7 @@ def get_data():
     train = torch.utils.data.TensorDataset(train_img, train_label)
     val = torch.utils.data.TensorDataset(val_img, val_label)
     test = torch.utils.data.TensorDataset(test_img, test_label)
-    BATCH_SIZE = 100
+    # BATCH_SIZE = 100
     train_iter = torch.utils.data.DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
     val_iter = torch.utils.data.DataLoader(val, batch_size=BATCH_SIZE, shuffle=True)
     test_iter = torch.utils.data.DataLoader(test, batch_size=BATCH_SIZE, shuffle=True)
