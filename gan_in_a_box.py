@@ -56,7 +56,7 @@ def get_multivariate_results(gans, gans_index, distributions, dimensions, epochs
             # Hyperparams
             res[gans_index[index]][dist]["LR"] = lr
             res[gans_index[index]][dist]["HDIM"] = dim
-            res[gans_index[index]][dist]["DSTEP"] = step
+            # res[gans_index[index]][dist]["DSTEP"] = step
             res[gans_index[index]][dist]["BSIZE"] = bsize
     return res
 
@@ -221,12 +221,12 @@ if __name__ == "__main__":
     distributions = ['normal', 'beta', 'exponential', 'gamma', 'gumbel', 'laplace']
     # gans = [wgan, wgpgan, nsgan, lsgan, mmgan, nsgan, began, vae]
     # gans_index = ["wgan",  "wgpgan", "nsgan", "lsgan", "mmgan", "nsgan", "began", "vae"]
-    gans = [wgpgan, vae]
+    gans = [dragan, vae]
     gans_index = ["wgpgan", "vae"]
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
     if data_type == "multivariate":
         for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
-            lr, dim, step, bsize = hyperparam
+            lr, dim, bsize = hyperparam
             print(hyperparam)
             res = get_multivariate_results(gans, gans_index, distributions, dimensions, epochs, samples, hyperparam)
             print(type(res))
