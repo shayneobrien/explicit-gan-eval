@@ -51,10 +51,10 @@ def get_multivariate_results(gans, gans_index, distributions, dimensions, epochs
             res[gans_index[index]][dist]["Wasserstein-Distance"] = wd
             res[gans_index[index]][dist]["Energy-Distance"] = ed
             # Hyperparams
-            res[gans_index[index]][dist]["LR"] = lr
-            res[gans_index[index]][dist]["HDIM"] = dim
-            res[gans_index[index]][dist]["DSTEP"] = step
-            res[gans_index[index]][dist]["BSIZE"] = bsize
+            # res[gans_index[index]][dist]["LR"] = lr
+            # res[gans_index[index]][dist]["HDIM"] = dim
+            # res[gans_index[index]][dist]["DSTEP"] = step
+            # res[gans_index[index]][dist]["BSIZE"] = bsize
     return res
 
 
@@ -187,9 +187,9 @@ if __name__ == "__main__":
         # for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, D_steps, BATCH_SIZE])):
             # lr, dim, step, bsize = hyperparam
         res = get_multivariate_results(gans, gans_index, distributions, dimensions, epochs, samples, hyperparam)
-            # print(type(res))
-            # with open('hypertuning/data{0}.json'.format(str(hyperparam)), 'w') as outfile:
-            #     json.dump(res, outfile)
+        print(type(res))
+        with open('hypertuning/data{0}.json'.format(str(hyperparam)), 'w') as outfile:
+            json.dump(res, outfile)
         get_multivariate_graphs(res, gans_index, distance_metrics)
     elif data_type == "mixture":
         res = get_mixture_results(gans, gans_index, distributions, dimensions, epochs, samples, n_mixtures)
