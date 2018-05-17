@@ -5,8 +5,8 @@ import torch
 from torch.utils.data import TensorDataset
 from scipy import stats
 from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
-matplotlib.use('agg')
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 
 import data
 
