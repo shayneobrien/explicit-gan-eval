@@ -164,7 +164,7 @@ class Trainer:
                 # model.eval()
                 noise = self.compute_noise(1000, model.z_dim) # images.shape[0] add sys.argv[1]
                 a = np.array(self.train_iter.dataset.data_tensor)
-                b = model.G(noise).data.numpy()
+                b = model.G(noise).data.cpu().numpy()
                 kl, js, wd, ed = get_metrics(a, b)
                 self.kl.append(kl)
                 self.wd.append(wd)

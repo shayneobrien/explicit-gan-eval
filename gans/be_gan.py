@@ -175,7 +175,8 @@ class Trainer:
                 G_scheduler.step(convergence_measure)
                 noise = self.compute_noise(images.shape[0], model.z_dim)
                 a = np.array(self.train_iter.dataset.data_tensor)
-                b = model.G(noise).data.numpy()
+                b = model.G(noise).data.cpu().numpy()
+
                 kl, js, wd, ed = get_metrics(a, b)
                 self.kl.append(kl)
                 self.wd.append(wd)
