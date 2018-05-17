@@ -203,10 +203,9 @@ def get_mnist_graphs(res, gans_index, distance_metrics):
 
 if __name__ == "__main__":
 
-    hyperparam = [5e-3, 256, 5, 10]
-    learning_rates = [5e-3, 1e-3, 5e-4, 1e-4, 5e-5, 1e-5]
+    # hyperparam = [5e-3, 256, 5, 10]
+    learning_rates = [1e-3, 5e-4, 1e-4, 5e-5]
     hidden_dims = [16, 32, 64, 128, 256]
-    # D_steps = [1, 2, 3, 5]
     BATCH_SIZE = [100, 150, 200, 250]
 
     print("Choose a dataset: multivariate, mixture, or circles")
