@@ -33,8 +33,8 @@ def get_multivariate_results(gans, gans_index, distributions, dimensions, epochs
         for dist in distributions:
             res[gans_index[index]][dist] = {}
             gen = data.Distribution(dist, dimensions)
-            train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
-            # train_iter, val_iter, test_iter = preprocess(gen, samples, 100)  # Default batch size
+            # train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
+            train_iter, val_iter, test_iter = preprocess(gen, samples, 100)  # Default batch size
             if gans_index[index] == "vae":
                 model = vae.VAE(image_size=dimensions, hidden_dim=dim, z_dim=20)
                 if torch.cuda.is_available():
@@ -46,8 +46,8 @@ def get_multivariate_results(gans, gans_index, distributions, dimensions, epochs
                 if torch.cuda.is_available():
                     model = model.cuda()
                 trainer = gan.Trainer(train_iter, val_iter, test_iter)
-                model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs, G_lr=lr, D_lr=lr, D_steps=step)
-                # model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)  ## Default lr and step size
+                # model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs, G_lr=lr, D_lr=lr, D_steps=step)
+                model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)  ## Default lr and step size
             res[gans_index[index]][dist]["KL-Divergence"] = kl
             res[gans_index[index]][dist]["Jensen-Shannon"] = js
             res[gans_index[index]][dist]["Wasserstein-Distance"] = wd
@@ -223,13 +223,13 @@ if __name__ == "__main__":
     gans_index = ["wgan",  "wgpgan", "nsgan", "lsgan", "mmgan", "began", "vae"]
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
     if data_type == "multivariate":
-        for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, D_steps, BATCH_SIZE])):
-            lr, dim, step, bsize = hyperparam
-            print(hyperparam)
-            res = get_multivariate_results(gans, gans_index, distributions, dimensions, epochs, samples, hyperparam)
-            print(type(res))
-            with open('hypertuning/data{0}.json'.format(str(hyperparam)), 'w') as outfile:
-                json.dump(res, outfile)
+        # for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, D_steps, BATCH_SIZE])):
+        #     lr, dim, step, bsize = hyperparam
+        #     print(hyperparam)
+        res = get_multivariate_results(gans, gans_index, distributions, dimensions, epochs, samples, hyperparam)
+        print(type(res))
+        with open('hypertuning/data{0}.json'.format(str(hyperparam)), 'w') as outfile:
+            json.dump(res, outfile)
         get_multivariate_graphs(res, gans_index, distance_metrics)
     elif data_type == "mixture":
         res = get_mixture_results(gans, gans_index, distributions, dimensions, epochs, samples, n_mixtures)
