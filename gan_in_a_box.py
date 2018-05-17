@@ -27,7 +27,7 @@ import itertools
 
 def get_multivariate_results(gans, gans_index, distributions, dimensions, epochs, samples, hyperparameters):
     res = {}
-    lr, dim, step, bsize = hyperparameters
+    lr, dim, bsize = hyperparameters
     for index, gan in enumerate(gans[:-1]):
         res[gans_index[index]] = {}
         print(gans_index[index])
@@ -47,7 +47,7 @@ def get_multivariate_results(gans, gans_index, distributions, dimensions, epochs
                 if torch.cuda.is_available():
                     model = model.cuda()
                 trainer = gan.Trainer(train_iter, val_iter, test_iter)
-                model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs, G_lr=lr, D_lr=lr, D_steps=step)
+                model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs, G_lr=lr, D_lr=lr)
                 # model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)  ## Default lr and step size
             res[gans_index[index]][dist]["KL-Divergence"] = kl
             res[gans_index[index]][dist]["Jensen-Shannon"] = js
@@ -204,10 +204,10 @@ def get_mnist_graphs(res, gans_index, distance_metrics):
 if __name__ == "__main__":
 
     hyperparam = [5e-3, 256, 5, 10]
-    learning_rates = [1e-2, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5, 1e-5]
+    learning_rates = [5e-3, 1e-3, 5e-4, 1e-4, 5e-5, 1e-5]
     hidden_dims = [16, 32, 64, 128, 256]
-    D_steps = [1, 2, 3, 4, 5]
-    BATCH_SIZE = [10, 25, 50, 75, 100, 150, 200, 250]
+    # D_steps = [1, 2, 3, 5]
+    BATCH_SIZE = [100, 150, 200, 250]
 
     print("Choose a dataset: multivariate, mixture, or circles")
     print("e.g. python gan_in_a_box.py multivariate n_dimensions n_epochs n_samples")
