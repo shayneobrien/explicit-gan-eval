@@ -41,18 +41,20 @@ def get_multivariate_results(gans, gans_index, distributions, dimensions, epochs
                 if torch.cuda.is_available():
                     model.cuda()
                 trainer = vae.Trainer(train_iter, val_iter, test_iter)
-                model, kl, ks, js, wd, ed = trainer.train(model, num_epochs=epochs)
+                model, kl, ks, js, wd, ed, dl, gl = trainer.train(model, num_epochs=epochs)
             else:
                 model = gan.GAN(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
                 if torch.cuda.is_available():
                     model = model.cuda()
                 trainer = gan.Trainer(train_iter, val_iter, test_iter)
-                model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs, G_lr=lr, D_lr=lr)
+                model, kl, ks, js, wd, ed, dl, gl = trainer.train(model=model, num_epochs=epochs, G_lr=lr, D_lr=lr)
                 # model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)  ## Default lr and step size
             res[gans_index[index]][dist]["KL-Divergence"] = kl
             res[gans_index[index]][dist]["Jensen-Shannon"] = js
             res[gans_index[index]][dist]["Wasserstein-Distance"] = wd
             res[gans_index[index]][dist]["Energy-Distance"] = ed
+            res[gans_index[index]][dist]["DLoss"] = dl
+            res[gans_index[index]][dist]["GLoss"] = gl
             # Hyperparams
             res[gans_index[index]][dist]["LR"] = lr
             res[gans_index[index]][dist]["HDIM"] = dim
