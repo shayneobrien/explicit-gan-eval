@@ -220,7 +220,9 @@ if __name__ == "__main__":
     print("python gan_in_a_box.py {0} {1} {2}".format(dimensions, epochs, samples))
     distributions = ['normal', 'beta', 'exponential', 'gamma', 'gumbel', 'laplace']
     gans = [wgan, wgpgan, nsgan, lsgan, mmgan, nsgan, dragan, began, vae]
-    gans_index = ["wgan",  "wgpgan", "nsgan", "lsgan", "mmgan", "nsgan", 'dragan', "began", "vae"]
+    gans_index = ["wgan", "wgpgan", "nsgan", "lsgan", "mmgan", "nsgan", 'dragan', "began", "vae"]
+    gans = [wgan, vae]
+    gans_index = ["wgan", "vae"]
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
     if data_type == "multivariate":
         for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
