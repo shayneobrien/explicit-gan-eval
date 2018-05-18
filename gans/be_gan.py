@@ -196,7 +196,7 @@ class Trainer:
                 fig = self.generate_images(model, epoch)
                 plt.show()
             
-        return model, self.kl, self.ks, self.js, self.wd, self.ed
+        return model, self.kl, self.ks, self.js, self.wd, self.ed, self.dloss, self.gloss
     
     def train_D(self, model, images, K):
         """ Run 1 step of training for discriminator
