@@ -93,6 +93,8 @@ class Trainer:
         self.ks = []
         self.wd = []
         self.ed = []
+        self.gloss = []
+        self.dloss = []
     
     def train(self, model, num_epochs, G_lr = 1e-4, D_lr = 1e-4, D_steps = 1, GAMMA = 0.50, LAMBDA = 1e-3, K = 0.00):
         """ Train a Least Squares GAN
@@ -182,6 +184,8 @@ class Trainer:
                 self.wd.append(wd)
                 self.js.append(js)
                 self.ed.append(ed)
+                self.gloss.append(G_loss)
+                self.dloss.append(D_loss)
                                 
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f, K: %.4f, Convergence Measure: %.4f"

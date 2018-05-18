@@ -30,6 +30,7 @@ from tqdm import tqdm_notebook
 from itertools import product
 from .utils import to_var, get_pdf, get_metrics
 from copy import deepcopy
+from .autoencoder import encode
 
 class Generator(nn.Module):
     def __init__(self, image_size, hidden_dim, z_dim):
@@ -86,6 +87,8 @@ class Trainer:
         self.ks = []
         self.wd = []
         self.ed = []
+        self.gloss = []
+        self.dloss = []
 
     def train(self, model, num_epochs, G_lr=5e-5, D_lr=5e-5, D_steps=5, clip=0.01):
         """ Train a Wasserstein GAN
@@ -163,7 +166,8 @@ class Trainer:
 
                 # model.eval()
                 noise = self.compute_noise(1000, model.z_dim) # images.shape[0] add sys.argv[1]
-                a = np.array(self.train_iter.dataset.data_tensor)
+                # a = np.array(self.train_iter.dataset.data_tensor)
+                a = encode(1).data.cpu().numpy()
                 b = model.G(noise).data.cpu().numpy()
                 # tensor = model.G(noise)
                 # b = tensor.data.tolist()
@@ -179,6 +183,8 @@ class Trainer:
                 self.wd.append(wd)
                 self.js.append(js)
                 self.ed.append(ed)
+                self.gloss.append(G_loss)
+                self.dloss.append(D_loss)
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
                    %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses))) 

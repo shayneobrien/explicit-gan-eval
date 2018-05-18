@@ -72,5 +72,3 @@ def encode(num_epochs=10, batch_size=128, learning_rate=1e-3):
     result = midput/torch.max(midput)
     print(result)
     return result
-
-encode(1)

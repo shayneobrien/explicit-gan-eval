@@ -77,6 +77,8 @@ class Trainer:
         self.ks = []
         self.wd = []
         self.ed = []
+        self.gloss = []
+        self.dloss = []
     
     def train(self, model, num_epochs, G_lr = 2e-4, D_lr = 2e-4, G_init = 5, D_steps = 1):
         """ Train a vanilla GAN using the mini-max loss for the generator (hard to train early-on, unrecommended usage). 
@@ -167,6 +169,8 @@ class Trainer:
                 self.wd.append(wd)
                 self.js.append(js)
                 self.ed.append(ed)
+                self.gloss.append(G_loss)
+                self.dloss.append(D_loss)
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
                    %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses))) 
