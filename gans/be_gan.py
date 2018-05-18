@@ -184,8 +184,8 @@ class Trainer:
                 self.wd.append(wd)
                 self.js.append(js)
                 self.ed.append(ed)
-                self.gloss.append(G_loss)
-                self.dloss.append(D_loss)
+                self.gloss.append(np.float64(G_loss[0].data.cpu().numpy()[0]))
+                self.dloss.append(np.float64(D_loss[0].data.cpu().numpy()[0]))
                                 
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f, K: %.4f, Convergence Measure: %.4f"

@@ -183,8 +183,6 @@ class Trainer:
                 self.wd.append(wd)
                 self.js.append(js)
                 self.ed.append(ed)
-                print(G_loss[0].data.cpu().numpy()[0])
-                print(D_loss[0].data.cpu().numpy()[0])
                 self.gloss.append(np.float64(G_loss[0].data.cpu().numpy()[0]))
                 self.dloss.append(np.float64(D_loss[0].data.cpu().numpy()[0]))
             # Progress logging
