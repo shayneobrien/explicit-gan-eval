@@ -183,6 +183,8 @@ class Trainer:
                 self.wd.append(wd)
                 self.js.append(js)
                 self.ed.append(ed)
+                print(G_loss)
+                print(D_loss)
                 self.gloss.append(G_loss)
                 self.dloss.append(D_loss)
             # Progress logging
