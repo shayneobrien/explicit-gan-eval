@@ -6,6 +6,7 @@ except:
    import pickle
 import scipy.stats as st
 import os
+from scipy.stats import ortho_group
 
 # Imports for handling images
 # from PIL import Image
@@ -99,6 +100,15 @@ class Distribution:
 
             return np.concatenate(samples, axis=0)
 
+    def generate_high_dimensional_samples(self, n_samples=10000, big_dim=100):
+        m = ortho_group.rvs(big_dim=dim)
+        m_transform = m[:self.dim, :]
+
+        samples = self.generate_samples(n_samples)
+
+        return np.dot(samples, m_transform)
+
+
     def save_dist(self, out_file):
 
         with open(out_file, 'wb') as of:
@@ -180,6 +190,14 @@ class MixtureDistribution:
             samples = np.concatenate([samples, this_samples])
 
         return samples
+
+    def generate_high_dimensional_samples(self, n_samples=10000, big_dim=100):
+        m = ortho_group.rvs(big_dim=dim)
+        m_transform = m[:self.dim, :]
+
+        samples = self.generate_samples(n_samples)
+
+        return np.dot(samples, m_transform)
 
     def save_dist(self, out_file):
 
