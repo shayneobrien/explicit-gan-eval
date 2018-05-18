@@ -224,7 +224,7 @@ if __name__ == "__main__":
     gans = [wgan, wgpgan, nsgan, lsgan, mmgan, nsgan, dragan, began, vae]
     gans_index = ["wgan", "wgpgan", "nsgan", "lsgan", "mmgan", "nsgan", 'dragan', "began", "vae"]
     # gans = [wgan, vae]
-    # gans_index = ["wgan", "vae"]
+    gans_index = ["wgan", "vae"]
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
     if data_type == "multivariate":
         for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
@@ -233,6 +233,7 @@ if __name__ == "__main__":
             res = get_multivariate_results(gans, gans_index, distributions, dimensions, epochs, samples, hyperparam)
             print(type(res))
             with open('hypertuning/data{0}.json'.format(str(hyperparam)), 'w') as outfile:
+                json.dump(res, outfile)
         # get_multivariate_graphs(res, gans_index, distance_metrics)
     elif data_type == "mixture":
         res = get_mixture_results(gans, gans_index, distributions, dimensions, epochs, samples, n_mixtures)
