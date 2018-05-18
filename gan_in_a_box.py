@@ -127,6 +127,7 @@ def get_mnist_results(gans, gans_index, epochs):
     for index, gan in enumerate(gans[:-1]):
         res[gans_index[index]] = {}
         print(gans_index[index])
+        print("\n\n\n")
         res[gans_index[index]]["mnist"] = {}
         train_iter, val_iter, test_iter = get_data(100)
         if gans_index[index] == "vae":
@@ -139,7 +140,7 @@ def get_mnist_results(gans, gans_index, epochs):
             model = gan.GAN(image_size=784, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
             if torch.cuda.is_available():
                 model = model.cuda()
-            trainer = gan.Trainer(train_iter, val_iter, test_iter)
+            trainer = gan.Trainer(train_iter, val_iter, test_iter, mnist=True)
             model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)
         res[gans_index[index]]["mnist"]["KL-Divergence"] = kl
         res[gans_index[index]]["mnist"]["Jensen-Shannon"] = js
@@ -210,7 +211,7 @@ if __name__ == "__main__":
     hidden_dims = [16, 32, 64, 128, 256]
     BATCH_SIZE = [100, 150, 200, 250]
 
-    print("Choose a dataset: multivariate, mixture, or circles")
+    print("Choose a dataset: multivariate, mixture, circles, or mnist")
     print("e.g. python gan_in_a_box.py multivariate n_dimensions n_epochs n_samples")
     data_type = sys.argv[1]
     dimensions = int(sys.argv[2])
@@ -243,6 +244,9 @@ if __name__ == "__main__":
         print("to do: graph circles")
     elif data_type == "mnist":
         res = get_mnist_results(gans, gans_index, epochs)
+        with open('mnistgoodies.json', 'w') as outfile:
+                json.dump(res, outfile)
         get_mnist_graphs(res, gans_index, distance_metrics)
+
         print("to do: graph circles")
     print("Le Fin.")

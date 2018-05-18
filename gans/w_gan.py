@@ -30,7 +30,7 @@ from tqdm import tqdm_notebook
 from itertools import product
 from .utils import to_var, get_pdf, get_metrics
 from copy import deepcopy
-# from .autoencoder import encode
+from .autoencoder import encode
 
 class Generator(nn.Module):
     def __init__(self, image_size, hidden_dim, z_dim):
@@ -76,7 +76,7 @@ class GAN(nn.Module):
 
 
 class Trainer:
-    def __init__(self, train_iter, val_iter, test_iter, image_data=False):
+    def __init__(self, train_iter, val_iter, test_iter, mnist=False, image_data=False):
         """ Object to hold data iterators, train a GAN variant """
         self.train_iter = train_iter
         self.val_iter = val_iter
@@ -89,6 +89,7 @@ class Trainer:
         self.ed = []
         self.gloss = []
         self.dloss = []
+        self.mnist = mnist
 
     def train(self, model, num_epochs, G_lr=5e-5, D_lr=5e-5, D_steps=5, clip=0.01):
         """ Train a Wasserstein GAN
@@ -167,7 +168,8 @@ class Trainer:
                 # model.eval()
                 noise = self.compute_noise(1000, model.z_dim) # images.shape[0] add sys.argv[1]
                 a = np.array(self.train_iter.dataset.data_tensor)
-                # a = encode(1).data.cpu().numpy()
+                if self.mnist is True:
+                    a = encode(1).data.cpu().numpy()
                 b = model.G(noise).data.cpu().numpy()
                 # tensor = model.G(noise)
                 # b = tensor.data.tolist()
