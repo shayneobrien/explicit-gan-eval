@@ -183,10 +183,10 @@ class Trainer:
                 self.wd.append(wd)
                 self.js.append(js)
                 self.ed.append(ed)
-                print(G_loss[0])
-                print(D_loss[0])
-                self.gloss.append(G_loss[0])
-                self.dloss.append(D_loss[0])
+                print(G_loss[0].data.numpy())
+                print(D_loss[0].data.numpy())
+                self.gloss.append(G_loss[0].data.numpy())
+                self.dloss.append(D_loss[0].data.numpy())
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
                    %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses))) 
