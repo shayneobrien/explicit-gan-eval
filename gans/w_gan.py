@@ -186,7 +186,7 @@ class Trainer:
                 print(G_loss[0].data.numpy())
                 print(D_loss[0].data.numpy())
                 self.gloss.append(G_loss[0].data.cpu().numpy())
-                self.dloss.append(D_loss[0].data.cpu()numpy())
+                self.dloss.append(D_loss[0].data.cpu().numpy())
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
                    %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses))) 
