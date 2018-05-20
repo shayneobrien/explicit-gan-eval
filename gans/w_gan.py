@@ -119,6 +119,7 @@ class Trainer:
         epoch_steps = int(np.ceil(len(self.train_iter) / (D_steps))) 
 
         # Begin training
+        print(D_steps*epoch_steps)
         for epoch in tqdm_notebook(range(1, num_epochs + 1)):
             model.train()
             G_losses, D_losses = [], []

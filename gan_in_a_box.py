@@ -129,7 +129,7 @@ def get_mnist_results(gans, gans_index, epochs):
         print(gans_index[index])
         print("\n\n\n")
         res[gans_index[index]]["mnist"] = {}
-        train_iter, val_iter, test_iter = get_data(100)
+        train_iter, val_iter, test_iter = get_data(2000)
         if gans_index[index] == "vae":
             model = vae.VAE(image_size=784, hidden_dim=400, z_dim=20)
             if torch.cuda.is_available():
@@ -141,11 +141,13 @@ def get_mnist_results(gans, gans_index, epochs):
             if torch.cuda.is_available():
                 model = model.cuda()
             trainer = gan.Trainer(train_iter, val_iter, test_iter, mnist=True)
-            model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)
+            model, kl, ks, js, wd, ed, dl, gl = trainer.train(model=model, num_epochs=epochs)
         res[gans_index[index]]["mnist"]["KL-Divergence"] = kl
         res[gans_index[index]]["mnist"]["Jensen-Shannon"] = js
         res[gans_index[index]]["mnist"]["Wasserstein-Distance"] = wd
         res[gans_index[index]]["mnist"]["Energy-Distance"] = ed
+        res[gans_index[index]]["mnist"]["DLoss"] = dl
+        res[gans_index[index]]["mnist"]["GLoss"] = gl
     return res
 
 
@@ -222,6 +224,7 @@ if __name__ == "__main__":
         n_mixtures = int(sys.argv[5])
     print("python gan_in_a_box.py {0} {1} {2}".format(dimensions, epochs, samples))
     distributions = ['normal', 'beta', 'exponential', 'gamma', 'gumbel', 'laplace']
+    distributions = ['normal']
     gans = [wgan, wgpgan, nsgan, lsgan, mmgan, nsgan, dragan, began, vae]
     gans_index = ["wgan", "wgpgan", "nsgan", "lsgan", "mmgan", "nsgan", 'dragan', "began", "vae"]
     # gans = [wgan, vae]
