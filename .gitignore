@@ -3,3 +3,5 @@ __pycache__/
 data/
 dataset_1/
 viz/
+.DS_store
+*.pyc
