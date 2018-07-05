@@ -26,24 +26,30 @@ import itertools
 from .utils import *
 
 if __name__ == "__main__":
+    print("""
+        Choose \n
+        (1) dataset: multivariate, mixture, circles, or mnist \n
+        (2) number of dimensions: 1, 10, 100, 1000, etc. \n
+        (3) number of epochs: 10, 100, 1000, etc. \n
+        (4) number of samples: 1000, 10,000, 100,000, etc. \n
+        (5) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
+        e.g. python main.py multivariate 200 15 10000
+        """)
+    data_type = sys.argv[1]
+    dimensions = int(sys.argv[2])
+    epochs = int(sys.argv[3])
+    samples = int(sys.argv[4])
 
     # hyperparam = [5e-3, 256, 5, 10]
     learning_rates = [1e-3, 5e-4, 1e-4, 5e-5]
     hidden_dims = [16, 32, 64, 128, 256]
     BATCH_SIZE = [100, 150, 200, 250]
-
-    print("Choose a dataset: multivariate, mixture, circles, or mnist")
-    print("e.g. python gan_in_a_box.py multivariate n_dimensions n_epochs n_samples")
-    data_type = sys.argv[1]
-    dimensions = int(sys.argv[2])
-    epochs = int(sys.argv[3])
-    samples = int(sys.argv[4])
     if data_type == "mixture":
         print("adding n_mixtures")
         n_mixtures = int(sys.argv[5])
-    print("python gan_in_a_box.py {0} {1} {2}".format(dimensions, epochs, samples))
+    print("python main.py {0} {1} {2}".format(dimensions, epochs, samples))
     distributions = ['normal', 'beta', 'exponential', 'gamma', 'gumbel', 'laplace']
-    distributions = ['normal']
+    # distributions = ['normal']
     gans = [wgan, wgpgan, nsgan, lsgan, mmgan, nsgan, dragan, began, vae]
     gans_index = ["wgan", "wgpgan", "nsgan", "lsgan", "mmgan", "nsgan", 'dragan', "began", "vae"]
     # gans = [wgan, vae]
@@ -69,6 +75,5 @@ if __name__ == "__main__":
         with open('mnistgoodies.json', 'w') as outfile:
                 json.dump(res, outfile)
         get_mnist_graphs(res, gans_index, distance_metrics)
-
         print("to do: graph circles")
     print("Le Fin.")
