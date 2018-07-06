@@ -5,4 +5,5 @@ dataset_1/
 viz/
 .DS_store
 *.pyci
+graphs
 hypertuning
