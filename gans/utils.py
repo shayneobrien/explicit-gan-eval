@@ -7,10 +7,15 @@ from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_
 
 
 def to_var(x):
-    """ function to automatically cudarize.. """
+    """ Make a tensor cuda-erized and requires gradient """
+    return to_cuda(x).requires_grad_()
+
+
+def to_cuda(x):
+    """ Cuda-erize a tensor """
     if torch.cuda.is_available():
         x = x.cuda()
-    return Variable(x)
+    return x
 
 
 def get_pdf(data, iqr, r, samples):
@@ -54,4 +59,4 @@ def get_metrics(a, b):
     ed = 0
     for i in range(a.shape[1]):
         ed += energy_distance(a[:,i],b[:,i])
-    return kl, jshannon, wd, ed
+    return {"kl": kl, "wd": wd, "js": jshannon, "ed": ed}

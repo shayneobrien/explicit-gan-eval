@@ -7,9 +7,7 @@ from scipy import stats
 from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
-
 import data
-
 import gans.w_gan as wgan
 import gans.w_gp_gan as wgpgan
 import gans.vae as vae
@@ -18,12 +16,11 @@ import gans.mm_gan as mmgan
 import gans.ls_gan as lsgan
 import gans.dra_gan as dragan
 import gans.be_gan as began
-from gans.load_data import get_data
 from gans.utils import to_var, get_pdf, get_the_data, preprocess
 from gans.load_data import get_data
 import json
 import itertools
-from .utils import *
+from utils import *
 
 if __name__ == "__main__":
     print("""
@@ -50,30 +47,36 @@ if __name__ == "__main__":
     print("python main.py {0} {1} {2}".format(dimensions, epochs, samples))
     distributions = ['normal', 'beta', 'exponential', 'gamma', 'gumbel', 'laplace']
     # distributions = ['normal']
-    gans = [wgan, wgpgan, nsgan, lsgan, mmgan, nsgan, dragan, began, vae]
-    gans_index = ["wgan", "wgpgan", "nsgan", "lsgan", "mmgan", "nsgan", 'dragan', "began", "vae"]
-    # gans = [wgan, vae]
-    # gans_index = ["wgan", "vae"]
+
+    gans = {
+        "wgan": wgan,
+        "wgpgan": wgpgan,
+        "nsgan": nsgan,
+        "lsgan": lsgan,
+        "mmgan": mmgan,
+        "dragan": dragan
+        # "vae": vae
+    }
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
     if data_type == "multivariate":
         for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
             lr, dim, bsize = hyperparam
             print(hyperparam)
-            res = get_multivariate_results(gans, gans_index, distributions, dimensions, epochs, samples, hyperparam)
+            res = get_multivariate_results(gans, distributions, dimensions, epochs, samples, hyperparam)
             print(type(res))
             with open('hypertuning/data{0}.json'.format(str(hyperparam)), 'w') as outfile:
                 json.dump(res, outfile)
-        # get_multivariate_graphs(res, gans_index, distance_metrics)
+        # get_multivariate_graphs(res, gans, distance_metrics)
     elif data_type == "mixture":
-        res = get_mixture_results(gans, gans_index, distributions, dimensions, epochs, samples, n_mixtures)
-        get_mixture_graphs(res, gans_index, distance_metrics)
+        res = get_mixture_results(gans, distributions, dimensions, epochs, samples, n_mixtures)
+        get_mixture_graphs(res, gans, distance_metrics)
     elif data_type == "circles":
-        res = get_circle_results(gans, gans_index, dimensions, epochs, samples)
+        res = get_circle_results(gans, dimensions, epochs, samples)
         print("to do: graph circles")
     elif data_type == "mnist":
-        res = get_mnist_results(gans, gans_index, epochs)
+        res = get_mnist_results(gans, epochs)
         with open('mnistgoodies.json', 'w') as outfile:
                 json.dump(res, outfile)
-        get_mnist_graphs(res, gans_index, distance_metrics)
+        get_mnist_graphs(res, gans, distance_metrics)
         print("to do: graph circles")
     print("Le Fin.")

@@ -7,9 +7,7 @@ from scipy import stats
 from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
-
 import data
-
 import gans.w_gan as wgan
 import gans.w_gp_gan as wgpgan
 import gans.vae as vae
@@ -25,18 +23,20 @@ import json
 import itertools
 
 
-def get_multivariate_results(gans, gans_index, distributions, dimensions, epochs, samples, hyperparameters):
+def get_multivariate_results(gans, distributions, dimensions, epochs, samples, hyperparameters):
     res = {}
     lr, dim, bsize = hyperparameters
-    for index, gan in enumerate(gans[:-1]):
-        res[gans_index[index]] = {}
-        print(gans_index[index])
+    for key, gan in gans.items():
+        res[key] = {}
+        print(key)
         for dist in distributions:
-            res[gans_index[index]][dist] = {}
+            res[key][dist] = {}
             gen = data.Distribution(dist, dimensions)
             train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
-            # train_iter, val_iter, test_iter = preprocess(gen, samples, 100)  # Default batch size
-            if gans_index[index] == "vae":
+            print(train_iter)
+            print(val_iter)
+            print(test_iter)
+            if key == "vae":
                 model = vae.VAE(image_size=dimensions, hidden_dim=dim, z_dim=20)
                 if torch.cuda.is_available():
                     model.cuda()
@@ -46,64 +46,62 @@ def get_multivariate_results(gans, gans_index, distributions, dimensions, epochs
                 model = gan.GAN(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
                 if torch.cuda.is_available():
                     model = model.cuda()
-                trainer = gan.Trainer(train_iter, val_iter, test_iter)
-                model, kl, ks, js, wd, ed, dl, gl = trainer.train(model=model, num_epochs=epochs, G_lr=lr, D_lr=lr)
-                # model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)  ## Default lr and step size
-            res[gans_index[index]][dist]["KL-Divergence"] = kl
-            res[gans_index[index]][dist]["Jensen-Shannon"] = js
-            res[gans_index[index]][dist]["Wasserstein-Distance"] = wd
-            res[gans_index[index]][dist]["Energy-Distance"] = ed
-            res[gans_index[index]][dist]["DLoss"] = dl
-            res[gans_index[index]][dist]["GLoss"] = gl
+                trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
+                metrics = trainer.train(num_epochs=epochs, G_lr=lr, D_lr=lr)
+            res[key][dist]["KL-Divergence"] = metrics['kl']
+            res[key][dist]["Jensen-Shannon"] = metrics['js']
+            res[key][dist]["Wasserstein-Distance"] = metrics['wd']
+            res[key][dist]["Energy-Distance"] = metrics['ed']
+            res[key][dist]["DLoss"] = metrics['dloss']
+            res[key][dist]["GLoss"] = metrics['gloss']
             # Hyperparams
-            res[gans_index[index]][dist]["LR"] = lr
-            res[gans_index[index]][dist]["HDIM"] = dim
-            # res[gans_index[index]][dist]["DSTEP"] = step
-            res[gans_index[index]][dist]["BSIZE"] = bsize
+            res[key][dist]["LR"] = lr
+            res[key][dist]["HDIM"] = dim
+            res[key][dist]["BSIZE"] = bsize
     return res
 
 
-def get_mixture_results(gans, gans_index, distributions, dimensions, epochs, samples, n_mixtures):
+def get_mixture_results(gans, distributions, dimensions, epochs, samples, n_mixtures):
     res = {}
-    for index, gan in enumerate(gans[:-1]):
-        res[gans_index[index]] = {}
-        print(gans_index[index])
+    for key, gan in gans.items():
+        res[key] = {}
+        print(key)
         for dist_i in distributions[0]:  # Just normal and other mixture models at the moment
-            res[gans_index[index]][dist_i] = {}
+            res[key][dist_i] = {}
             for dist_j in distributions:  
                 print(dist_j)
-                res[gans_index[index]][dist_i][dist_j] = {}
+                res[key][dist_i][dist_j] = {}
                 print(dist_i, dist_j, n_mixtures, dimensions, samples)
                 gen = data.MixtureDistribution(dist_i, dist_j, n_mixtures=n_mixtures, dim=dimensions)
                 train_iter, val_iter, test_iter = preprocess(gen, samples) # some error is occuring here
-                if gans_index[index] == "vae":
+                if key == "vae":
                     model = vae.VAE(image_size=dimensions, hidden_dim=400, z_dim=20)
                     if torch.cuda.is_available():
                         model.cuda()
                     trainer = vae.Trainer(train_iter, val_iter, test_iter)
                     model, kl, ks, js, wd, ed = trainer.train(model, num_epochs=epochs)
                 else:
-                    model = gan.GAN(image_size=dimensions, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
+                    model = value.GAN(image_size=dimensions, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
                     if torch.cuda.is_available():
                         model = model.cuda()
                     trainer = gan.Trainer(train_iter, val_iter, test_iter)
                     model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)
-                res[gans_index[index]][dist_i][dist_j]["KL-Divergence"] = kl
-                res[gans_index[index]][dist_i][dist_j]["Jensen-Shannon"] = js
-                res[gans_index[index]][dist_i][dist_j]["Wasserstein-Distance"] = wd
-                res[gans_index[index]][dist_i][dist_j]["Energy-Distance"] = ed
+                res[key][dist_i][dist_j]["KL-Divergence"] = kl
+                res[key][dist_i][dist_j]["Jensen-Shannon"] = js
+                res[key][dist_i][dist_j]["Wasserstein-Distance"] = wd
+                res[key][dist_i][dist_j]["Energy-Distance"] = ed
     return res
 
 
-def get_circle_results(gans, gans_index, dimensions, epochs, samples):
+def get_circle_results(gans, dimensions, epochs, samples):
     res = {}
-    for index, gan in enumerate(gans[:-1]):
-        res[gans_index[index]] = {}
-        print(gans_index[index])
-        res[gans_index[index]]["circle"] = {}
+    for key, gan in gans.items():
+        res[key] = {}
+        print(key)
+        res[key]["circle"] = {}
         generator = data.CirclesDatasetGenerator(size=dimensions, n_circles=samples, random_colors=True, random_sizes=True, modes=20)
         train_iter, val_iter, test_iter = preprocess(generator, samples)
-        if gans_index[index] == "vae":
+        if key == "vae":
             model = vae.VAE(image_size=dimensions, hidden_dim=400, z_dim=20)
             if torch.cuda.is_available():
                 model.cuda()
@@ -115,22 +113,22 @@ def get_circle_results(gans, gans_index, dimensions, epochs, samples):
                 model = model.cuda()
             trainer = gan.Trainer(train_iter, val_iter, test_iter)
             model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)
-        res[gans_index[index]]["circle"]["KL-Divergence"] = kl
-        res[gans_index[index]]["circle"]["Jensen-Shannon"] = js
-        res[gans_index[index]]["circle"]["Wasserstein-Distance"] = wd
-        res[gans_index[index]]["circle"]["Energy-Distance"] = ed
+        res[key]["circle"]["KL-Divergence"] = kl
+        res[key]["circle"]["Jensen-Shannon"] = js
+        res[key]["circle"]["Wasserstein-Distance"] = wd
+        res[key]["circle"]["Energy-Distance"] = ed
     return res
 
 
-def get_mnist_results(gans, gans_index, epochs):
+def get_mnist_results(gans, epochs):
     res = {}
-    for index, gan in enumerate(gans[:-1]):
-        res[gans_index[index]] = {}
-        print(gans_index[index])
+    for key, gan in gans.items():
+        res[key] = {}
+        print(key)
         print("\n\n\n")
-        res[gans_index[index]]["mnist"] = {}
+        res[key]["mnist"] = {}
         train_iter, val_iter, test_iter = get_data(2000)
-        if gans_index[index] == "vae":
+        if key == "vae":
             model = vae.VAE(image_size=784, hidden_dim=400, z_dim=20)
             if torch.cuda.is_available():
                 model.cuda()
@@ -142,17 +140,17 @@ def get_mnist_results(gans, gans_index, epochs):
                 model = model.cuda()
             trainer = gan.Trainer(train_iter, val_iter, test_iter, mnist=True)
             model, kl, ks, js, wd, ed, dl, gl = trainer.train(model=model, num_epochs=epochs)
-        res[gans_index[index]]["mnist"]["KL-Divergence"] = kl
-        res[gans_index[index]]["mnist"]["Jensen-Shannon"] = js
-        res[gans_index[index]]["mnist"]["Wasserstein-Distance"] = wd
-        res[gans_index[index]]["mnist"]["Energy-Distance"] = ed
-        res[gans_index[index]]["mnist"]["DLoss"] = dl
-        res[gans_index[index]]["mnist"]["GLoss"] = gl
+        res[key]["mnist"]["KL-Divergence"] = kl
+        res[key]["mnist"]["Jensen-Shannon"] = js
+        res[key]["mnist"]["Wasserstein-Distance"] = wd
+        res[key]["mnist"]["Energy-Distance"] = ed
+        res[key]["mnist"]["DLoss"] = dl
+        res[key]["mnist"]["GLoss"] = gl
     return res
 
 
-def get_multivariate_graphs(res, gans_index, distance_metrics):
-    for gan in gans_index[:-1]:
+def get_multivariate_graphs(res, gans, distance_metrics):
+    for gan, value in gans.items():
         normal = pd.DataFrame(res[gan]['normal'])
         beta = pd.DataFrame(res[gan]['beta'])
         exponential = pd.DataFrame(res[gan]['exponential'])
@@ -173,7 +171,7 @@ def get_multivariate_graphs(res, gans_index, distance_metrics):
 
 
 def get_mixture_graphs(res, gans_index, distance_metrics):
-    for gan in gans_index[:-1]:
+    for gan, value in gans.items():
         normal_normal = pd.DataFrame(res[gan]['normal']['normal'])
         normal_beta = pd.DataFrame(res[gan]['normal']['beta'])
         normal_exponential = pd.DataFrame(res[gan]['normal']['exponential'])
@@ -194,7 +192,7 @@ def get_mixture_graphs(res, gans_index, distance_metrics):
 
 
 def get_mnist_graphs(res, gans_index, distance_metrics):
-    for gan in gans_index[:-1]:
+    for gan, value in gans.items():
         normal = pd.DataFrame(res[gan]['mnist'])
         for dist in distance_metrics:
             plt.plot(range(len(normal['mnist'])), normal['mnist'], label="MNIST")
