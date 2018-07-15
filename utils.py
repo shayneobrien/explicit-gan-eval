@@ -1,29 +1,13 @@
-import sys
 import pandas as pd
-import numpy as np
 import torch
-from torch.utils.data import TensorDataset
-from scipy import stats
-from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
 import matplotlib.pyplot as plt
+import models, data
+from models.gan_utils import preprocess
 plt.switch_backend('agg')
-import data
-import gans.w_gan as wgan
-import gans.w_gp_gan as wgpgan
-import gans.vae as vae
-import gans.ns_gan as nsgan
-import gans.mm_gan as mmgan
-import gans.ls_gan as lsgan
-import gans.dra_gan as dragan
-import gans.be_gan as began
-from gans.load_data import get_data
-from gans.utils import to_var, get_pdf, get_the_data, preprocess
-from gans.load_data import get_data
-import json
-import itertools
 
 
-def get_multivariate_results(gans, distributions, dimensions, epochs, samples, hyperparameters):
+def get_multivariate_results(gans, distributions, dimensions,
+                            epochs, samples, hyperparameters):
     res = {}
     lr, dim, bsize = hyperparameters
     for key, gan in gans.items():
@@ -33,9 +17,6 @@ def get_multivariate_results(gans, distributions, dimensions, epochs, samples, h
             res[key][dist] = {}
             gen = data.Distribution(dist, dimensions)
             train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
-            print(train_iter)
-            print(val_iter)
-            print(test_iter)
             if key == "vae":
                 model = vae.VAE(image_size=dimensions, hidden_dim=dim, z_dim=20)
                 if torch.cuda.is_available():
@@ -54,6 +35,7 @@ def get_multivariate_results(gans, distributions, dimensions, epochs, samples, h
             res[key][dist]["Energy-Distance"] = metrics['ed']
             res[key][dist]["DLoss"] = metrics['dloss']
             res[key][dist]["GLoss"] = metrics['gloss']
+
             # Hyperparams
             res[key][dist]["LR"] = lr
             res[key][dist]["HDIM"] = dim
@@ -61,14 +43,15 @@ def get_multivariate_results(gans, distributions, dimensions, epochs, samples, h
     return res
 
 
-def get_mixture_results(gans, distributions, dimensions, epochs, samples, n_mixtures):
+def get_mixture_results(gans, distributions, dimensions,
+                        epochs, samples, n_mixtures):
     res = {}
     for key, gan in gans.items():
         res[key] = {}
         print(key)
         for dist_i in distributions[0]:  # Just normal and other mixture models at the moment
             res[key][dist_i] = {}
-            for dist_j in distributions:  
+            for dist_j in distributions:
                 print(dist_j)
                 res[key][dist_i][dist_j] = {}
                 print(dist_i, dist_j, n_mixtures, dimensions, samples)

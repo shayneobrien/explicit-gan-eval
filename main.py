@@ -1,25 +1,15 @@
-import sys
+import os, sys, json, itertools
 import pandas as pd
 import numpy as np
-import torch
-from torch.utils.data import TensorDataset
-from scipy import stats
-from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
+
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
+
+from torch.utils.data import TensorDataset
+from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
+
 import data
-import gans.w_gan as wgan
-import gans.w_gp_gan as wgpgan
-import gans.vae as vae
-import gans.ns_gan as nsgan
-import gans.mm_gan as mmgan
-import gans.ls_gan as lsgan
-import gans.dra_gan as dragan
-import gans.be_gan as began
-from gans.utils import to_var, get_pdf, get_the_data, preprocess
-from gans.load_data import get_data
-import json
-import itertools
+from models import w_gan, w_gp_gan, ns_gan, mm_gan, ls_gan, dra_gan, be_gan, vae
 from utils import *
 
 if __name__ == "__main__":
@@ -37,6 +27,10 @@ if __name__ == "__main__":
     epochs = int(sys.argv[3])
     samples = int(sys.argv[4])
 
+    # Make output directories if they don't exist yet
+    if not os.path.exists('hypertuning'):
+        os.makedirs('hypertuning')
+
     # hyperparam = [5e-3, 256, 5, 10]
     learning_rates = [1e-3, 5e-4, 1e-4, 5e-5]
     hidden_dims = [16, 32, 64, 128, 256]
@@ -46,15 +40,14 @@ if __name__ == "__main__":
         n_mixtures = int(sys.argv[5])
     print("python main.py {0} {1} {2}".format(dimensions, epochs, samples))
     distributions = ['normal', 'beta', 'exponential', 'gamma', 'gumbel', 'laplace']
-    # distributions = ['normal']
 
     gans = {
-        "wgan": wgan,
-        "wgpgan": wgpgan,
-        "nsgan": nsgan,
-        "lsgan": lsgan,
-        "mmgan": mmgan,
-        "dragan": dragan
+        "wgan": w_gan,
+        "wgpgan": w_gp_gan,
+        "nsgan": ns_gan,
+        "lsgan": ls_gan,
+        "mmgan": mm_gan,
+        "dragan": dra_gan
         # "vae": vae
     }
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
@@ -75,8 +68,8 @@ if __name__ == "__main__":
         print("to do: graph circles")
     elif data_type == "mnist":
         res = get_mnist_results(gans, epochs)
-        with open('mnistgoodies.json', 'w') as outfile:
-                json.dump(res, outfile)
+        with open('mnist_output.json', 'w') as outfile:
+            json.dump(res, outfile)
         get_mnist_graphs(res, gans, distance_metrics)
         print("to do: graph circles")
     print("Le Fin.")

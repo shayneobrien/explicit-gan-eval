@@ -16,9 +16,9 @@ def to_img(x):
     return x
 
 
-class autoencoder(nn.Module):
+class AutoEncoder(nn.Module):
     def __init__(self):
-        super(autoencoder, self).__init__()
+        super().__init__()
         self.encoder = nn.Sequential(
             nn.Linear(28 * 28, 128),
             nn.ReLU(True),
@@ -49,7 +49,7 @@ def encode(num_epochs=10, batch_size=128, learning_rate=1e-3):
     dataset = MNIST('./data', transform=img_transform, download=True)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-    model = autoencoder()
+    model = AutoEncoder()
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(
         model.parameters(), lr=learning_rate, weight_decay=1e-5)
@@ -71,4 +71,3 @@ def encode(num_epochs=10, batch_size=128, learning_rate=1e-3):
               .format(epoch + 1, num_epochs, loss.data[0]))
     result = midput/torch.max(midput)
     return output
-
