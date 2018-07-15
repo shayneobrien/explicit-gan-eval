@@ -88,6 +88,9 @@ def gan_metrics(trainer):
     B = trainer.model.G(noise).data.numpy()
 
     metrics = compute_divergences(A, B)
+    for key, value in metrics.items():
+        trainer.metrics[key].append(value)
+    metrics = trainer.metrics
     metrics['GLoss'] = trainer.Glosses
     metrics['DLoss'] = trainer.Dlosses
     metrics["LR"] = trainer.lr

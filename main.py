@@ -8,6 +8,7 @@ from models import w_gan, w_gp_gan, ns_gan, mm_gan, ls_gan, dra_gan, be_gan, vae
 from utils import *
 
 plt.switch_backend('agg')
+plt.style.use('fivethirtyeight')
 
 
 if __name__ == "__main__":
@@ -25,32 +26,37 @@ if __name__ == "__main__":
     dimensions = int(sys.argv[2])
     epochs = int(sys.argv[3])
     samples = int(sys.argv[4])
-
-    # Make output directories if they don't exist yet
-    for type in ['multivariate', 'mixture', 'circles', 'mnist']:
-        if not os.path.exists('hypertuning/' + type + '/'):
-            os.makedirs('hypertuning/' + type + '/')
-        else:
-            continue
-
-    learning_rates = [1e-3, 5e-4, 1e-4, 5e-5]
-    hidden_dims = [16, 32, 64, 128, 256]
-    BATCH_SIZE = [100, 150, 200, 250]
     if data_type == "mixture":
         print("adding n_mixtures")
         n_mixtures = int(sys.argv[5])
 
-    print("python main.py {0} {1} {2}".format(dimensions, epochs, samples))
-    distributions = ['normal', 'beta', 'exponential', 'gamma', 'gumbel', 'laplace']
+    # Make output directories if they don't exist yet
+    for dir in ['hypertuning', 'graphs']:
+        for subdir in ['multivariate', 'mixture', 'circles', 'mnist']:
+            dirname = dir + '/' + subdir + '/'
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+
+
+    # Set hyperparameters
+    learning_rates = [1e-3, 5e-4, 1e-4, 5e-5]
+    hidden_dims = [16, 32, 64, 128, 256]
+    BATCH_SIZE = [100, 150, 200, 250]
+    distributions = ['normal',
+                     'beta',
+                     'exponential',
+                     # 'gamma', # TODO: Fix gamma
+                     'gumbel',
+                     'laplace']
 
     models = {
         "wgan": w_gan,
-        "wgpgan": w_gp_gan,
-        "nsgan": ns_gan,
-        "lsgan": ls_gan,
-        "mmgan": mm_gan,
-        "dragan": dra_gan,
-        "vae": vae,
+        # "wgpgan": w_gp_gan,
+        # "nsgan": ns_gan,
+        # "lsgan": ls_gan,
+        # "mmgan": mm_gan,
+        # "dragan": dra_gan,
+        # "vae": vae,
         # "began": be_gan,
     }
 
@@ -60,12 +66,13 @@ if __name__ == "__main__":
         if data_type == "multivariate":
             results = get_multivariate_results(models, distributions, dimensions,
                                             epochs, samples, hyperparam)
-        # get_multivariate_graphs(res, models, distance_metrics)
+            # We only want to graph the best ones!
+            # get_multivariate_graphs(results, models, distributions, distance_metrics, epochs)
         elif data_type == "mixture":
             # TODO: output results
             results = get_mixture_results(models, distributions, dimensions,
                                         epochs, samples, n_mixtures, hyperparam)
-                # get_mixture_graphs(res, models, distance_metrics)
+            get_mixture_graphs(results, models, distributions, distance_metrics, epochs)
         # elif data_type == "circles":
         #     # TODO: Graphing circles
         #     results = get_circle_results(models, dimensions, epochs, samples)
