@@ -8,21 +8,20 @@ from models.gan_utils import preprocess
 plt.switch_backend('agg')
 
 
-def get_multivariate_results(gans, distributions, dimensions,
-                            epochs, samples, hyperparameters):
+def get_multivariate_results(models, distributions, dimensions,
+                             epochs, samples, hyperparameters):
     res = defaultdict(partial(defaultdict, defaultdict))
-    lr, dim, bsize = hyperparameters
-    for model_name, module in gans.items():
+    # lr, dim, bsize = hyperparameters
+    for model_name, module in models.items():
         for dist in distributions:
             # TODO: fix Gamma
             if dist == 'gamma':
                 continue
             print('\n', model_name, dist)
-            gen = data.Distribution(dist, dimensions)
-            train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
-            model = module.Model(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
-            trainer = module.Trainer(model, train_iter, val_iter, test_iter)
-            metrics = trainer.train(num_epochs=epochs, lr=lr)
+
+            gen = data.Distribution(dist_type=dist, dim=dimensions)
+            metrics = model_results(module, epochs, hyperparameters,
+                                    gen, samples, dimensions)
 
             for metric, value in metrics.items():
                 res[model_name][dist][metric] = value
@@ -30,38 +29,27 @@ def get_multivariate_results(gans, distributions, dimensions,
     return res
 
 
-# def get_mixture_results(gans, distributions, dimensions,
-#                         epochs, samples, n_mixtures):
-#     res = {}
-#     for key, gan in gans.items():
-#         res[key] = {}
-#         print(key)
-#         print(distributions)
-#         for dist_i in distributions[0]: # Just normal and other mixture models at the moment
-#             res[key][dist_i] = {}
-#             for dist_j in distributions:
-#                 res[key][dist_i][dist_j] = {}
-#                 print(dist_i, dist_j, n_mixtures, dimensions, samples)
-#                 # TODO: mix_type='uniform', or mix_type = 'random' (should there be others?)
-#                 gen = data.MixtureDistribution(dist_type=dist_i, mix_type=dist_j,
-#                                                 n_mixtures=n_mixtures, dim=dimensions)
-#                 train_iter, val_iter, test_iter = preprocess(gen, samples) # TODO: fix error (wrong dim?)
-#                 if key == "vae":
-#                     continue
-#                     # model = vae.VAE(image_size=dimensions, hidden_dim=400, z_dim=20)
-#                     # trainer = vae.Trainer(model, train_iter, val_iter, test_iter)
-#                     # model, kl, ks, js, wd, ed = trainer.train(num_epochs=epochs)
-#                 else:
-#                     model = gan.GAN(image_size=dimensions, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
-#                     trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
-#                     model, kl, ks, js, wd, ed = trainer.train(num_epochs=epochs)
-#                 res[key][dist_i][dist_j]["KL-Divergence"] = kl
-#                 res[key][dist_i][dist_j]["Jensen-Shannon"] = js
-#                 res[key][dist_i][dist_j]["Wasserstein-Distance"] = wd
-#                 res[key][dist_i][dist_j]["Energy-Distance"] = ed
-#     return res
-#
-#
+def get_mixture_results(models, distributions, dimensions,
+                        epochs, samples, n_mixtures):
+    res = defaultdict(partial(defaultdict, defaultdict))
+    lr, dim, bsize = hyperparameters
+    for model_name, module in models.items():
+        for dist_i in distributions[0]: # Just normal and other mixture models at the moment
+            for dist_j in distributions:
+                print(dist_i, dist_j, n_mixtures, dimensions, samples)
+                # TODO: mix_type='uniform', or mix_type = 'random' (should there be others?)
+                gen = data.MixtureDistribution(dist_type=dist_i, mix_type=dist_j,
+                                                n_mixtures=n_mixtures, dim=dimensions)
+
+                metrics = model_results(module, epochs, hyperparameters,
+                                        gen, samples, dimensions)
+
+                for metric, value in metrics.items():
+                    res[model_name][dist][metric] = value
+
+    return res
+
+
 # def get_circle_results(gans, dimensions, epochs, samples):
 #     res = {}
 #     for key, gan in gans.items():
@@ -165,3 +153,18 @@ def get_mnist_graphs(res, gans_index, distance_metrics):
             plt.legend()
             plt.savefig('graphs/{0}_{1}.png'.format(gan, dist), dpi=100)
             plt.clf()
+
+def model_results(module, epochs, hyperparameters, gen, samples, dimensions):
+    """ Train a model, get metrics dictionary out """
+    # Unpack hyperparameters, initialize results dictionary
+    lr, dim, bsize = hyperparameters
+
+    # Create data iterators
+    train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
+
+    # Model, trainer, metrics
+    model = module.Model(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
+    trainer = module.Trainer(model, train_iter, val_iter, test_iter)
+    metrics = trainer.train(num_epochs=epochs, lr=lr)
+
+    return metrics

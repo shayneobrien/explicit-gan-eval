@@ -1,16 +1,14 @@
 import os, sys, json, itertools
 import pandas as pd
-import numpy as np
-
 import matplotlib.pyplot as plt
-plt.switch_backend('agg')
-
 from torch.utils.data import TensorDataset
-from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
 
 import data
 from models import w_gan, w_gp_gan, ns_gan, mm_gan, ls_gan, dra_gan, be_gan, vae
 from utils import *
+
+plt.switch_backend('agg')
+
 
 if __name__ == "__main__":
     print("""
@@ -43,7 +41,7 @@ if __name__ == "__main__":
     distributions = ['normal', 'beta', 'exponential',
                      'gamma', 'gumbel', 'laplace']
 
-    gans = {
+    models = {
         "wgan": w_gan,
         "wgpgan": w_gp_gan,
         "nsgan": ns_gan,
@@ -59,22 +57,22 @@ if __name__ == "__main__":
         for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
             lr, dim, bsize = hyperparam
             print(hyperparam)
-            res = get_multivariate_results(gans, distributions, dimensions,
+            res = get_multivariate_results(models, distributions, dimensions,
                                             epochs, samples, hyperparam)
             with open('hypertuning/data{0}.json'.format(str(hyperparam)), 'w') as outfile:
                 json.dump(res, outfile)
-        # get_multivariate_graphs(res, gans, distance_metrics)
+        # get_multivariate_graphs(res, models, distance_metrics)
     elif data_type == "mixture":
         # TODO: Fix
-        res = get_mixture_results(gans, distributions, dimensions, epochs, samples, n_mixtures)
-        get_mixture_graphs(res, gans, distance_metrics)
+        res = get_mixture_results(models, distributions, dimensions, epochs, samples, n_mixtures)
+        get_mixture_graphs(res, models, distance_metrics)
     elif data_type == "circles":
         # TODO: Graphing circles
-        res = get_circle_results(gans, dimensions, epochs, samples)
+        res = get_circle_results(models, dimensions, epochs, samples)
     elif data_type == "mnist":
         # TODO: Graphing MNIST (see VAE code)
-        res = get_mnist_results(gans, epochs)
+        res = get_mnist_results(models, epochs)
         with open('mnist_output.json', 'w') as outfile:
             json.dump(res, outfile)
-        get_mnist_graphs(res, gans, distance_metrics)
+        get_mnist_graphs(res, models, distance_metrics)
     print("Le Fin.")
