@@ -2,13 +2,14 @@ import pandas as pd
 import torch
 import matplotlib.pyplot as plt
 import data
+from collections import defaultdict
 from models.gan_utils import preprocess
 plt.switch_backend('agg')
 
 
 def get_multivariate_results(gans, distributions, dimensions,
                             epochs, samples, hyperparameters):
-    res = {}
+    res = defaultdict()
     lr, dim, bsize = hyperparameters
     for key, gan in gans.items():
         res[key] = {}
@@ -18,19 +19,17 @@ def get_multivariate_results(gans, distributions, dimensions,
             gen = data.Distribution(dist, dimensions)
             train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
             if key == "vae":
-                model = gan.VAE(image_size=dimensions, hidden_dim=dim, z_dim=20)
-                trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
-                model, kl, ks, js, wd, ed, dl, gl = trainer.train(num_epochs=epochs)
+                continue
+                # model = gan.VAE(image_size=dimensions, hidden_dim=dim, z_dim=20)
+                # trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
+                # metrics = trainer.train(num_epochs=epochs)
             else:
                 model = gan.GAN(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
                 trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
                 metrics = trainer.train(num_epochs=epochs, G_lr=lr, D_lr=lr)
-            res[key][dist]["KL-Divergence"] = metrics['kl']
-            res[key][dist]["Jensen-Shannon"] = metrics['js']
-            res[key][dist]["Wasserstein-Distance"] = metrics['wd']
-            res[key][dist]["Energy-Distance"] = metrics['ed']
-            res[key][dist]["DLoss"] = metrics['dloss']
-            res[key][dist]["GLoss"] = metrics['gloss']
+
+            for metric, value in metrics.items():
+                res[key][dist][metric] = value
 
             # Hyperparams
             res[key][dist]["LR"] = lr
@@ -45,26 +44,25 @@ def get_mixture_results(gans, distributions, dimensions,
     for key, gan in gans.items():
         res[key] = {}
         print(key)
-        for dist_i in distributions[0]:  # Just normal and other mixture models at the moment
+        print(distributions)
+        for dist_i in distributions[0]: # Just normal and other mixture models at the moment
             res[key][dist_i] = {}
             for dist_j in distributions:
                 print(dist_j)
                 res[key][dist_i][dist_j] = {}
                 print(dist_i, dist_j, n_mixtures, dimensions, samples)
-                gen = data.MixtureDistribution(dist_i, dist_j, n_mixtures=n_mixtures, dim=dimensions)
-                train_iter, val_iter, test_iter = preprocess(gen, samples) # some error is occuring here
+                # TODO: mix_type='uniform', or mix_type = 'random' (should there be others?)
+                gen = data.MixtureDistribution(dist_type=dist_j, n_mixtures=n_mixtures, dim=dimensions)
+                train_iter, val_iter, test_iter = preprocess(gen, samples) # TODO: fix error (wrong dim?)
                 if key == "vae":
-                    model = vae.VAE(image_size=dimensions, hidden_dim=400, z_dim=20)
-                    if torch.cuda.is_available():
-                        model.cuda()
-                    trainer = vae.Trainer(train_iter, val_iter, test_iter)
-                    model, kl, ks, js, wd, ed = trainer.train(model, num_epochs=epochs)
+                    continue
+                    # model = vae.VAE(image_size=dimensions, hidden_dim=400, z_dim=20)
+                    # trainer = vae.Trainer(model, train_iter, val_iter, test_iter)
+                    # model, kl, ks, js, wd, ed = trainer.train(num_epochs=epochs)
                 else:
-                    model = value.GAN(image_size=dimensions, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
-                    if torch.cuda.is_available():
-                        model = model.cuda()
-                    trainer = gan.Trainer(train_iter, val_iter, test_iter)
-                    model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)
+                    model = gan.GAN(image_size=dimensions, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
+                    trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
+                    model, kl, ks, js, wd, ed = trainer.train(num_epochs=epochs)
                 res[key][dist_i][dist_j]["KL-Divergence"] = kl
                 res[key][dist_i][dist_j]["Jensen-Shannon"] = js
                 res[key][dist_i][dist_j]["Wasserstein-Distance"] = wd
@@ -81,16 +79,13 @@ def get_circle_results(gans, dimensions, epochs, samples):
         generator = data.CirclesDatasetGenerator(size=dimensions, n_circles=samples, random_colors=True, random_sizes=True, modes=20)
         train_iter, val_iter, test_iter = preprocess(generator, samples)
         if key == "vae":
-            model = vae.VAE(image_size=dimensions, hidden_dim=400, z_dim=20)
-            if torch.cuda.is_available():
-                model.cuda()
-            trainer = vae.Trainer(train_iter, val_iter, test_iter)
-            model, kl, ks, js, wd, ed = trainer.train(model, num_epochs=epochs)
+            continue
+            # model = vae.VAE(image_size=dimensions, hidden_dim=400, z_dim=20)
+            # trainer = vae.Trainer(model, train_iter, val_iter, test_iter)
+            # model, kl, ks, js, wd, ed = trainer.train(model, num_epochs=epochs)
         else:
             model = gan.GAN(image_size=dimensions, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
-            if torch.cuda.is_available():
-                model = model.cuda()
-            trainer = gan.Trainer(train_iter, val_iter, test_iter)
+            trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
             model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)
         res[key]["circle"]["KL-Divergence"] = kl
         res[key]["circle"]["Jensen-Shannon"] = js
@@ -108,16 +103,13 @@ def get_mnist_results(gans, epochs):
         res[key]["mnist"] = {}
         train_iter, val_iter, test_iter = get_data(2000)
         if key == "vae":
-            model = vae.VAE(image_size=784, hidden_dim=400, z_dim=20)
-            if torch.cuda.is_available():
-                model.cuda()
-            trainer = vae.Trainer(train_iter, val_iter, test_iter)
-            model, kl, ks, js, wd, ed = trainer.train(model, num_epochs=epochs)
+            continue
+            # model = vae.VAE(image_size=784, hidden_dim=400, z_dim=20)
+            # trainer = vae.Trainer(model, train_iter, val_iter, test_iter)
+            # model, kl, ks, js, wd, ed = trainer.train(model, num_epochs=epochs)
         else:
             model = gan.GAN(image_size=784, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
-            if torch.cuda.is_available():
-                model = model.cuda()
-            trainer = gan.Trainer(train_iter, val_iter, test_iter, mnist=True)
+            trainer = gan.Trainer(model, train_iter, val_iter, test_iter, mnist=True)
             model, kl, ks, js, wd, ed, dl, gl = trainer.train(model=model, num_epochs=epochs)
         res[key]["mnist"]["KL-Divergence"] = kl
         res[key]["mnist"]["Jensen-Shannon"] = js

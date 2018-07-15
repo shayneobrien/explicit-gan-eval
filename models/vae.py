@@ -158,7 +158,7 @@ class Trainer:
                 self.best_model = deepcopy(self.model)
                 best_val_loss = val_loss
 
-# TO DO: VAE metric logging
+            # TODO: VAE metric logging
             # noise = self.compute_noise(1000, model.z_dim) # images.shape[0] add sys.argv[1]
             # a = self.process_batch(self.train_iter)#.dataset.data_tensor
             # # if self.mnist is True:
@@ -167,7 +167,7 @@ class Trainer:
             # a = a.data.numpy()
             # b = b.data.numpy()
             # metrics_dict = get_metrics(a, b)
-
+            #
             # for key, value in metrics_dict.items():
             #     self.metrics[key].append(value)
             # self.metrics['gloss'] = self.Glosses

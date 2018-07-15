@@ -49,7 +49,7 @@ def preprocess(generator, samples, BATCH_SIZE=100):
     return train_iter, val_iter, test_iter
 
 
-def get_metrics(A, B):
+def compute_divergences(A, B):
     """ Compute divergence metrics (Jensen Shannon, Kullback-Liebler,
     Wasserstein Distance, Energy Distance) between predicted distribution A
     and true distribution B """
@@ -68,8 +68,26 @@ def get_metrics(A, B):
 
     # Compute metrics
     kl = entropy(pk=A, qk=B).sum()/A.shape[1]
-    jshannon = .5*(entropy(pk=A, qk=m)+entropy(pk=B, qk=m)).sum()/A.shape[1]
+    js = .5*(entropy(pk=A, qk=m)+entropy(pk=B, qk=m)).sum()/A.shape[1]
     wd = sum([wasserstein_distance(A[:,i], B[:,i]) for i in range(A.shape[1])])
     ed = sum([energy_distance(A[:,i], B[:,i]) for i in range(A.shape[1])])
 
-    return {"kl": kl, "wd": wd, "js": jshannon, "ed": ed}
+    divergences = {"KL-Divergence": kl,
+                    "Jensen-Shannon": js,
+                    "Wasserstein-Distance": wd,
+                    "Energy-Distance": ed,}
+
+    return divergences
+
+def get_metrics(trainer):
+    """ Generate samples, compute divergences, get losses """
+    noise = trainer.compute_noise(1000, trainer.model.z_dim)
+    a = trainer.process_batch(trainer.train_iter)
+    b = trainer.model.G(noise)
+    a = a.data.numpy()
+    b = b.data.numpy()
+    metrics = compute_divergences(a, b)
+    metrics['GLoss'] = trainer.Glosses
+    metrics['DLoss'] = trainer.Dlosses
+
+    return metrics

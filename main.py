@@ -20,7 +20,8 @@ if __name__ == "__main__":
         (3) number of epochs: 10, 100, 1000, etc. \n
         (4) number of samples: 1000, 10,000, 100,000, etc. \n
         (5) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
-        e.g. python main.py multivariate 200 15 10000
+        e.g. python main.py multivariate 200 15 10000 \n
+             python main.py mixture 3, 5, 10, 10
         """)
     data_type = sys.argv[1]
     dimensions = int(sys.argv[2])
@@ -39,16 +40,18 @@ if __name__ == "__main__":
         print("adding n_mixtures")
         n_mixtures = int(sys.argv[5])
     print("python main.py {0} {1} {2}".format(dimensions, epochs, samples))
-    distributions = ['normal', 'beta', 'exponential', 'gamma', 'gumbel', 'laplace']
+    distributions = ['normal', 'beta', 'exponential',
+                     'gamma', 'gumbel', 'laplace']
 
     gans = {
-        # "wgan": w_gan,
+        "wgan": w_gan,
         # "wgpgan": w_gp_gan,
         # "nsgan": ns_gan,
         # "lsgan": ls_gan,
         # "mmgan": mm_gan,
         # "dragan": dra_gan,
-        "vae": vae
+        # "began": be_gan,
+        # "vae": vae
     }
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
     if data_type == "multivariate":

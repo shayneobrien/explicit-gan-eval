@@ -179,18 +179,9 @@ class Trainer:
             # Save progress
             self.Glosses.extend(G_losses)
             self.Dlosses.extend(D_losses)
-            noise = self.compute_noise(1000, self.model.z_dim)
-            a = self.process_batch(self.train_iter)
-            b = self.model.G(noise)
-            a = a.data.numpy()
-            b = b.data.numpy()
-            metrics_dict = get_metrics(a, b)
 
-            for key, value in metrics_dict.items():
-                self.metrics[key].append(value)
-            self.metrics['gloss'] = self.Glosses
-            self.metrics['dloss'] = self.Dlosses
-            print(self.metrics)
+            # Get metrics
+            self.metrics = get_metrics(self)
 
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
@@ -202,6 +193,7 @@ class Trainer:
 
             if self.viz:
                 plt.show()
+                
             return self.metrics
 
     def train_D(self, images):

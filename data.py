@@ -99,6 +99,10 @@ class Distribution:
 
                     samples.append(np.expand_dims(np.random.laplace(self.params['loc'], self.params['scale']), axis=0))
 
+                else:
+
+                    raise AttributeError('Invalid distribution type.')
+
             return np.concatenate(samples, axis=0)
 
     def generate_high_dimensional_samples(self, n_samples=10000, big_dim=100):
@@ -156,22 +160,20 @@ class Distribution:
 
 class MixtureDistribution:
 
-    def __init__(self, dist_type='normal', mix_type='uniform', n_mixtures = 1, dim = 1):
+    def __init__(self, dist_type='normal', mix_type='uniform', n_mixtures=1, dim=1):
 
         self.dist_type = dist_type
         self.mix_type = mix_type
-        self.dists = []
+        self.dists = [Distribution(self.dist_type, dim) for _ in range(n_mixtures)]
         self.sampling_prob = []
-
-        for i in range(n_mixtures):
-
-            self.dists.append(Distribution(self.dist_type, dim))
 
         if mix_type == 'uniform':
 
             self.sampling_prob = np.squeeze(np.ones((n_mixtures, 1))/n_mixtures)
 
         else:
+            # TODO:
+            # Then it's random? Or what?
 
             t = np.random.rand(n_mixtures, 1)
             self.sampling_prob = np.squeeze(t/np.linalg.norm(t, ord=1))
