@@ -78,6 +78,7 @@ class Model(nn.Module):
     """
     def __init__(self, image_size=784, hidden_dim=400, z_dim=20):
         super().__init__()
+        self.__dict__.update(locals())
 
         self.encoder = Encoder(image_size = image_size, hidden_dim = hidden_dim, z_dim = z_dim)
         self.decoder = Decoder(z_dim = z_dim, hidden_dim = hidden_dim, image_size = image_size)
@@ -127,6 +128,7 @@ class Trainer:
 
         # Adam optimizer, sigmoid cross entropy for reconstructing binary MNIST
         optimizer = torch.optim.Adam(params=[p for p in self.model.parameters() if p.requires_grad], lr=lr, weight_decay=weight_decay)
+        self.__dict__.update(locals())
 
         # Begin training
         for epoch in tqdm(range(1, num_epochs+1)):

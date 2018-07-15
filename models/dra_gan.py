@@ -70,10 +70,10 @@ class Model(nn.Module):
     def __init__(self, image_size, hidden_dim, z_dim, output_dim=1):
         super().__init__()
 
+        self.__dict__.update(locals())
+
         self.G = Generator(image_size, hidden_dim, z_dim)
         self.D = Discriminator(image_size, hidden_dim, output_dim)
-
-        self.z_dim = z_dim
 
 
 class Trainer:
@@ -105,6 +105,7 @@ class Trainer:
         # Initialize optimizers
         G_optimizer = torch.optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=lr)
         D_optimizer = torch.optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=lr)
+        self.__dict__.update(locals())
 
         # Approximate steps/epoch given D_steps per epoch --> roughly train in the same way as if D_step (1) == G_step (1)
         epoch_steps = int(np.ceil(len(self.train_iter) / (D_steps)))

@@ -63,7 +63,7 @@ def compute_divergences(A, B):
     A = get_pdf(A, iqr, r, samples)
     B = get_pdf(B, iqr, r, samples)
 
-    # TODO: Matt what does this variable stand for?
+    # TODO: Matt what does this variable stand for again?
     m = (np.array(A)+np.array(B))/2
 
     # Compute metrics
@@ -90,6 +90,9 @@ def gan_metrics(trainer):
     metrics = compute_divergences(A, B)
     metrics['GLoss'] = trainer.Glosses
     metrics['DLoss'] = trainer.Dlosses
+    metrics["LR"] = trainer.lr
+    metrics["HDIM"] = trainer.model.hidden_dim
+    metrics["BSIZE"] = trainer.train_iter.batch_size
 
     trainer.model.train()
 
@@ -105,5 +108,8 @@ def vae_metrics(trainer, output, batch):
     metrics = compute_divergences(A, B)
     metrics['RLoss'] = trainer.Rlosses
     metrics['KLDiv'] = trainer.KLdivs
+    metrics["LR"] = trainer.lr
+    metrics["HDIM"] = trainer.model.hidden_dim
+    metrics["BSIZE"] = trainer.train_iter.batch_size
 
     return metrics

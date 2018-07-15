@@ -14,6 +14,10 @@ def get_multivariate_results(gans, distributions, dimensions,
     lr, dim, bsize = hyperparameters
     for model_name, module in gans.items():
         for dist in distributions:
+            # TODO: fix Gamma
+            if dist == 'gamma':
+                continue
+            print('\n', model_name, dist)
             gen = data.Distribution(dist, dimensions)
             train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
             model = module.Model(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
@@ -22,11 +26,6 @@ def get_multivariate_results(gans, distributions, dimensions,
 
             for metric, value in metrics.items():
                 res[model_name][dist][metric] = value
-
-            # Hyperparams
-            res[model_name][dist]["LR"] = lr
-            res[model_name][dist]["HDIM"] = dim
-            res[model_name][dist]["BSIZE"] = bsize
 
     return res
 
