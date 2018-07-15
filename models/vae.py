@@ -154,6 +154,7 @@ class Trainer:
 
             # Save progress
             self.Rlosses.extend(epoch_recon)
+            print(epoch_recon)
             self.KLdivs.extend(epoch_kl)
 
             # Test the model on the validation set
@@ -166,7 +167,6 @@ class Trainer:
 
             # Get metrics
             self.metrics = vae_metrics(self, output, batch)
-            print(self.metrics)
 
             # Progress logging
             print ("Epoch[%d/%d], Total Loss: %.4f, Reconst Loss: %.4f, KL Div: %.7f, Val Loss: %.4f"
@@ -177,7 +177,7 @@ class Trainer:
                 self.reconstruct_images(self.debugging_image, epoch)
                 plt.show()
 
-            return self.metrics
+        return self.metrics
 
     def compute_batch(self, batch):
         """ Compute loss for a batch of examples """

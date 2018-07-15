@@ -44,21 +44,23 @@ if __name__ == "__main__":
                      'gamma', 'gumbel', 'laplace']
 
     gans = {
-        # "wgan": w_gan,
-        # "wgpgan": w_gp_gan,
+        "wgan": w_gan,
+        "wgpgan": w_gp_gan,
         # "nsgan": ns_gan,
         # "lsgan": ls_gan,
-        # "mmgan": mm_gan,
+        "mmgan": mm_gan,
         # "dragan": dra_gan,
         # "began": be_gan,
-        "vae": vae,
+        # "vae": vae,
     }
-    distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
+    distance_metrics = ["KL-Divergence", "Jensen-Shannon",
+                        "Wasserstein-Distance", "Energy-Distance"]
     if data_type == "multivariate":
         for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
             lr, dim, bsize = hyperparam
             print(hyperparam)
-            res = get_multivariate_results(gans, distributions, dimensions, epochs, samples, hyperparam)
+            res = get_multivariate_results(gans, distributions, dimensions,
+                                            epochs, samples, hyperparam)
             with open('hypertuning/data{0}.json'.format(str(hyperparam)), 'w') as outfile:
                 json.dump(res, outfile)
         # get_multivariate_graphs(res, gans, distance_metrics)

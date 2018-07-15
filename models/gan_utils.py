@@ -23,7 +23,7 @@ def get_pdf(data, iqr, r, samples):
     """ Compute optimally binned probability distribution function  """
     x = []
     bin_width = 2*iqr/np.cbrt(samples)
-    bins = int(round(r/bin_width,0))
+    bins = int(round(r/bin_width, 0))
     for i in range(data.shape[1]):
         x.append(list(np.histogram(data[:, i], bins=bins, density=True)[0]))
     res = np.array(x).T
@@ -63,7 +63,7 @@ def compute_divergences(A, B):
     A = get_pdf(A, iqr, r, samples)
     B = get_pdf(B, iqr, r, samples)
 
-    # TODO: Matt what is this variable?
+    # TODO: Matt what does this variable stand for?
     m = (np.array(A)+np.array(B))/2
 
     # Compute metrics

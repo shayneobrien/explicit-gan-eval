@@ -166,7 +166,7 @@ class Trainer:
             if self.viz:
                 plt.show()
 
-            return self.metrics
+        return self.metrics
 
     def train_D(self, images, LAMBDA=10):
         """ Run 1 step of training for discriminator
