@@ -20,7 +20,6 @@ up on "Karl Pearson's Crabs." The basic idea was that a scientist collected data
 noticed that the distribution was non-normal, and Pearson postulated it was because there were likely
 more than one population of crabs studied. This would've been a latent variable, since the data colllector
 did not know.
-
 """
 
 import torch, torchvision
@@ -283,7 +282,7 @@ class Viz:
 
         # Initialize and train a VAE with size two dimension latent space
         model = VAE(image_size=784, hidden_dim=400, z_dim=2)
-        trainer = VAETrainer(model, train_iter, val_iter, test_iter)
+        trainer = Trainer(model, train_iter, val_iter, test_iter)
         trainer.train(num_epochs)
         model = trainer.best_model
 
@@ -335,13 +334,13 @@ if __name__ == "__main__":
     # Load in binarized MNIST data, separate into data loaders
     train_iter, val_iter, test_iter = load_mnist()
     model = VAE(image_size=784,
-            hidden_dim=400,
-            z_dim=20)
+                hidden_dim=400,
+                z_dim=20)
     trainer = Trainer(model=model,
-                         train_iter=train_iter,
-                         val_iter=val_iter,
-                         test_iter=test_iter,
-                         viz=False)
+                      train_iter=train_iter,
+                      val_iter=val_iter,
+                      test_iter=test_iter,
+                      viz=False)
     trainer.train(num_epochs=5,
               lr=1e-3,
               weight_decay=1e-5)

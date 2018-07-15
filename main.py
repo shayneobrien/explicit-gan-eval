@@ -10,7 +10,7 @@ from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_
 
 import data
 from models import w_gan, w_gp_gan, ns_gan, mm_gan, ls_gan, dra_gan, be_gan, vae
-from metrics import *
+from utils import *
 
 if __name__ == "__main__":
     print("""
@@ -42,13 +42,13 @@ if __name__ == "__main__":
     distributions = ['normal', 'beta', 'exponential', 'gamma', 'gumbel', 'laplace']
 
     gans = {
-        "wgan": w_gan,
-        "wgpgan": w_gp_gan,
-        "nsgan": ns_gan,
-        "lsgan": ls_gan,
-        "mmgan": mm_gan,
-        "dragan": dra_gan
-        # "vae": vae
+        # "wgan": w_gan,
+        # "wgpgan": w_gp_gan,
+        # "nsgan": ns_gan,
+        # "lsgan": ls_gan,
+        # "mmgan": mm_gan,
+        # "dragan": dra_gan,
+        "vae": vae
     }
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
     if data_type == "multivariate":

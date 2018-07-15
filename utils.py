@@ -1,7 +1,7 @@
 import pandas as pd
 import torch
 import matplotlib.pyplot as plt
-import models, data
+import data
 from models.gan_utils import preprocess
 plt.switch_backend('agg')
 
@@ -18,15 +18,11 @@ def get_multivariate_results(gans, distributions, dimensions,
             gen = data.Distribution(dist, dimensions)
             train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
             if key == "vae":
-                model = vae.VAE(image_size=dimensions, hidden_dim=dim, z_dim=20)
-                if torch.cuda.is_available():
-                    model.cuda()
-                trainer = vae.Trainer(train_iter, val_iter, test_iter)
-                model, kl, ks, js, wd, ed, dl, gl = trainer.train(model, num_epochs=epochs)
+                model = gan.VAE(image_size=dimensions, hidden_dim=dim, z_dim=20)
+                trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
+                model, kl, ks, js, wd, ed, dl, gl = trainer.train(num_epochs=epochs)
             else:
                 model = gan.GAN(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
-                if torch.cuda.is_available():
-                    model = model.cuda()
                 trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
                 metrics = trainer.train(num_epochs=epochs, G_lr=lr, D_lr=lr)
             res[key][dist]["KL-Divergence"] = metrics['kl']
