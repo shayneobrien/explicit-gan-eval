@@ -10,7 +10,7 @@ plt.switch_backend('agg')
 
 def get_multivariate_results(models, distributions, dimensions,
                              epochs, samples, hyperparameters):
-    res = defaultdict(partial(defaultdict, defaultdict))
+    results = nested_pickle_dict()
     for model_name, module in models.items():
         for dist in distributions:
             # TODO: fix Gamma
@@ -23,20 +23,19 @@ def get_multivariate_results(models, distributions, dimensions,
                                     gen, samples, dimensions)
 
             for metric, value in metrics.items():
-                res[model_name][dist][metric] = value
+                results[model_name][dist][metric] = value
 
-    return res
+    return results
 
 
 def get_mixture_results(models, distributions, dimensions,
                         epochs, samples, n_mixtures, hyperparameters):
-    res = defaultdict(partial(defaultdict, defaultdict))
-    # lr, dim, bsize = hyperparameters
+    results = nested_pickle_dict()
     for model_name, module in models.items():
-        for dist_i in distributions[0]: # Just normal and other mixture models at the moment
+        for dist_i in distributions[0:1]: # Just normal and other mixture models at the moment
             for dist_j in distributions:
                 print(dist_i, dist_j, n_mixtures, dimensions, samples)
-                # TODO: mix_type='uniform', or mix_type = 'random' (should there be others?)
+                # TODO: Fix mix_type='uniform', or mix_type = 'random'
                 gen = data.MixtureDistribution(dist_type=dist_i, mix_type=dist_j,
                                                 n_mixtures=n_mixtures, dim=dimensions)
 
@@ -44,9 +43,29 @@ def get_mixture_results(models, distributions, dimensions,
                                         gen, samples, dimensions)
 
                 for metric, value in metrics.items():
-                    res[model_name][dist][metric] = value
+                    results[model_name][dist_i][dist_j][metric] = value
 
-    return res
+    return results
+
+
+def model_results(module, epochs, hyperparameters, gen, samples, dimensions):
+    """ Train a model, get metrics dictionary out """
+    # Unpack hyperparameters, initialize results dictionary
+    lr, dim, bsize = hyperparameters
+
+    # Create data iterators
+    train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
+
+    # Model, trainer, metrics
+    model = module.Model(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
+    trainer = module.Trainer(model, train_iter, val_iter, test_iter)
+    metrics = trainer.train(num_epochs=epochs, lr=lr)
+
+    return metrics
+
+def nested_pickle_dict():
+    """ defaultdict for nested dictionaries and it can be pickled """
+    return defaultdict(nested_pickle_dict)
 
 
 # def get_circle_results(gans, dimensions, epochs, samples):
@@ -98,72 +117,57 @@ def get_mixture_results(models, distributions, dimensions,
 #         res[key]["mnist"]["GLoss"] = gl
 #     return res
 
-
-def get_multivariate_graphs(res, gans, distance_metrics):
-    for gan, value in gans.items():
-        normal = pd.DataFrame(res[gan]['normal'])
-        beta = pd.DataFrame(res[gan]['beta'])
-        exponential = pd.DataFrame(res[gan]['exponential'])
-        gamma = pd.DataFrame(res[gan]['gamma'])
-        gumbel = pd.DataFrame(res[gan]['gumbel'])
-        for dist in distance_metrics:
-            plt.plot(range(len(normal[dist])), normal[dist], label="Normal")
-            plt.plot(range(len(normal[dist])), beta[dist], label="Beta")
-            plt.plot(range(len(normal[dist])), exponential[dist], label="Exponential")
-            plt.plot(range(len(normal[dist])), gamma[dist], label="Gamma")
-            plt.plot(range(len(normal[dist])), gumbel[dist], label="Gumbel")
-            plt.xlabel("Epoch")
-            plt.ylabel(dist)
-            plt.title("{0}: {1}".format(gan.upper(), dist))
-            plt.legend()
-            plt.savefig('graphs/{0}_{1}.png'.format(gan, dist), dpi=100)
-            plt.clf()
-
-
-def get_mixture_graphs(res, gans_index, distance_metrics):
-    for gan, value in gans.items():
-        normal_normal = pd.DataFrame(res[gan]['normal']['normal'])
-        normal_beta = pd.DataFrame(res[gan]['normal']['beta'])
-        normal_exponential = pd.DataFrame(res[gan]['normal']['exponential'])
-        normal_gamma = pd.DataFrame(res[gan]['normal']['gamma'])
-        normal_gumbel = pd.DataFrame(res[gan]['normal']['gumbel'])
-        for dist in distance_metrics:
-            plt.plot(range(epochs), normal_normal[dist], label="Normal")
-            plt.plot(range(epochs), normal_beta[dist], label="Beta")
-            plt.plot(range(epochs), normal_exponential[dist], label="Exponential")
-            plt.plot(range(epochs), normal_gamma[dist], label="Gamma")
-            plt.plot(range(epochs), normal_gumbel[dist], label="Gumbel")
-            plt.xlabel("Epoch")
-            plt.ylabel(dist)
-            plt.title("{0}: {1}".format(gan.upper(), dist))
-            plt.legend()
-            plt.savefig('graphs/{0}_{1}.png'.format(gan, dist), dpi=100)
-            plt.clf()
-
-
-def get_mnist_graphs(res, gans_index, distance_metrics):
-    for gan, value in gans.items():
-        normal = pd.DataFrame(res[gan]['mnist'])
-        for dist in distance_metrics:
-            plt.plot(range(len(normal['mnist'])), normal['mnist'], label="MNIST")
-            plt.xlabel("Epoch")
-            plt.ylabel(dist)
-            plt.title("{0}: {1}".format(gan.upper(), dist))
-            plt.legend()
-            plt.savefig('graphs/{0}_{1}.png'.format(gan, dist), dpi=100)
-            plt.clf()
-
-def model_results(module, epochs, hyperparameters, gen, samples, dimensions):
-    """ Train a model, get metrics dictionary out """
-    # Unpack hyperparameters, initialize results dictionary
-    lr, dim, bsize = hyperparameters
-
-    # Create data iterators
-    train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
-
-    # Model, trainer, metrics
-    model = module.Model(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
-    trainer = module.Trainer(model, train_iter, val_iter, test_iter)
-    metrics = trainer.train(num_epochs=epochs, lr=lr)
-
-    return metrics
+#
+# def get_multivariate_graphs(res, gans, distance_metrics):
+#     for gan, value in gans.items():
+#         normal = pd.DataFrame(res[gan]['normal'])
+#         beta = pd.DataFrame(res[gan]['beta'])
+#         exponential = pd.DataFrame(res[gan]['exponential'])
+#         gamma = pd.DataFrame(res[gan]['gamma'])
+#         gumbel = pd.DataFrame(res[gan]['gumbel'])
+#         for dist in distance_metrics:
+#             plt.plot(range(len(normal[dist])), normal[dist], label="Normal")
+#             plt.plot(range(len(normal[dist])), beta[dist], label="Beta")
+#             plt.plot(range(len(normal[dist])), exponential[dist], label="Exponential")
+#             plt.plot(range(len(normal[dist])), gamma[dist], label="Gamma")
+#             plt.plot(range(len(normal[dist])), gumbel[dist], label="Gumbel")
+#             plt.xlabel("Epoch")
+#             plt.ylabel(dist)
+#             plt.title("{0}: {1}".format(gan.upper(), dist))
+#             plt.legend()
+#             plt.savefig('graphs/{0}_{1}.png'.format(gan, dist), dpi=100)
+#             plt.clf()
+#
+#
+# def get_mixture_graphs(res, gans_index, distance_metrics):
+#     for gan, value in gans.items():
+#         normal_normal = pd.DataFrame(res[gan]['normal']['normal'])
+#         normal_beta = pd.DataFrame(res[gan]['normal']['beta'])
+#         normal_exponential = pd.DataFrame(res[gan]['normal']['exponential'])
+#         normal_gamma = pd.DataFrame(res[gan]['normal']['gamma'])
+#         normal_gumbel = pd.DataFrame(res[gan]['normal']['gumbel'])
+#         for dist in distance_metrics:
+#             plt.plot(range(epochs), normal_normal[dist], label="Normal")
+#             plt.plot(range(epochs), normal_beta[dist], label="Beta")
+#             plt.plot(range(epochs), normal_exponential[dist], label="Exponential")
+#             plt.plot(range(epochs), normal_gamma[dist], label="Gamma")
+#             plt.plot(range(epochs), normal_gumbel[dist], label="Gumbel")
+#             plt.xlabel("Epoch")
+#             plt.ylabel(dist)
+#             plt.title("{0}: {1}".format(gan.upper(), dist))
+#             plt.legend()
+#             plt.savefig('graphs/{0}_{1}.png'.format(gan, dist), dpi=100)
+#             plt.clf()
+#
+#
+# def get_mnist_graphs(res, gans_index, distance_metrics):
+#     for gan, value in gans.items():
+#         normal = pd.DataFrame(res[gan]['mnist'])
+#         for dist in distance_metrics:
+#             plt.plot(range(len(normal['mnist'])), normal['mnist'], label="MNIST")
+#             plt.xlabel("Epoch")
+#             plt.ylabel(dist)
+#             plt.title("{0}: {1}".format(gan.upper(), dist))
+#             plt.legend()
+#             plt.savefig('graphs/{0}_{1}.png'.format(gan, dist), dpi=100)
+#             plt.clf()

@@ -27,22 +27,21 @@ if __name__ == "__main__":
     samples = int(sys.argv[4])
 
     # Make output directories if they don't exist yet
-    for type in ['multivariate', 'mixtures']:
+    for type in ['multivariate', 'mixture', 'circles', 'mnist']:
         if not os.path.exists('hypertuning/' + type + '/'):
             os.makedirs('hypertuning/' + type + '/')
         else:
             continue
 
-    # hyperparam = [5e-3, 256, 5, 10]
     learning_rates = [1e-3, 5e-4, 1e-4, 5e-5]
     hidden_dims = [16, 32, 64, 128, 256]
     BATCH_SIZE = [100, 150, 200, 250]
     if data_type == "mixture":
         print("adding n_mixtures")
         n_mixtures = int(sys.argv[5])
+
     print("python main.py {0} {1} {2}".format(dimensions, epochs, samples))
-    distributions = ['normal', 'beta', 'exponential',
-                     'gamma', 'gumbel', 'laplace']
+    distributions = ['normal', 'beta', 'exponential', 'gamma', 'gumbel', 'laplace']
 
     models = {
         "wgan": w_gan,
@@ -56,26 +55,25 @@ if __name__ == "__main__":
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance",]
-
-    if data_type == "multivariate":
-        for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
-            res = get_multivariate_results(models, distributions, dimensions,
+    for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
+        out_path = 'hypertuning/' + data_type + '/data{0}.json'.format(str(hyperparam))
+        if data_type == "multivariate":
+            results = get_multivariate_results(models, distributions, dimensions,
                                             epochs, samples, hyperparam)
-            with open('hypertuning/data{0}.json'.format(str(hyperparam)), 'w') as outfile:
-                json.dump(res, outfile)
         # get_multivariate_graphs(res, models, distance_metrics)
-    elif data_type == "mixture":
-        for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
-            res = get_mixture_results(models, distributions, dimensions,
+        elif data_type == "mixture":
+            # TODO: output results
+            results = get_mixture_results(models, distributions, dimensions,
                                         epochs, samples, n_mixtures, hyperparam)
-        # get_mixture_graphs(res, models, distance_metrics)
-    elif data_type == "circles":
-        # TODO: Graphing circles
-        res = get_circle_results(models, dimensions, epochs, samples)
-    elif data_type == "mnist":
-        # TODO: Graphing MNIST (see VAE code)
-        res = get_mnist_results(models, epochs)
-        with open('mnist_output.json', 'w') as outfile:
-            json.dump(res, outfile)
-        get_mnist_graphs(res, models, distance_metrics)
+                # get_mixture_graphs(res, models, distance_metrics)
+        # elif data_type == "circles":
+        #     # TODO: Graphing circles
+        #     results = get_circle_results(models, dimensions, epochs, samples)
+        # elif data_type == "mnist":
+        #     # TODO: Graphing MNIST (see VAE code)
+        #     results = get_mnist_results(models, epochs)
+            # get_mnist_graphs(res, models, distance_metrics)
+
+        with open(out_path, 'w') as outfile:
+            json.dump(results, outfile)
     print("Le Fin.")

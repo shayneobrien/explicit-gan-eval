@@ -172,8 +172,7 @@ class MixtureDistribution:
             self.sampling_prob = np.squeeze(np.ones((n_mixtures, 1))/n_mixtures)
 
         else:
-            # TODO:
-            # Then it's random? Or what?
+            # TODO: Then it's random? Or what?
 
             t = np.random.rand(n_mixtures, 1)
             self.sampling_prob = np.squeeze(t/np.linalg.norm(t, ord=1))
