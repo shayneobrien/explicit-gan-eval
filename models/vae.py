@@ -46,7 +46,7 @@ class Encoder(nn.Module):
     outputs is the mean and std of the latent representation z pre-reparametrization
     """
     def __init__(self, image_size, hidden_dim, z_dim):
-        super(Encoder, self).__init__()
+        super().__init__()
 
         self.linear = nn.Linear(image_size, hidden_dim)
         self.mu = nn.Linear(hidden_dim, z_dim)
@@ -62,7 +62,7 @@ class Decoder(nn.Module):
     """ MLP decoder for VAE. Input is a reparametrized latent representation,
     output is reconstructed image """
     def __init__(self, z_dim, hidden_dim, image_size):
-        super(Decoder, self).__init__()
+        super().__init__()
 
         self.linear = nn.Linear(z_dim, hidden_dim)
         self.recon = nn.Linear(hidden_dim, image_size)
@@ -73,11 +73,11 @@ class Decoder(nn.Module):
         return reconstructed
 
 
-class VAE(nn.Module):
+class Model(nn.Module):
     """ VAE super class to reconstruct an image. Contains reparametrization method
     """
     def __init__(self, image_size=784, hidden_dim=400, z_dim=20):
-        super(VAE, self).__init__()
+        super().__init__()
 
         self.encoder = Encoder(image_size = image_size, hidden_dim = hidden_dim, z_dim = z_dim)
         self.decoder = Decoder(z_dim = z_dim, hidden_dim = hidden_dim, image_size = image_size)
@@ -278,7 +278,7 @@ class Viz:
         """ Viz method 3: train a VAE with 2 latent variables, compare variational means """
 
         # Initialize and train a VAE with size two dimension latent space
-        model = VAE(image_size=784, hidden_dim=400, z_dim=2)
+        model = Model(image_size=784, hidden_dim=400, z_dim=2)
         trainer = Trainer(model, train_iter, val_iter, test_iter)
         trainer.train(num_epochs)
         model = trainer.best_model
@@ -330,7 +330,7 @@ class Viz:
 if __name__ == "__main__":
     # Load in binarized MNIST data, separate into data loaders
     train_iter, val_iter, test_iter = load_mnist()
-    model = VAE(image_size=784,
+    model = Model(image_size=784,
                 hidden_dim=400,
                 z_dim=20)
     trainer = Trainer(model=model,

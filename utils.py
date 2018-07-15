@@ -2,6 +2,7 @@ import pandas as pd
 import torch
 import matplotlib.pyplot as plt
 import data
+from functools import partial
 from collections import defaultdict
 from models.gan_utils import preprocess
 plt.switch_backend('agg')
@@ -9,27 +10,15 @@ plt.switch_backend('agg')
 
 def get_multivariate_results(gans, distributions, dimensions,
                             epochs, samples, hyperparameters):
-    res = defaultdict()
+    res = defaultdict(partial(defaultdict, defaultdict))
     lr, dim, bsize = hyperparameters
     for model_name, module in gans.items():
-        res[model_name] = {}
-        print(model_name)
         for dist in distributions:
-            print(dist)
-            res[model_name][dist] = {}
             gen = data.Distribution(dist, dimensions)
             train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
-            if model_name == "vae":
-                # TODO: Why is Gamma breaking BCE?
-                if dist == 'gamma':
-                    continue
-                model = module.VAE(image_size=dimensions, hidden_dim=dim, z_dim=20)
-                trainer = module.Trainer(model, train_iter, val_iter, test_iter)
-                metrics = trainer.train(num_epochs=epochs)
-            else:
-                model = module.GAN(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
-                trainer = module.Trainer(model, train_iter, val_iter, test_iter)
-                metrics = trainer.train(num_epochs=epochs, G_lr=lr, D_lr=lr)
+            model = module.Model(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
+            trainer = module.Trainer(model, train_iter, val_iter, test_iter)
+            metrics = trainer.train(num_epochs=epochs, lr=lr)
 
             for metric, value in metrics.items():
                 res[model_name][dist][metric] = value
@@ -38,6 +27,7 @@ def get_multivariate_results(gans, distributions, dimensions,
             res[model_name][dist]["LR"] = lr
             res[model_name][dist]["HDIM"] = dim
             res[model_name][dist]["BSIZE"] = bsize
+
     return res
 
 

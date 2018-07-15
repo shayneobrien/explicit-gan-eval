@@ -66,7 +66,7 @@ class Discriminator(nn.Module):
         return discrimination
 
 
-class GAN(nn.Module):
+class Model(nn.Module):
     """ Super class to contain both Discriminator (D) and Generator (G)
     """
     def __init__(self, image_size, hidden_dim, z_dim, output_dim=1):
@@ -95,20 +95,19 @@ class Trainer:
         self.viz = viz
         self.metrics = defaultdict(list)
 
-    def train(self, num_epochs, G_lr=5e-5, D_lr=5e-5, D_steps=5, clip=0.01):
+    def train(self, num_epochs, lr=5e-5, D_steps=5, clip=0.01):
         """ Train a Wasserstein GAN
             Logs progress using G loss, D loss, G(x), D(G(x)), visualizations of Generator output.
 
         Inputs:
             num_epochs: int, number of epochs to train for
-            G_lr: float, learning rate for generator's RMProp optimizer (default 5e-5)
-            D_lr: float, learning rate for discriminator's RMSProp optimizer (default 5e-5)
+            lr: float, learning rate for RMSProp optimizers (default 5e-5)
             D_steps: int, training step ratio for how often to train D compared to G (default 5)
             clip: float, bound for parameters [-c, c] to crudely ensure K-Lipschitz (default 0.01)
         """
         # Initialize optimizers
-        G_optimizer = torch.optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=G_lr)
-        D_optimizer = torch.optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=D_lr)
+        G_optimizer = torch.optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=lr)
+        D_optimizer = torch.optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=lr)
 
         # Approximate steps/epoch given D_steps per epoch --> roughly train in the same way as if D_step (1) == G_step (1)
         epoch_steps = int(np.ceil(len(self.train_iter) / (D_steps)))
@@ -295,7 +294,7 @@ class Trainer:
 if __name__ == "__main__":
     # Load in binarized MNIST data, separate into data loaders
     train_iter, val_iter, test_iter = load_mnist()
-    model = GAN(image_size=784,
+    model = Model(image_size=784,
                 hidden_dim=256,
                 z_dim=128)
     trainer = Trainer(model=model,

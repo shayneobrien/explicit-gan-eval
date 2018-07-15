@@ -46,12 +46,12 @@ if __name__ == "__main__":
     gans = {
         "wgan": w_gan,
         "wgpgan": w_gp_gan,
-        # "nsgan": ns_gan,
-        # "lsgan": ls_gan,
+        "nsgan": ns_gan,
+        "lsgan": ls_gan,
         "mmgan": mm_gan,
-        # "dragan": dra_gan,
+        "dragan": dra_gan,
+        "vae": vae,
         # "began": be_gan,
-        # "vae": vae,
     }
     distance_metrics = ["KL-Divergence", "Jensen-Shannon",
                         "Wasserstein-Distance", "Energy-Distance"]
