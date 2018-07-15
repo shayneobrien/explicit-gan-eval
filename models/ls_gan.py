@@ -156,7 +156,7 @@ class Trainer:
             self.Dlosses.extend(D_losses)
 
             # Get metrics
-            self.metrics = get_metrics(self)
+            self.metrics = gan_metrics(self)
 
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
@@ -168,7 +168,7 @@ class Trainer:
 
             if self.viz:
                 plt.show()
-                
+
             return self.metrics
 
     def train_D(self, images, a=0, b=1):

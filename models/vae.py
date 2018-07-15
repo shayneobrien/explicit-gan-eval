@@ -109,6 +109,8 @@ class Trainer:
         self.viz = viz
         self.metrics = defaultdict(list)
 
+        self.Rlosses = []
+        self.KLdivs = []
 
     def train(self, num_epochs, lr=1e-3, weight_decay=1e-5):
         """ Train a Variational Autoencoder
@@ -138,7 +140,7 @@ class Trainer:
                 optimizer.zero_grad()
 
                 # Compute reconstruction loss, Kullback-Leibler divergence for a batch
-                recon_loss, kl_diverge = self.compute_batch(batch)
+                output, recon_loss, kl_diverge = self.compute_batch(batch)
                 batch_loss = recon_loss + kl_diverge # ELBO
 
                 # Update parameters
@@ -150,6 +152,10 @@ class Trainer:
                 epoch_recon.append(recon_loss.item())
                 epoch_kl.append(kl_diverge.item())
 
+            # Save progress
+            self.Rlosses.extend(epoch_recon)
+            self.KLdivs.extend(epoch_kl)
+
             # Test the model on the validation set
             val_loss = self.evaluate(self.val_iter)
 
@@ -158,20 +164,9 @@ class Trainer:
                 self.best_model = deepcopy(self.model)
                 best_val_loss = val_loss
 
-            # TODO: VAE metric logging
-            # noise = self.compute_noise(1000, model.z_dim) # images.shape[0] add sys.argv[1]
-            # a = self.process_batch(self.train_iter)#.dataset.data_tensor
-            # # if self.mnist is True:
-            #     # a = encode(1)
-            # b = model.G(noise)#.data.cpu().numpy()
-            # a = a.data.numpy()
-            # b = b.data.numpy()
-            # metrics_dict = get_metrics(a, b)
-            #
-            # for key, value in metrics_dict.items():
-            #     self.metrics[key].append(value)
-            # self.metrics['gloss'] = self.Glosses
-            # self.metrics['dloss'] = self.Dlosses
+            # Get metrics
+            self.metrics = vae_metrics(self, output, batch)
+            print(self.metrics)
 
             # Progress logging
             print ("Epoch[%d/%d], Total Loss: %.4f, Reconst Loss: %.4f, KL Div: %.7f, Val Loss: %.4f"
@@ -181,6 +176,8 @@ class Trainer:
             if self.viz:
                 self.reconstruct_images(self.debugging_image, epoch)
                 plt.show()
+
+            return self.metrics
 
     def compute_batch(self, batch):
         """ Compute loss for a batch of examples """
@@ -192,13 +189,13 @@ class Trainer:
         recon_loss = F.binary_cross_entropy(output, images, size_average=False)
         kl_diverge = self.kl_divergence(mu, log_var)
 
-        return recon_loss, kl_diverge
+        return output, recon_loss, kl_diverge
 
     def evaluate(self, iterator):
         """ Evaluate on a given dataset """
         loss = []
         for batch in iterator:
-            recon_loss, kl_diverge = self.compute_batch(batch)
+            output, recon_loss, kl_diverge = self.compute_batch(batch)
             batch_loss = recon_loss + kl_diverge
             loss.append(batch_loss.item())
 

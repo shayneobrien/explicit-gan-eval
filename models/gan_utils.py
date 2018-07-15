@@ -79,15 +79,31 @@ def compute_divergences(A, B):
 
     return divergences
 
-def get_metrics(trainer):
-    """ Generate samples, compute divergences, get losses """
+def gan_metrics(trainer):
+    """ Generate samples, compute divergences, get losses for GANs """
+    trainer.model.eval()
+
     noise = trainer.compute_noise(1000, trainer.model.z_dim)
-    a = trainer.process_batch(trainer.train_iter)
-    b = trainer.model.G(noise)
-    a = a.data.numpy()
-    b = b.data.numpy()
-    metrics = compute_divergences(a, b)
+    A = trainer.process_batch(trainer.train_iter).data.numpy()
+    B = trainer.model.G(noise).data.numpy()
+
+    metrics = compute_divergences(A, B)
     metrics['GLoss'] = trainer.Glosses
     metrics['DLoss'] = trainer.Dlosses
+
+    trainer.model.train()
+
+    return metrics
+
+def vae_metrics(trainer, output, batch):
+    """ Generate samples, compute divergences, get losses for VAEs """
+    images, _ = batch
+
+    A = output.data.numpy()
+    B = images.data.numpy()
+
+    metrics = compute_divergences(A, B)
+    metrics['RLoss'] = trainer.Rlosses
+    metrics['KLDiv'] = trainer.KLdivs
 
     return metrics

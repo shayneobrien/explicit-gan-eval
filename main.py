@@ -21,7 +21,7 @@ if __name__ == "__main__":
         (4) number of samples: 1000, 10,000, 100,000, etc. \n
         (5) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
         e.g. python main.py multivariate 200 15 10000 \n
-             python main.py mixture 3, 5, 10, 10
+             python main.py mixture 3 5 10 10
         """)
     data_type = sys.argv[1]
     dimensions = int(sys.argv[2])
@@ -44,14 +44,14 @@ if __name__ == "__main__":
                      'gamma', 'gumbel', 'laplace']
 
     gans = {
-        "wgan": w_gan,
+        # "wgan": w_gan,
         # "wgpgan": w_gp_gan,
         # "nsgan": ns_gan,
         # "lsgan": ls_gan,
         # "mmgan": mm_gan,
         # "dragan": dra_gan,
         # "began": be_gan,
-        # "vae": vae
+        "vae": vae,
     }
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
     if data_type == "multivariate":
@@ -59,20 +59,20 @@ if __name__ == "__main__":
             lr, dim, bsize = hyperparam
             print(hyperparam)
             res = get_multivariate_results(gans, distributions, dimensions, epochs, samples, hyperparam)
-            print(type(res))
             with open('hypertuning/data{0}.json'.format(str(hyperparam)), 'w') as outfile:
                 json.dump(res, outfile)
         # get_multivariate_graphs(res, gans, distance_metrics)
     elif data_type == "mixture":
+        # TODO: Fix
         res = get_mixture_results(gans, distributions, dimensions, epochs, samples, n_mixtures)
         get_mixture_graphs(res, gans, distance_metrics)
     elif data_type == "circles":
+        # TODO: Graphing circles
         res = get_circle_results(gans, dimensions, epochs, samples)
-        print("to do: graph circles")
     elif data_type == "mnist":
+        # TODO: Graphing MNIST (see VAE code)
         res = get_mnist_results(gans, epochs)
         with open('mnist_output.json', 'w') as outfile:
             json.dump(res, outfile)
         get_mnist_graphs(res, gans, distance_metrics)
-        print("to do: graph circles")
     print("Le Fin.")

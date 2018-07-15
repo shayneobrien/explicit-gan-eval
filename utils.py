@@ -19,10 +19,10 @@ def get_multivariate_results(gans, distributions, dimensions,
             gen = data.Distribution(dist, dimensions)
             train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
             if key == "vae":
-                continue
-                # model = gan.VAE(image_size=dimensions, hidden_dim=dim, z_dim=20)
-                # trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
-                # metrics = trainer.train(num_epochs=epochs)
+                # continue
+                model = gan.VAE(image_size=dimensions, hidden_dim=dim, z_dim=20)
+                trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
+                metrics = trainer.train(num_epochs=epochs)
             else:
                 model = gan.GAN(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
                 trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
@@ -48,11 +48,11 @@ def get_mixture_results(gans, distributions, dimensions,
         for dist_i in distributions[0]: # Just normal and other mixture models at the moment
             res[key][dist_i] = {}
             for dist_j in distributions:
-                print(dist_j)
                 res[key][dist_i][dist_j] = {}
                 print(dist_i, dist_j, n_mixtures, dimensions, samples)
                 # TODO: mix_type='uniform', or mix_type = 'random' (should there be others?)
-                gen = data.MixtureDistribution(dist_type=dist_j, n_mixtures=n_mixtures, dim=dimensions)
+                gen = data.MixtureDistribution(dist_type=dist_i, mix_type=dist_j,
+                                                n_mixtures=n_mixtures, dim=dimensions)
                 train_iter, val_iter, test_iter = preprocess(gen, samples) # TODO: fix error (wrong dim?)
                 if key == "vae":
                     continue
@@ -110,7 +110,7 @@ def get_mnist_results(gans, epochs):
         else:
             model = gan.GAN(image_size=784, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
             trainer = gan.Trainer(model, train_iter, val_iter, test_iter, mnist=True)
-            model, kl, ks, js, wd, ed, dl, gl = trainer.train(model=model, num_epochs=epochs)
+            metrics = trainer.train(model=model, num_epochs=epochs)
         res[key]["mnist"]["KL-Divergence"] = kl
         res[key]["mnist"]["Jensen-Shannon"] = js
         res[key]["mnist"]["Wasserstein-Distance"] = wd
