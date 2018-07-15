@@ -10,7 +10,7 @@ from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_
 
 import data
 from models import w_gan, w_gp_gan, ns_gan, mm_gan, ls_gan, dra_gan, be_gan, vae
-from utils import *
+from metrics import *
 
 if __name__ == "__main__":
     print("""
