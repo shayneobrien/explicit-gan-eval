@@ -11,7 +11,6 @@ plt.switch_backend('agg')
 def get_multivariate_results(models, distributions, dimensions,
                              epochs, samples, hyperparameters):
     res = defaultdict(partial(defaultdict, defaultdict))
-    # lr, dim, bsize = hyperparameters
     for model_name, module in models.items():
         for dist in distributions:
             # TODO: fix Gamma
@@ -30,9 +29,9 @@ def get_multivariate_results(models, distributions, dimensions,
 
 
 def get_mixture_results(models, distributions, dimensions,
-                        epochs, samples, n_mixtures):
+                        epochs, samples, n_mixtures, hyperparameters):
     res = defaultdict(partial(defaultdict, defaultdict))
-    lr, dim, bsize = hyperparameters
+    # lr, dim, bsize = hyperparameters
     for model_name, module in models.items():
         for dist_i in distributions[0]: # Just normal and other mixture models at the moment
             for dist_j in distributions:

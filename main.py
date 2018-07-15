@@ -27,8 +27,11 @@ if __name__ == "__main__":
     samples = int(sys.argv[4])
 
     # Make output directories if they don't exist yet
-    if not os.path.exists('hypertuning'):
-        os.makedirs('hypertuning')
+    for type in ['multivariate', 'mixtures']:
+        if not os.path.exists('hypertuning/' + type + '/'):
+            os.makedirs('hypertuning/' + type + '/')
+        else:
+            continue
 
     # hyperparam = [5e-3, 256, 5, 10]
     learning_rates = [1e-3, 5e-4, 1e-4, 5e-5]
@@ -51,21 +54,21 @@ if __name__ == "__main__":
         "vae": vae,
         # "began": be_gan,
     }
-    distance_metrics = ["KL-Divergence", "Jensen-Shannon",
-                        "Wasserstein-Distance", "Energy-Distance"]
+
+    distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance",]
+
     if data_type == "multivariate":
         for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
-            lr, dim, bsize = hyperparam
-            print(hyperparam)
             res = get_multivariate_results(models, distributions, dimensions,
                                             epochs, samples, hyperparam)
             with open('hypertuning/data{0}.json'.format(str(hyperparam)), 'w') as outfile:
                 json.dump(res, outfile)
         # get_multivariate_graphs(res, models, distance_metrics)
     elif data_type == "mixture":
-        # TODO: Fix
-        res = get_mixture_results(models, distributions, dimensions, epochs, samples, n_mixtures)
-        get_mixture_graphs(res, models, distance_metrics)
+        for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
+            res = get_mixture_results(models, distributions, dimensions,
+                                        epochs, samples, n_mixtures, hyperparam)
+        # get_mixture_graphs(res, models, distance_metrics)
     elif data_type == "circles":
         # TODO: Graphing circles
         res = get_circle_results(models, dimensions, epochs, samples)
