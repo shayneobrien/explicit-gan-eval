@@ -1,3 +1,4 @@
+import os, sys, json, itertools
 import torch
 import data
 import numpy as np
@@ -19,7 +20,6 @@ def get_multivariate_results(models, distributions, dimensions,
             metrics = model_results(module, epochs, hyperparameters,
                                     gen, samples, dimensions)
             results[model_name][dist].update(metrics)
-
     return results
 
 
@@ -55,10 +55,73 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions):
 
     return metrics
 
+
 def nested_pickle_dict():
     """ defaultdict for nested dictionaries and it can be pickled """
     return defaultdict(nested_pickle_dict)
 
+
+def get_best_performance(data_type):
+    mypath = "hypertuning/{}".format(data_type)
+    files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+    results = []
+    for file in files:
+        with open("{}/{}".format(mypath, file)) as f:
+            data = json.load(f)
+        results.append(data)
+    optimal = {}
+    for result in results:
+        for gan, distributions in result.items():
+            if gan not in optimal:
+                optimal[gan] = {}
+            for distribution, metrics in distributions.items():
+                if distribution not in optimal[gan]:
+                    optimal[gan][distribution] = {}
+                for metric, values in metrics.items():
+                    if metric not in ["LR", "HDIM", "BSIZE"]:
+                        if type(values) is list: # issue with data type on VAE and autoencoder...
+                            if metric not in optimal[gan][distribution]:
+                                optimal[gan][distribution][metric] = {}
+                                optimal[gan][distribution][metric]["value"] = values
+                                optimal[gan][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
+                                # print("Initialized")
+                            elif optimal[gan][distribution][metric]["value"][-1] > values[-1]:
+                                optimal[gan][distribution][metric]["value"] = values
+                                optimal[gan][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
+                                # print("Updated")
+                            else:
+                                pass
+    return optimal
+
+
+def get_confidence_intervals(data_type):
+    mypath = "best/{}".format(data_type)
+    files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+    results = []
+    for file in files:
+        with open("{}/{}".format(mypath, file)) as f:
+            data = json.load(f)
+        results.append(data)
+    optimal = {}
+    for result in results:
+        for gan, distributions in result.items():
+            if gan not in optimal:
+                optimal[gan] = {}
+            for distribution, metrics in distributions.items():
+                if distribution not in optimal[gan]:
+                    optimal[gan][distribution] = {}
+                for metric, values in metrics.items():
+                    if metric not in optimal[gan][distribution]:
+                        optimal[gan][distribution][metric] = {"original": []}
+                    optimal[gan][distribution][metric]["original"].append(values['value'])
+    for result in results:
+        for gan, distributions in result.items():
+            for distribution, metrics in distributions.items():
+                for metric, values in metrics.items():
+                    data = np.array(optimal[gan][distribution][metric]["original"])
+                    optimal[gan][distribution][metric]['5'] = list(np.percentile(data, 5, axis=0))
+                    optimal[gan][distribution][metric]['95'] = list(np.percentile(data, 95, axis=0))
+    return optimal
 
 # def get_circle_results(gans, dimensions, epochs, samples):
 #     res = {}
@@ -108,6 +171,27 @@ def nested_pickle_dict():
 #         res[key]["mnist"]["DLoss"] = dl
 #         res[key]["mnist"]["GLoss"] = gl
 #     return res
+
+def get_best_graph(results,
+                   models,
+                   distributions,
+                   distance_metrics,
+                   num_epochs):
+    # TODO: fix save error, legend, make pretty
+    for metric in distance_metrics:
+        for model_name, module in models.items():
+            for dist in distributions:
+                data = results[model_name][dist][metric]['value']
+                print(model_name, dist, metric, data)
+                plt.plot(np.linspace(1, num_epochs, len(data)), data, label=dist)
+            plt.xlabel("Epoch")
+            plt.ylabel(metric)
+            plt.title("{0}: {1}".format(model_name.upper(), metric))
+            plt.legend(loc="best")
+            plt.savefig('graphs/multivariate/{0}_{1}.png'.format(metric, model_name), dpi=100)
+            plt.clf()
+
+
 
 def get_multivariate_graphs(results, models, distributions,
                             distance_metrics, num_epochs):

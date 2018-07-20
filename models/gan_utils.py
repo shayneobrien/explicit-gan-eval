@@ -110,7 +110,7 @@ def vae_metrics(trainer, output, batch):
 
     metrics = compute_divergences(A, B)
     metrics['RLoss'] = trainer.Rlosses
-    metrics['KLDiv'] = trainer.KLdivs
+    metrics['KL-Divergence'] = trainer.KLdivs
     metrics["LR"] = trainer.lr
     metrics["HDIM"] = trainer.model.hidden_dim
     metrics["BSIZE"] = trainer.train_iter.batch_size
