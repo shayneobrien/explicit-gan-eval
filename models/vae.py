@@ -156,7 +156,6 @@ class Trainer:
 
             # Save progress
             self.Rlosses.extend(epoch_recon)
-            print(epoch_recon)
             self.KLdivs.extend(epoch_kl)
 
             # Test the model on the validation set

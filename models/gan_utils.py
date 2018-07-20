@@ -116,3 +116,17 @@ def vae_metrics(trainer, output, batch):
     metrics["BSIZE"] = trainer.train_iter.batch_size
 
     return metrics
+
+def autoencoder_metrics(trainer, output, batch):
+    images, _ = batch
+
+    A = output.data.numpy()
+    B = images.data.numpy()
+
+    metrics = compute_divergences(A, B)
+    metrics['Loss'] = trainer.losses
+    metrics["LR"] = trainer.lr
+    metrics["HDIM"] = trainer.model.hidden_dim
+    metrics["BSIZE"] = trainer.train_iter.batch_size
+
+    return metrics

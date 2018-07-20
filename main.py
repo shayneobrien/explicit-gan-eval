@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from torch.utils.data import TensorDataset
 
 import data
-from models import w_gan, w_gp_gan, ns_gan, mm_gan, ls_gan, dra_gan, be_gan, vae
+from models import w_gan, w_gp_gan, ns_gan, mm_gan, ls_gan, dra_gan, be_gan, vae, autoencoder
 from utils import *
 
 plt.switch_backend('agg')
@@ -50,14 +50,15 @@ if __name__ == "__main__":
                      'laplace']
 
     models = {
-        "wgan": w_gan,
+        # "wgan": w_gan,
         # "wgpgan": w_gp_gan,
         # "nsgan": ns_gan,
         # "lsgan": ls_gan,
         # "mmgan": mm_gan,
         # "dragan": dra_gan,
-        # "vae": vae,
         # "began": be_gan,
+        # "vae": vae,
+        "autoencoder": autoencoder,
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance",]
