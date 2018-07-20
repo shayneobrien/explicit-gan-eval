@@ -3,6 +3,7 @@ Standard Autoencoder
 
 Autoencoders take an input representation, encode it into a reduced dimensionality
 space using an 'encoder network', and then decode it using a 'decoder network'
+back to its original representation
 """
 
 import torch, torchvision
