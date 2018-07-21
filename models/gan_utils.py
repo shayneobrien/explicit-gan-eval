@@ -109,6 +109,9 @@ def vae_metrics(trainer, output, batch):
     B = images.data.numpy()
 
     metrics = compute_divergences(A, B)
+    for key, value in metrics.items():
+        trainer.metrics[key].append(value)
+    metrics = trainer.metrics
     metrics['RLoss'] = trainer.Rlosses
     metrics['KL-Divergence'] = trainer.KLdivs
     metrics["LR"] = trainer.lr
@@ -124,6 +127,9 @@ def autoencoder_metrics(trainer, output, batch):
     B = images.data.numpy()
 
     metrics = compute_divergences(A, B)
+    for key, value in metrics.items():
+        trainer.metrics[key].append(value)
+    metrics = trainer.metrics
     metrics['Loss'] = trainer.losses
     metrics["LR"] = trainer.lr
     metrics["HDIM"] = trainer.model.hidden_dim

@@ -57,7 +57,7 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions):
 
 
 def nested_pickle_dict():
-    """ defaultdict for nested dictionaries and it can be pickled """
+    """ Picklable defaultdict nested dictionaries """
     return defaultdict(nested_pickle_dict)
 
 
@@ -69,28 +69,19 @@ def get_best_performance(data_type):
         with open("{}/{}".format(mypath, file)) as f:
             data = json.load(f)
         results.append(data)
-    optimal = {}
+    optimal = nested_pickle_dict()
     for result in results:
         for gan, distributions in result.items():
-            if gan not in optimal:
-                optimal[gan] = {}
             for distribution, metrics in distributions.items():
-                if distribution not in optimal[gan]:
-                    optimal[gan][distribution] = {}
                 for metric, values in metrics.items():
                     if metric not in ["LR", "HDIM", "BSIZE"]:
-                        if type(values) is list: # issue with data type on VAE and autoencoder...
-                            if metric not in optimal[gan][distribution]:
-                                optimal[gan][distribution][metric] = {}
-                                optimal[gan][distribution][metric]["value"] = values
-                                optimal[gan][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
-                                # print("Initialized")
-                            elif optimal[gan][distribution][metric]["value"][-1] > values[-1]:
-                                optimal[gan][distribution][metric]["value"] = values
-                                optimal[gan][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
-                                # print("Updated")
-                            else:
-                                pass
+                        if metric not in optimal[gan][distribution]:
+                            optimal[gan][distribution][metric]["value"] = values
+                            optimal[gan][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
+                        elif optimal[gan][distribution][metric]["value"][-1] > values[-1]:
+                            optimal[gan][distribution][metric]["value"] = values
+                            optimal[gan][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
+
     return optimal
 
 

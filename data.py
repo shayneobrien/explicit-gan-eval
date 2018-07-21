@@ -1,19 +1,14 @@
-import numpy as np
-from sklearn.datasets import make_spd_matrix
 try:
    import cPickle as pickle
 except:
    import pickle
-import scipy.stats as st
+
 import os
-from scipy.stats import ortho_group
-
-# Imports for handling images
-# from PIL import Image
-# from heatmap import Heatmapper
-
+import scipy.stats as st
 import matplotlib.pyplot as plt
 import cv2 as cv
+import numpy as np
+from sklearn.datasets import make_spd_matrix
 
 def load_dist(self, in_file):
     with open(in_file, 'wb') as of:
@@ -106,7 +101,7 @@ class Distribution:
             return np.concatenate(samples, axis=0)
 
     def generate_high_dimensional_samples(self, n_samples=10000, big_dim=100):
-        m = ortho_group.rvs(big_dim=dim)
+        m = st.ortho_group.rvs(big_dim=dim)
         m_transform = m[:self.dim, :]
 
         samples = self.generate_samples(n_samples)
@@ -194,7 +189,7 @@ class MixtureDistribution:
         return samples
 
     def generate_high_dimensional_samples(self, n_samples=10000, big_dim=100):
-        m = ortho_group.rvs(big_dim=dim)
+        m = st.ortho_group.rvs(big_dim=dim)
         m_transform = m[:self.dim, :]
 
         samples = self.generate_samples(n_samples)

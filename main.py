@@ -15,16 +15,16 @@ if __name__ == "__main__":
     print("""
         Choose \n
         (1) dataset: multivariate, mixture, circles, or mnist \n
-        (2) repetitions (for confidence intervals) 1 \n
+        (2) trials (for confidence intervals) 1 \n
         (3) number of dimensions: 1, 10, 100, 1000, etc. \n
         (4) number of epochs: 10, 100, 1000, etc. \n
         (5) number of samples: 1000, 10,000, 100,000, etc. \n
         (6) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
-        e.g. python main.py multivariate 200 15 10000 \n
-             python main.py mixture 3 5 10 10
+        e.g. python main.py multivariate 3 3 3 3 \n
+             python main.py mixture 3 3 5 10 10
         """)
     data_type = sys.argv[1]
-    reps = int(sys.argv[2])
+    trials = int(sys.argv[2])
     dimensions = int(sys.argv[3])
     epochs = int(sys.argv[4])
     samples = int(sys.argv[5])
@@ -53,30 +53,31 @@ if __name__ == "__main__":
 
     models = {
         "wgan": w_gan,
-        "wgpgan": w_gp_gan,
-        "nsgan": ns_gan,
-        "lsgan": ls_gan,
-        "mmgan": mm_gan,
-        "dragan": dra_gan,
+        # "wgpgan": w_gp_gan,
+        # "nsgan": ns_gan,
+        # "lsgan": ls_gan,
+        # "mmgan": mm_gan,
+        # "dragan": dra_gan,
         # "began": be_gan,
-        # "vae": vae,
-        # "autoencoder": autoencoder,
+        "vae": vae,
+        "autoencoder": autoencoder,
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
-    for rep in range(reps):
-        print(rep)
+    for t in range(trials):
+        print('Trial {0}'.format(t))
         for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
             print(hyperparam)
             out_path = 'hypertuning/' + data_type + '/results_{0}.json'.format("_".join([str(i) for i in hyperparam]))
             if data_type == "multivariate":
                 results = get_multivariate_results(models, distributions, dimensions,
                                                 epochs, samples, hyperparam)
+                # get_multivariate_graphs()
             elif data_type == "mixture":
                 # TODO: output results
                 results = get_mixture_results(models, distributions, dimensions,
                                             epochs, samples, n_mixtures, hyperparam)
-                get_mixture_graphs(results, models, distributions, distance_metrics, epochs)
+                # get_mixture_graphs(results, models, distributions, distance_metrics, epochs)
             elif data_type == "circles":
                 pass
                 # TODO: Graphing circles
@@ -89,7 +90,7 @@ if __name__ == "__main__":
             with open(out_path, 'w') as outfile:
                 json.dump(results, outfile)
         results = get_best_performance(data_type)
-        with open("best/{}/results_{}_{}.json".format(data_type, rep, datetime.datetime.now().strftime("%Y-%m-%d")), 'w') as outfile:
+        with open("best/{}/results_{}_{}.json".format(data_type, t, datetime.datetime.now().strftime("%Y-%m-%d")), 'w') as outfile:
                 json.dump(results, outfile)
     ci = get_confidence_intervals(data_type)
     with open("confidence_intervals/{}/data.json".format(data_type), 'w') as outfile:

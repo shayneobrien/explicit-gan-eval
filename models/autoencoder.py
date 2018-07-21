@@ -85,7 +85,6 @@ class Trainer:
         self.viz = viz
 
         self.metrics = defaultdict(list)
-
         self.losses = []
 
     def train(self, num_epochs, lr=1e-3, weight_decay=1e-5):
