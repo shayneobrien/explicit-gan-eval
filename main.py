@@ -23,14 +23,15 @@ if __name__ == "__main__":
         e.g. python main.py multivariate 3 3 3 3 \n
              python main.py mixture 3 3 5 10 10
         """)
+    # TODO: argparse once we're ready to send to GPUs
     data_type = sys.argv[1]
     trials = int(sys.argv[2])
     dimensions = int(sys.argv[3])
     epochs = int(sys.argv[4])
     samples = int(sys.argv[5])
     if data_type == "mixture":
-        print("adding n_mixtures")
         n_mixtures = int(sys.argv[6])
+
 
     # Make output directories if they don't exist yet
     for dir in ['hypertuning', 'graphs', 'best', "confidence_intervals"]:
@@ -44,13 +45,17 @@ if __name__ == "__main__":
     learning_rates = [1e-3, 5e-4, 1e-4, 5e-5]
     hidden_dims = [16, 32, 64, 128, 256]
     BATCH_SIZE = [100, 150, 200, 250]
-    distributions = ['normal',
+    distributions = [
+                     'normal',
                      'beta',
                      'exponential',
                      'gamma',
                      'gumbel',
-                     'laplace']
+                     'laplace',
+                     ]
 
+
+    # Specify models to test
     models = {
         "wgan": w_gan,
         "wgpgan": w_gp_gan,
@@ -58,7 +63,7 @@ if __name__ == "__main__":
         "lsgan": ls_gan,
         "mmgan": mm_gan,
         "dragan": dra_gan,
-        # "began": be_gan,
+        # "began": be_gan, #TODO: fix
         "vae": vae,
         "autoencoder": autoencoder,
     }
@@ -69,21 +74,25 @@ if __name__ == "__main__":
         for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
             print(hyperparam)
             out_path = 'hypertuning/' + data_type + '/results_{0}.json'.format("_".join([str(i) for i in hyperparam]))
+
             if data_type == "multivariate":
                 results = get_multivariate_results(models, distributions, dimensions,
                                                 epochs, samples, hyperparam)
-                # get_multivariate_graphs()
+                # get_multivariate_graphs(results, models, distributions, distance_metrics, epochs)
+
             elif data_type == "mixture":
-                # TODO: output results
                 results = get_mixture_results(models, distributions, dimensions,
                                             epochs, samples, n_mixtures, hyperparam)
                 # get_mixture_graphs(results, models, distributions, distance_metrics, epochs)
+
             elif data_type == "circles":
-                pass
+                # TODO: compatibility with images
+                results = get_circle_results(models, dimensions,
+                                            epochs, samples, hyperparam)
                 # TODO: Graphing circles
-                # results = get_circle_results(models, dimensions, epochs, samples)
             elif data_type == "mnist":
                 pass
+                # TODO: MNIST
                 # TODO: Graphing MNIST (see VAE code)
                 # results = get_mnist_results(models, epochs)
                 # get_mnist_graphs(res, models, distance_metrics)

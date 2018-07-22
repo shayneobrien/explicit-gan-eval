@@ -40,6 +40,20 @@ def get_mixture_results(models, distributions, dimensions,
     return results
 
 
+def get_circle_results(models, dimensions,
+                       epochs, samples, hyperparameters):
+    results = nested_pickle_dict()
+    for model_name, module in models.items():
+        gen = data.CirclesDatasetGenerator(size=dimensions, n_circles=samples,
+                                            random_colors=True, random_sizes=True,
+                                            modes=20)
+        metrics = model_results(module, epochs, hyperparameters,
+                                gen, samples, dimensions)
+        results[model_name].update(metrics)
+
+    return results
+
+
 def model_results(module, epochs, hyperparameters, gen, samples, dimensions):
     """ Train a model, get metrics dictionary out """
     # Unpack hyperparameters, initialize results dictionary

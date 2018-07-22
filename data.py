@@ -168,8 +168,7 @@ class MixtureDistribution:
             self.sampling_prob = np.squeeze(np.ones((n_mixtures, 1))/n_mixtures)
 
         else:
-            # TODO: Then it's random? Or what?
-
+            # Normal
             t = np.random.rand(n_mixtures, 1)
             self.sampling_prob = np.squeeze(t/np.linalg.norm(t, ord=1))
 
@@ -237,7 +236,7 @@ class MixtureDistribution:
 
 class CirclesDatasetGenerator:
 
-    def __init__(self, size=28, n_circles=1, random_colors=True, random_sizes=True, modes=1):
+    def __init__(self, size=28, n_circles=1, modes=1, random_colors=True, random_sizes=True):
 
         self.size = size
         self.circles = n_circles
@@ -248,6 +247,7 @@ class CirclesDatasetGenerator:
         n_vars = n_circles * 2
         if random_colors:
             n_vars += n_circles * 3
+
         if random_sizes:
             n_vars += n_circles
 
@@ -255,7 +255,8 @@ class CirclesDatasetGenerator:
 
         self.random_color = [(np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)) for i in
                         range(n_circles)]
-        self.random_size = [np.random.randint(0, int(size * 0.25)) for i in range(n_circles)]
+
+        self.random_size = [np.random.randint(0, round(size * 0.25)) for i in range(n_circles)]
 
     def generate_samples(self, n_samples):
 
@@ -274,7 +275,8 @@ class CirclesDatasetGenerator:
                     color = (
                     int(self.size * sample[6 * k + 3]), int(self.size * sample[6 * k + 4]), int(self.size * sample[6 * k + 5]))
                     circle_size = int(self.size * 0.25 * sample[6 * k + 2])
-                    location = (int(self.size * sample[6 * k]), int(self.size * sample[6 * k + 1]))
+                    location = (int(self.size * sample[6 * k]), int(self.size * sample[6 * k + 1])
+                    )
 
                 elif self.has_random_sizes:
                     color = self.random_color[k]
@@ -285,7 +287,8 @@ class CirclesDatasetGenerator:
                     color = (
                     int(self.size * sample[5 * k + 2]), int(self.size * sample[5 * k + 3]), int(self.size * sample[5 * k + 4]))
                     circle_size = self.random_size[k]
-                    location = (int(self.size * sample[5 * k]), int(self.size * sample[5 * k + 1]))
+                    location = (int(self.size * sample[5 * k]), int(self.size * sample[5 * k + 1])
+                    )
 
                 else:
                     color = self.random_color[k]
