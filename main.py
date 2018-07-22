@@ -47,17 +47,17 @@ if __name__ == "__main__":
     distributions = ['normal',
                      'beta',
                      'exponential',
-                     # 'gamma', # TODO: Fix gamma
+                     'gamma',
                      'gumbel',
                      'laplace']
 
     models = {
         "wgan": w_gan,
-        # "wgpgan": w_gp_gan,
-        # "nsgan": ns_gan,
-        # "lsgan": ls_gan,
-        # "mmgan": mm_gan,
-        # "dragan": dra_gan,
+        "wgpgan": w_gp_gan,
+        "nsgan": ns_gan,
+        "lsgan": ls_gan,
+        "mmgan": mm_gan,
+        "dragan": dra_gan,
         # "began": be_gan,
         "vae": vae,
         "autoencoder": autoencoder,
@@ -95,5 +95,5 @@ if __name__ == "__main__":
     ci = get_confidence_intervals(data_type)
     with open("confidence_intervals/{}/data.json".format(data_type), 'w') as outfile:
         json.dump(ci, outfile)
-    # get_best_graph(results, models, distributions, distance_metrics, epochs)
+    get_best_graph(results, models, distributions, distance_metrics, epochs)
     print("Le Fin.")

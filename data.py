@@ -47,8 +47,9 @@ class Distribution:
 
         elif self.dist_type == 'gamma':
 
-            k = np.random.choice(1000, dim)
-            theta = np.random.rand(dim, 1)
+            # TODO: test
+            k = np.random.rand(dim, 1) * 10
+            theta = np.random.rand(dim, 1) * 2
 
             self.params['k'] = np.squeeze(k)
             self.params['theta'] = np.squeeze(theta)
