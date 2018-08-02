@@ -21,8 +21,8 @@ from collections import defaultdict
 
 from tqdm import tqdm
 from itertools import product
-from .mnist_data import load_mnist
-from .gan_utils import *
+from mnist_data import load_mnist
+from gan_utils import *
 
 def to_cuda(x):
     """ Cuda-erize a tensor """
@@ -208,7 +208,7 @@ class Trainer:
 
 if __name__ == '__main__':
     # Load in binzarized MNIST data, separate into data loaders
-    train_iter, val_iter, test_iter = load_mnist()
+    train_iter, val_iter, test_iter = load_mnist(100)
 
     model = Model(image_size=784,
                   hidden_dim=32)
@@ -219,6 +219,6 @@ if __name__ == '__main__':
                       test_iter=test_iter,
                       viz=False)
 
-    trainer.train(num_epochs=5,
+    trainer.train(num_epochs=1,
                   lr=1e-3,
                   weight_decay=1e-5)
