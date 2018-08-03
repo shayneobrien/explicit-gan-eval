@@ -7,7 +7,7 @@ import numpy as np
 
 from torch.utils.data import TensorDataset
 from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
-from autoencoder import model, Trainer
+from .autoencoder import Model, Trainer
 
 def to_var(x):
     """ Make a tensor cuda-erized and requires gradient """
@@ -106,9 +106,23 @@ def preprocess_mnist(BATCH_SIZE=100):
     trainer.train(num_epochs=1,
                   lr=1e-3,
                   weight_decay=1e-5)
+
+    autoencoder_mnist = {}
+    for count, dataset in enumerate([train_iter, val_iter, test_iter]):
+        for index, data in enumerate(dataset):
+            img, _ = data
+            img = img.view(img.size(0), -1)
+            img = Variable(img)
+            result = trainer.model.forward(img)
+            result = result/torch.max(result)
+            if index == 0:
+                results = result
+            else:
+                results = torch.cat([results, result])
+        autoencoder_mnist[str(count)] = results
     # TO DO
     # trainer.model...?...
-    return train_iter, val_iter, test_iter
+    return  autoencoder_mnist["0"], autoencoder_mnist["1"], autoencoder_mnist["2"]
 
 
 def compute_divergences(A, B):

@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from functools import partial
 from collections import defaultdict
-from models.gan_utils import preprocess
+from models.gan_utils import preprocess, preprocess_mnist
 plt.switch_backend('agg')
 
 
@@ -152,30 +152,31 @@ def get_confidence_intervals(data_type):
 #     return res
 #
 #
-# def get_mnist_results(gans, epochs):
-#     res = {}
-#     for key, gan in gans.items():
-#         res[key] = {}
-#         print(key)
-#         print("\n\n\n")
-#         res[key]["mnist"] = {}
-#         train_iter, val_iter, test_iter = get_data(2000)
-#         if key == "vae":
-#             continue
-#             # model = vae.VAE(image_size=784, hidden_dim=400, z_dim=20)
-#             # trainer = vae.Trainer(model, train_iter, val_iter, test_iter)
-#             # model, kl, ks, js, wd, ed = trainer.train(model, num_epochs=epochs)
-#         else:
-#             model = gan.GAN(image_size=784, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
-#             trainer = gan.Trainer(model, train_iter, val_iter, test_iter, mnist=True)
-#             metrics = trainer.train(model=model, num_epochs=epochs)
-#         res[key]["mnist"]["KL-Divergence"] = kl
-#         res[key]["mnist"]["Jensen-Shannon"] = js
-#         res[key]["mnist"]["Wasserstein-Distance"] = wd
-#         res[key]["mnist"]["Energy-Distance"] = ed
-#         res[key]["mnist"]["DLoss"] = dl
-#         res[key]["mnist"]["GLoss"] = gl
-#     return res
+def model_results_mnist(module, epochs, hyperparameters, dimensions):
+    """ Train a model, get metrics dictionary out """
+    # Unpack hyperparameters, initialize results dictionary
+    lr, dim, bsize = hyperparameters
+
+    # Create data iterators
+    train_iter, val_iter, test_iter = preprocess_mnist(bsize)
+
+    # Model, trainer, metrics
+    model = module.Model(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
+    trainer = module.Trainer(model, train_iter, val_iter, test_iter)
+    metrics = trainer.train(num_epochs=epochs, lr=lr)  # ... this: ValueError: too many values to unpack (expected 2)
+
+    return metrics
+
+
+def get_mnist_results(models, dimensions,
+                             epochs, hyperparameters):
+    results = nested_pickle_dict()
+    for model_name, module in models.items():
+        print('\n', model_name, "mnist")
+        metrics = model_results_mnist(module, epochs, hyperparameters, dimensions)
+        results[model_name]["mnist"].update(metrics)
+    return results
+
 
 def get_best_graph(results,
                    models,

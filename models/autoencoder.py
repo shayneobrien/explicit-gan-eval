@@ -21,8 +21,27 @@ from collections import defaultdict
 
 from tqdm import tqdm
 from itertools import product
-from mnist_data import load_mnist
-from gan_utils import *
+from .mnist_data import load_mnist
+from .gan_utils import *
+
+
+def autoencoder_metrics(trainer, output, batch):
+    images, _ = batch
+
+    A = output.data.numpy()
+    B = images.data.numpy()
+
+    # metrics = compute_divergences(A, B)  # This line is a bug for running the autoencoder.py script
+    metrics = {}
+    for key, value in metrics.items():
+        trainer.metrics[key].append(value)
+    metrics = trainer.metrics
+    metrics['Loss'] = trainer.losses
+    metrics["LR"] = trainer.lr
+    metrics["HDIM"] = trainer.model.hidden_dim
+    metrics["BSIZE"] = trainer.train_iter.batch_size
+
+    return metrics
 
 def to_cuda(x):
     """ Cuda-erize a tensor """
@@ -206,19 +225,32 @@ class Trainer:
         self.model.load_state_dict(state)
 
 
-if __name__ == '__main__':
-    # Load in binzarized MNIST data, separate into data loaders
-    train_iter, val_iter, test_iter = load_mnist(100)
+# if __name__ == '__main__':
+#     # Load in binzarized MNIST data, separate into data loaders
+#     train_iter, val_iter, test_iter = load_mnist(100)
 
-    model = Model(image_size=784,
-                  hidden_dim=32)
+#     model = Model(image_size=784,
+#                   hidden_dim=32)
 
-    trainer = Trainer(model=model,
-                      train_iter=train_iter,
-                      val_iter=val_iter,
-                      test_iter=test_iter,
-                      viz=False)
+#     trainer = Trainer(model=model,
+#                       train_iter=train_iter,
+#                       val_iter=val_iter,
+#                       test_iter=test_iter,
+#                       viz=False)
 
-    trainer.train(num_epochs=1,
-                  lr=1e-3,
-                  weight_decay=1e-5)
+#     trainer.train(num_epochs=1,
+#                   lr=1e-3,
+#                   weight_decay=1e-5)
+
+#     for index, data in enumerate(train_iter):
+#         img, _ = data
+#         img = img.view(img.size(0), -1)
+#         img = Variable(img)
+#         result = trainer.model.forward(img)
+#         result = result/torch.max(result)
+#         if index == 0:
+#             results = result
+#         else:
+#             results = torch.cat([results, result])
+#     print(results.shape)
+#     print("Booyakasha baby")

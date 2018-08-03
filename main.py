@@ -58,14 +58,14 @@ if __name__ == "__main__":
     # Specify models to test
     models = {
         "wgan": w_gan,
-        "wgpgan": w_gp_gan,
-        "nsgan": ns_gan,
-        "lsgan": ls_gan,
-        "mmgan": mm_gan,
-        "dragan": dra_gan,
+        # "wgpgan": w_gp_gan,
+        # "nsgan": ns_gan,
+        # "lsgan": ls_gan,
+        # "mmgan": mm_gan,
+        # "dragan": dra_gan,
         # "began": be_gan, #TODO: fix
-        "vae": vae,
-        "autoencoder": autoencoder,
+        # "vae": vae,
+        # "autoencoder": autoencoder,
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
@@ -91,11 +91,8 @@ if __name__ == "__main__":
                                             epochs, samples, hyperparam)
                 # TODO: Graphing circles
             elif data_type == "mnist":
-                pass
-                # TODO: MNIST
-                # TODO: Graphing MNIST (see VAE code)
-                # results = get_mnist_results(models, epochs)
-                # get_mnist_graphs(res, models, distance_metrics)
+                # pass
+                results = get_mnist_results(models, 784, epochs, hyperparam)  # TODO: MNIST
             with open(out_path, 'w') as outfile:
                 json.dump(results, outfile)
         results = get_best_performance(data_type)
