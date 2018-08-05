@@ -63,7 +63,7 @@ if __name__ == "__main__":
         # "lsgan": ls_gan,
         # "mmgan": mm_gan,
         # "dragan": dra_gan,
-        # "began": be_gan, #TODO: fix
+        # "began": be_gan,
         # "vae": vae,
         # "autoencoder": autoencoder,
     }

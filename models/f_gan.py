@@ -1,37 +1,41 @@
-""" (MM GAN)
-Vanilla GAN using MLP architecture, minimax loss as laid out in the original paper.
-Compared to NS GAN, the only change is the generator's loss. In particular:
+""" (f-GAN)
 
-MM GAN: L(G) =  E[log(1-D(G(z)))]
-NS GAN: L(G) = -E[log(D(G(z)))]
+The authors empirically demonstrate that when the generative model is
+misspecified and does not contain the true distribution, the divergence
+function used for estimation has a strong influence on which model is
+learned. To address this issue, they theoretically show that the
+generative-adversarial approach is a special case of an existing, more
+general variational divergence estimation approach and that any
+f-divergence can be used for training generative neural samplers (which
+are defined as models that take a random input vector and produce a sample
+from a probability distribution defined by the network weights). They
+then empirically show the effect of using different training
+divergences on a trained model's average log likelihood of sampled data.
 
-It is important to note that early on, G is much worse than D and so training early-on
-is difficult. Adjustments are required for successful training.
+They test (forward) Kullback-Leibler, reverse Kullback-Leibler, Pearson
+chi-squared, Neyman chi-squared, squared Hellinger, Jensen-Shannon,
+and Jeffrey divergences.
 
-In both NS GAN and MM GAN, the output of G can be interpretted as a probability.
+# TODO: fix Neyman, tweak JS
 
-https://arxiv.org/abs/1406.2661
+We exclude Jeffrey due to poor performance and nontrivial implementation.
+(see scipy.special.lambertw otherwise)
 
-
-From the abstract: 'We propose a new framework for estimating generative models via an adversarial
-process, in which we simultaneously train two models: a generative model G
-that captures the data distribution, and a discriminative model D that estimates
-the probability that a sample came from the training data rather than G. The training
-procedure for G is to maximize the probability of D making a mistake.'
+https://arxiv.org/pdf/1606.00709.pdf
 """
 
 import torch, torchvision
 import torch.nn as nn
+import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
-from collections import defaultdict
 
 import os
 import matplotlib.pyplot as plt
 import numpy as np
 
 from itertools import product
-from tqdm import tqdm
+from tqdm import tqdm_notebook
 from .mnist_data import load_mnist
 from .gan_utils import *
 
@@ -41,13 +45,12 @@ class Generator(nn.Module):
     """
     def __init__(self, image_size, hidden_dim, z_dim):
         super().__init__()
-
         self.linear = nn.Linear(z_dim, hidden_dim)
         self.generate = nn.Linear(hidden_dim, image_size)
 
     def forward(self, x):
         activated = F.relu(self.linear(x))
-        generation = F.sigmoid(self.generate(activated))
+        generation = torch.sigmoid(self.generate(activated))
         return generation
 
 
@@ -56,13 +59,12 @@ class Discriminator(nn.Module):
     """
     def __init__(self, image_size, hidden_dim, output_dim):
         super().__init__()
-
         self.linear = nn.Linear(image_size, hidden_dim)
         self.discriminate = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x):
         activated = F.relu(self.linear(x))
-        discrimination = F.sigmoid(self.discriminate(activated))
+        discrimination = torch.sigmoid(self.discriminate(activated))
         return discrimination
 
 
@@ -76,6 +78,72 @@ class Model(nn.Module):
 
         self.G = Generator(image_size, hidden_dim, z_dim)
         self.D = Discriminator(image_size, hidden_dim, output_dim)
+
+
+class Divergence:
+    """ Compute G and D loss using an f-divergence metric.
+    Implementations based on Table 6 (Appendix C) of the arxiv paper.
+    """
+    def __init__(self, method):
+        self.method = method.lower().strip()
+        assert self.method in ['total_vartiation',
+                               'forward_kl',
+                               'reverse_kl',
+                               'hellinger',
+                               'pearson',
+#                                'neyman', #TODO: fix neyman
+                               'jensen_shannon'], \
+            'Invalid divergence.'
+
+    def D_loss(self, DX_score, DG_score):
+        """ Compute batch loss for discriminator using f-divergence metric """
+
+        if self.method == 'total_vartiation':
+            return -(torch.mean(0.5*torch.tanh(DX_score)) - torch.mean(0.5*torch.tanh(DG_score)))
+
+        elif self.method == 'forward_kl':
+            return -(torch.mean(DX_score) - torch.mean(torch.exp(DG_score-1)))
+
+        elif self.method == 'reverse_kl':
+            return -(torch.mean(-torch.exp(DX_score)) - torch.mean(-1-DG_score))
+
+        elif self.method == 'hellinger':
+            return -(torch.mean(1-torch.exp(DX_score)) /
+                    - torch.mean((1-torch.exp(DG_score))/(torch.exp(DG_score))))
+
+        elif self.method == 'pearson':
+            return -(torch.mean(DX_score) - torch.mean(0.25*DG_score**2 + DG_score))
+
+        # elif self.method == 'neyman':
+        #     return -(torch.mean(1-torch.exp(DX_score)) - torch.mean(2 - 2*(1-DG_score)**0.50))
+
+        elif self.method == 'jensen_shannon':
+            return -(torch.mean(torch.log(torch.tensor(2.))-torch.log(1+torch.exp(-DX_score+1e-8))) /
+                    - torch.mean(-torch.log(torch.tensor(2.)-torch.exp(DG_score)+1e-8)))
+
+    def G_loss(self, DG_score):
+        """ Compute batch loss for generator using f-divergence metric """
+
+        if self.method == 'total_vartiation':
+            return -torch.mean(0.5*torch.tanh(DG_score))
+
+        elif self.method == 'forward_kl':
+            return -torch.mean(torch.exp(DG_score-1))
+
+        elif self.method == 'reverse_kl':
+            return -torch.mean(-1-DG_score)
+
+        elif self.method == 'hellinger':
+            return -torch.mean((1-torch.exp(DG_score))/(torch.exp(DG_score)))
+
+        elif self.method == 'pearson':
+            return -torch.mean(0.25*DG_score**2 + DG_score)
+
+        # elif self.method == 'neyman':
+        #     return -torch.mean(2 - 2*(1-DG_score)**0.50)
+
+        elif self.method == 'jensen_shannon':
+            return -torch.mean(-torch.log(torch.tensor(2.)-torch.exp(DG_score)+1e-8))
 
 
 class Trainer:
@@ -95,48 +163,30 @@ class Trainer:
         self.viz = viz
         self.metrics = defaultdict(list)
 
-
-    def train(self, num_epochs, lr=2e-4, D_steps=1, G_init=5):
-        """ Train a vanilla GAN using the minimax gradients loss for the generator.
-            Logs progress using G loss, D loss, G(x), D(G(x)), visualizations of Generator output.
+    def train(self, num_epochs, method='forward_kl', G_lr=1e-4, D_lr=1e-4, D_steps=1):
+        """ Train an NSGAN using f-divergence
+            Logs progress using G loss, D loss, G(x), D(G(x)),
+            visualizations of Generator output.
 
         Inputs:
             num_epochs: int, number of epochs to train for
-            lr: float, learning rate for Adam optimizers (default 2e-4)
+            method: str, divergence metric to optimize (default 'forward_kl')
+            G_lr: float, learning rate for generator's Adam optimizer (default 1e-4)
+            D_lr: float, learning rate for discriminator's Adam optimizer (default 1e-4)
             D_steps: int, training step ratio for how often to train D compared to G (default 1)
-            G_init: int, number of training steps to pre-train G for (default 5)
         """
+        # Initialize loss
+        self.loss_fnc = Divergence(method)
+
         # Initialize optimizers
-        G_optimizer = torch.optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=lr)
-        D_optimizer = torch.optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=lr)
-        self.__dict__.update(locals())
+        G_optimizer = optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=G_lr)
+        D_optimizer = optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=D_lr)
 
         # Approximate steps/epoch given D_steps per epoch --> roughly train in the same way as if D_step (1) == G_step (1)
-        epoch_steps = int(np.ceil(len(self.train_iter) / (D_steps)))
-
-        # Let G train for a few steps before beginning to jointly train G and D because MM GANs have trouble learning
-        # very early on in training
-        if G_init > 0:
-            for _ in range(G_init):
-                # Process a batch of images
-                images = self.process_batch(self.train_iter)
-
-                # Zero out gradients for G
-                G_optimizer.zero_grad()
-
-                # Train the generator using predictions from D on the noise compared to true image labels
-                G_loss = self.train_G(images)
-
-                # Backpropagate the generator network
-                G_loss.backward()
-                G_optimizer.step()
-
-            print('G pre-trained for {0} training steps.'.format(G_init))
-        else:
-            print('G not pre-trained -- GAN unlikely to converge.')
+        epoch_steps = int(np.ceil(len(train_iter) / (D_steps)))
 
         # Begin training
-        for epoch in tqdm(range(1, num_epochs+1)):
+        for epoch in tqdm_notebook(range(1, num_epochs+1)):
             self.model.train()
             G_losses, D_losses = [], []
 
@@ -162,7 +212,7 @@ class Trainer:
                     # Log results, backpropagate the discriminator network
                     D_step_loss.append(D_loss.item())
 
-                # We report D_loss in this way so that G_loss and D_loss have the same number of entries.
+                # So that G_loss and D_loss have the same number of entries.
                 D_losses.append(np.mean(D_step_loss))
 
                 # TRAINING G: Zero out gradients for G
@@ -180,13 +230,13 @@ class Trainer:
             self.Glosses.extend(G_losses)
             self.Dlosses.extend(D_losses)
 
-            # Get metrics
-            self.metrics = gan_metrics(self)
-
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
                    %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses)))
             self.num_epochs = epoch
+
+            # Get metrics
+            self.metrics = gan_metrics(self)
 
             # Visualize generator progress
             # self.generate_images(epoch)
@@ -203,7 +253,6 @@ class Trainer:
             images: batch of images (reshaped to [batch_size, 784])
         Output:
             D_loss: non-saturing loss for discriminator,
-            -E[log(D(x))] - E[log(1 - D(G(z)))]
         """
         # Generate labels (ones indicate real images, zeros indicate generated)
         X_labels = to_cuda(torch.ones(images.shape[0], 1))
@@ -211,18 +260,16 @@ class Trainer:
 
         # Classify the real batch images, get the loss for these
         DX_score = self.model.D(images)
-        DX_loss = F.binary_cross_entropy(DX_score, X_labels)
 
         # Sample noise z, generate output G(z)
-        noise = self.compute_noise(images.shape[0], self.model.z_dim)
+        noise = self.compute_noise(images.shape[0], model.z_dim)
         G_output = self.model.G(noise)
 
         # Classify the fake batch images, get the loss for these using sigmoid cross entropy
         DG_score = self.model.D(G_output)
-        DG_loss = F.binary_cross_entropy(DG_score, G_labels)
 
-        # Compute vanilla (original paper) D loss
-        D_loss = DX_loss + DG_loss
+        # Compute f-divergence loss
+        D_loss = self.loss_fnc.D_loss(DX_score, DG_score)
 
         return D_loss
 
@@ -232,8 +279,7 @@ class Trainer:
         Input:
             images: batch of images reshaped to [batch_size, -1]
         Output:
-            G_loss: minimax loss for how well G(z) fools D,
-            -E[log(D(G(z)))]
+            G_loss: non-saturating loss for how well G(z) fools D,
         """
         # Generate labels for the generator batch images (all 0, since they are fake)
         G_labels = to_cuda(torch.ones(images.shape[0], 1))
@@ -243,10 +289,10 @@ class Trainer:
         G_output = self.model.G(noise) # G(z)
         DG_score = self.model.D(G_output) # D(G(z))
 
-        # Compute the minimax loss for how D did versus the generations of G using sigmoid cross entropy
-        G_loss = F.binary_cross_entropy((1-DG_score), G_labels)
+        # Compute f-divergence loss
+        G_loss = self.loss_fnc.G_loss(DG_score)
 
-        return -1 * G_loss
+        return G_loss
 
     def compute_noise(self, batch_size, z_dim):
         """ Compute random noise for the generator to learn to make images from """
@@ -316,22 +362,25 @@ class Trainer:
         self.model.load_state_dict(state)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+
     # Load in binarized MNIST data, separate into data loaders
     train_iter, val_iter, test_iter = load_mnist()
 
+    # Init model
     model = Model(image_size=784,
                   hidden_dim=256,
                   z_dim=128)
 
+    # Init trainer
     trainer = Trainer(model=model,
-                           train_iter=train_iter,
-                           val_iter=val_iter,
-                           test_iter=test_iter,
-                           viz=False)
-
+                      train_iter=train_iter,
+                      val_iter=val_iter,
+                      test_iter=test_iter,
+                      viz=False)
+    # Train
     trainer.train(num_epochs=25,
-                  G_lr=2e-4,
-                  D_lr=2e-4,
-                  D_steps=1,
-                  G_init=5)
+                  method='forward_kl',
+                  G_lr=1e-4,
+                  D_lr=1e-4,
+                  D_steps=1)

@@ -1,30 +1,32 @@
-""" (MM GAN)
-Vanilla GAN using MLP architecture, minimax loss as laid out in the original paper.
-Compared to NS GAN, the only change is the generator's loss. In particular:
+""" (RaGAN)
+This implementation uses non-saturating (NS) GAN as a case study.
 
-MM GAN: L(G) =  E[log(1-D(G(z)))]
-NS GAN: L(G) = -E[log(D(G(z)))]
+Relativistic GANs argue that the GAN generator should decrease the
+discriminator's output probability that real data is real in addition to
+increasing its output probability that fake data is real. By doing this, GANs
+are claimed to be more stable and generate higher quality images.
 
-It is important to note that early on, G is much worse than D and so training early-on
-is difficult. Adjustments are required for successful training.
+Discriminator loss is changed such that the discriminator estimates the
+probability that the given real data is more realistic than a randomly sampled
+fake data. Generator loss is change such that real data is less likely to be
+classified as real and fake data is more likely to be classified as real.
 
-In both NS GAN and MM GAN, the output of G can be interpretted as a probability.
+For computational efficiency, the discriminator estimates the probability that
+the given real data is more realistic than fake data, on average. Otherwise, the
+network would need to consider all combinations of real and fake data in the
+minibatch. This would require O(m^2) instead of O(m), where m is batch size.
 
-https://arxiv.org/abs/1406.2661
+L(D) = -E[log( sigmoid(D(x) - E[D(G(z))]) )] - E[log(1 - sigmoid(D(G(z)) - E[D(x)]))]
+L(G) = -E[log( sigmoid(D(G(z)) - E[D(x)]) )] - E[log(1 - sigmoid(D(x) - E[D(G(z))]))]
 
-
-From the abstract: 'We propose a new framework for estimating generative models via an adversarial
-process, in which we simultaneously train two models: a generative model G
-that captures the data distribution, and a discriminative model D that estimates
-the probability that a sample came from the training data rather than G. The training
-procedure for G is to maximize the probability of D making a mistake.'
+https://arxiv.org/pdf/1807.00734.pdf
 """
 
 import torch, torchvision
 import torch.nn as nn
+import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
-from collections import defaultdict
 
 import os
 import matplotlib.pyplot as plt
@@ -32,8 +34,8 @@ import numpy as np
 
 from itertools import product
 from tqdm import tqdm
-from .mnist_data import load_mnist
-from .gan_utils import *
+from load_data import get_data
+from utils import *
 
 
 class Generator(nn.Module):
@@ -41,13 +43,12 @@ class Generator(nn.Module):
     """
     def __init__(self, image_size, hidden_dim, z_dim):
         super().__init__()
-
         self.linear = nn.Linear(z_dim, hidden_dim)
         self.generate = nn.Linear(hidden_dim, image_size)
 
     def forward(self, x):
         activated = F.relu(self.linear(x))
-        generation = F.sigmoid(self.generate(activated))
+        generation = torch.sigmoid(self.generate(activated))
         return generation
 
 
@@ -56,13 +57,12 @@ class Discriminator(nn.Module):
     """
     def __init__(self, image_size, hidden_dim, output_dim):
         super().__init__()
-
         self.linear = nn.Linear(image_size, hidden_dim)
         self.discriminate = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x):
         activated = F.relu(self.linear(x))
-        discrimination = F.sigmoid(self.discriminate(activated))
+        discrimination = torch.sigmoid(self.discriminate(activated))
         return discrimination
 
 
@@ -95,45 +95,23 @@ class Trainer:
         self.viz = viz
         self.metrics = defaultdict(list)
 
-
-    def train(self, num_epochs, lr=2e-4, D_steps=1, G_init=5):
-        """ Train a vanilla GAN using the minimax gradients loss for the generator.
-            Logs progress using G loss, D loss, G(x), D(G(x)), visualizations of Generator output.
+    def train(self, num_epochs, G_lr=2e-4, D_lr=2e-4, D_steps=1):
+        """ Train a relativistic NSGAN
+            Logs progress using G loss, D loss, G(x), D(G(x)),
+            visualizations of Generator output.
 
         Inputs:
             num_epochs: int, number of epochs to train for
-            lr: float, learning rate for Adam optimizers (default 2e-4)
+            G_lr: float, learning rate for generator's Adam optimizer (default 2e-4)
+            D_lr: float, learning rate for discriminator's Adam optimizer (default 2e-4)
             D_steps: int, training step ratio for how often to train D compared to G (default 1)
-            G_init: int, number of training steps to pre-train G for (default 5)
         """
         # Initialize optimizers
-        G_optimizer = torch.optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=lr)
-        D_optimizer = torch.optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=lr)
-        self.__dict__.update(locals())
+        G_optimizer = optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=G_lr)
+        D_optimizer = optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=D_lr)
 
         # Approximate steps/epoch given D_steps per epoch --> roughly train in the same way as if D_step (1) == G_step (1)
-        epoch_steps = int(np.ceil(len(self.train_iter) / (D_steps)))
-
-        # Let G train for a few steps before beginning to jointly train G and D because MM GANs have trouble learning
-        # very early on in training
-        if G_init > 0:
-            for _ in range(G_init):
-                # Process a batch of images
-                images = self.process_batch(self.train_iter)
-
-                # Zero out gradients for G
-                G_optimizer.zero_grad()
-
-                # Train the generator using predictions from D on the noise compared to true image labels
-                G_loss = self.train_G(images)
-
-                # Backpropagate the generator network
-                G_loss.backward()
-                G_optimizer.step()
-
-            print('G pre-trained for {0} training steps.'.format(G_init))
-        else:
-            print('G not pre-trained -- GAN unlikely to converge.')
+        epoch_steps = int(np.ceil(len(train_iter) / (D_steps)))
 
         # Begin training
         for epoch in tqdm(range(1, num_epochs+1)):
@@ -152,7 +130,7 @@ class Trainer:
                     # TRAINING D: Zero out gradients for D
                     D_optimizer.zero_grad()
 
-                    # Train the discriminator to learn to discriminate between real and generated images
+                    # Learn to discriminate between real and generated images
                     D_loss = self.train_D(images)
 
                     # Update parameters
@@ -162,13 +140,13 @@ class Trainer:
                     # Log results, backpropagate the discriminator network
                     D_step_loss.append(D_loss.item())
 
-                # We report D_loss in this way so that G_loss and D_loss have the same number of entries.
+                # So that G_loss and D_loss have the same number of entries.
                 D_losses.append(np.mean(D_step_loss))
 
                 # TRAINING G: Zero out gradients for G
                 G_optimizer.zero_grad()
 
-                # Train the generator to generate images that fool the discriminator
+                # Learn to generate images that fool the discriminator
                 G_loss = self.train_G(images)
 
                 # Log results, update parameters
@@ -179,9 +157,6 @@ class Trainer:
             # Save progress
             self.Glosses.extend(G_losses)
             self.Dlosses.extend(D_losses)
-
-            # Get metrics
-            self.metrics = gan_metrics(self)
 
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
@@ -203,7 +178,7 @@ class Trainer:
             images: batch of images (reshaped to [batch_size, 784])
         Output:
             D_loss: non-saturing loss for discriminator,
-            -E[log(D(x))] - E[log(1 - D(G(z)))]
+            -E[log( sigmoid(D(x) - E[D(G(z))]) )] - E[log(1 - sigmoid(D(G(z)) - E[D(x)]))]
         """
         # Generate labels (ones indicate real images, zeros indicate generated)
         X_labels = to_cuda(torch.ones(images.shape[0], 1))
@@ -211,7 +186,6 @@ class Trainer:
 
         # Classify the real batch images, get the loss for these
         DX_score = self.model.D(images)
-        DX_loss = F.binary_cross_entropy(DX_score, X_labels)
 
         # Sample noise z, generate output G(z)
         noise = self.compute_noise(images.shape[0], self.model.z_dim)
@@ -219,10 +193,11 @@ class Trainer:
 
         # Classify the fake batch images, get the loss for these using sigmoid cross entropy
         DG_score = self.model.D(G_output)
-        DG_loss = F.binary_cross_entropy(DG_score, G_labels)
 
-        # Compute vanilla (original paper) D loss
-        D_loss = DX_loss + DG_loss
+        # Compute D loss
+        DX_loss = F.binary_cross_entropy_with_logits(DX_score - torch.mean(DG_score), X_labels)
+        DG_loss = F.binary_cross_entropy_with_logits(DG_score - torch.mean(DX_score), G_labels)
+        D_loss = (DX_loss + DG_loss)/2
 
         return D_loss
 
@@ -232,21 +207,21 @@ class Trainer:
         Input:
             images: batch of images reshaped to [batch_size, -1]
         Output:
-            G_loss: minimax loss for how well G(z) fools D,
-            -E[log(D(G(z)))]
+            G_loss: non-saturating loss for how well G(z) fools D,
+            -E[log( sigmoid(D(G(z)) - E[D(x)]) )] - E[log(1 - sigmoid(D(x) - E[D(G(z))]))]
         """
         # Generate labels for the generator batch images (all 0, since they are fake)
         G_labels = to_cuda(torch.ones(images.shape[0], 1))
 
-        # Get noise (denoted z), classify it using G, then classify the output of G using D.
+        # Get noise (z), classify using G, then classify the output of G using D.
         noise = self.compute_noise(images.shape[0], self.model.z_dim) # z
         G_output = self.model.G(noise) # G(z)
         DG_score = self.model.D(G_output) # D(G(z))
 
-        # Compute the minimax loss for how D did versus the generations of G using sigmoid cross entropy
-        G_loss = F.binary_cross_entropy((1-DG_score), G_labels)
+        # Compute the non-saturating loss for how D did discrimination G(z)
+        G_loss = F.binary_cross_entropy(DG_score, G_labels)
 
-        return -1 * G_loss
+        return G_loss
 
     def compute_noise(self, batch_size, z_dim):
         """ Compute random noise for the generator to learn to make images from """
@@ -298,8 +273,12 @@ class Trainer:
         plt.rcParams["figure.figsize"] = (8,6)
 
         # Plot Discriminator loss in red, Generator loss in green
-        plt.plot(np.linspace(1, self.num_epochs, len(self.Dlosses)), self.Dlosses, 'r')
-        plt.plot(np.linspace(1, self.num_epochs, len(self.Dlosses)), self.Glosses, 'g')
+        plt.plot(np.linspace(1, self.num_epochs, len(self.Dlosses)),
+                 self.Dlosses,
+                 'r')
+        plt.plot(np.linspace(1, self.num_epochs, len(self.Dlosses)),
+                 self.Glosses,
+                 'g')
 
         # Add legend, title
         plt.legend(['Discriminator', 'Generator'])
@@ -315,23 +294,24 @@ class Trainer:
         state = torch.load(loadpath)
         self.model.load_state_dict(state)
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Load in binarized MNIST data, separate into data loaders
     train_iter, val_iter, test_iter = load_mnist()
 
+    # Initialize model
     model = Model(image_size=784,
-                  hidden_dim=256,
-                  z_dim=128)
+                    hidden_dim=256,
+                    z_dim=128)
 
+    # Initialize trainer
     trainer = Trainer(model=model,
-                           train_iter=train_iter,
-                           val_iter=val_iter,
-                           test_iter=test_iter,
-                           viz=False)
+                        train_iter=train_iter,
+                        val_iter=val_iter,
+                        test_iter=test_iter,
+                        viz=False)
 
+    # Train
     trainer.train(num_epochs=25,
                   G_lr=2e-4,
                   D_lr=2e-4,
-                  D_steps=1,
-                  G_init=5)
+                  D_steps=1)

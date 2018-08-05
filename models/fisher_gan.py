@@ -1,54 +1,39 @@
-""" (BEGAN)
-Boundary Equilibrium GAN
+""" (FisherGAN)
 
-https://arxiv.org/pdf/1703.10717.pdf
+From the abstract:
+"In this paper we introduce Fisher GAN which fits within the
+Integral Probability Metrics (IPM) framework for training GANs.
+Fisher GAN defines a critic with a data dependent constraint on
+its second order moments. We show in this paper that Fisher GAN
+allows for stable and time efficient training that does not
+compromise the capacity of the critic, and does not need data
+independent constraints such as weight clipping."
 
-Matching the distributions of the reconstruction losses is a solid approximation
-to matching the generated and real data distributions. While this is the idea of
-BEGAN, it is crucial to note that the reconstruction losses are NOT what we are
-trying to minimize. Instead, we derive the real loss from the Wasserstein
-distance between these reconstruction losses.
+Integral Probability Metrics (IPM) framework simply means that
+the outputs of the discriminator can be interpretted
+probabilistically. This is similar to WGAN/WGAN-GP. Whereas
+WGAN-GP uses a penalty on the gradients of the critic, FisherGAN
+imposes a constraint on the second order moments of the critic.
+Also, the Fisher IPM corresponds to the Chi-squared distance
+between distributions.
 
-BEGAN uses an autoencoder as a discriminator and optimizes a lower bound of the
-Wasserstein distance between auto-encoder loss distributions on realand fake
-data (as opposed to the sample distributions of the generator and real data).
+The main empirical claims are that FisherGAN yields better
+inception scores and has less computational overhead than WGAN.
 
-During training:
-
-    1) D (here, an autoencoder) reconstructs real images and is optimized to
-    minimize this reconstruction loss.
-    2) As a byproduct of D's optimization, the reconstruction loss of generated
-    images is increased. We optimize G to minimize the reconstruction loss of
-    the generated images.
-
-This setup trains D and G simultaneously while preserving the adversarial setup.
-
-The authors introduce an additional hyperparameter γ ∈ [0,1] to maintain the
-equilibrium between the D and G. Equilibrium between D and G occurs when
-E[loss(D(x))] == E[loss(D(G(z)))]. This γ is useful because an equilibrium is
-necessary for successful training of the BEGAN, and "the discriminator has two
-competing goals: auto-encode real images and discriminate real from generated
-images. The γ term lets us balance these. Lower values of γ lead to lower image
-diversity because the discriminator focuses more heavily on auto-encoding real
-images." We define γ = E[loss(D(G(z)))] / E[loss(D(x))]. Then
-E[loss(D(G(z)))] == γE[loss(D(x))]. To keep this balance, the authors introduce
-a variable kt ∈ [0,1] to control how much emphasis to put on loss(D(G(z)))
-during gradient descent.
+https://arxiv.org/pdf/1606.07536.pdf
 """
 
 import torch, torchvision
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 import os
 import matplotlib.pyplot as plt
 import numpy as np
 
 from itertools import product
-from tqdm import tqdm
+from tqdm import tqdm_notebook
 from .mnist_data import load_mnist
 from .gan_utils import *
 
@@ -58,7 +43,6 @@ class Generator(nn.Module):
     """
     def __init__(self, image_size, hidden_dim, z_dim):
         super().__init__()
-
         self.linear = nn.Linear(z_dim, hidden_dim)
         self.generate = nn.Linear(hidden_dim, image_size)
 
@@ -69,36 +53,35 @@ class Generator(nn.Module):
 
 
 class Discriminator(nn.Module):
-    """ Autoencoder. Input is an image (real, generated), output is the
-    reconstructed image.
+    """ Discriminator. Input is an image (real or generated), output is P(generated).
     """
-    def __init__(self, image_size, hidden_dim):
+    def __init__(self, image_size, hidden_dim, output_dim):
         super().__init__()
-
-        self.encoder = nn.Linear(image_size, hidden_dim)
-        self.decoder = nn.Linear(hidden_dim, image_size)
+        self.linear = nn.Linear(image_size, hidden_dim)
+        self.discriminate = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x):
-        encoded = F.relu(self.encoder(x))
-        decoded = self.decoder(encoded)
-        return decoded
+        activated = F.relu(self.linear(x))
+        discrimination = torch.sigmoid(self.discriminate(activated))
+        return discrimination
 
 
 class Model(nn.Module):
     """ Super class to contain both Discriminator (D) and Generator (G)
     """
-    def __init__(self, image_size, hidden_dim, z_dim):
+    def __init__(self, image_size, hidden_dim, z_dim, output_dim=1):
         super().__init__()
 
         self.__dict__.update(locals())
 
         self.G = Generator(image_size, hidden_dim, z_dim)
-        self.D = Discriminator(image_size, hidden_dim)
+        self.D = Discriminator(image_size, hidden_dim, output_dim)
 
 
 class Trainer:
+    """ Object to hold data iterators, train a GAN variant
+    """
     def __init__(self, model, train_iter, val_iter, test_iter, viz=False):
-        """ Object to hold data iterators, train a GAN variant """
         self.model = to_cuda(model)
         self.name = model.__class__.__name__
 
@@ -112,35 +95,32 @@ class Trainer:
         self.viz = viz
         self.metrics = defaultdict(list)
 
-    def train(self, num_epochs, G_lr=1e-4, D_lr=1e-4, D_steps=1,
-                    GAMMA=0.50, LAMBDA=1e-3, K=0.00):
-        """ Train a Bounded Equilibrium GAN
-            Logs progress using G loss, D loss, convergence metric,
-            visualizations of Generator output.
+    def train(self, num_epochs, G_lr=1e-4, D_lr=1e-4, D_steps=1, LAMBDA=0., RHO=1e-6):
+        """ Train FisherGAN using IPM framework
+            Logs progress using G loss, D loss, G(x), D(G(x)), IPM ratio (want close to 0.50),
+            Lambda (want close to 0), and visualizations of Generator output.
 
         Inputs:
             num_epochs: int, number of epochs to train for
             G_lr: float, learning rate for generator's Adam optimizer (default 1e-4)
             D_lr: float, learning rate for discriminator's Adam optimizer (default 1e-4)
             D_steps: int, training step ratio for how often to train D compared to G (default 1)
-            GAMMA: float, balance equilibrium between G and D objectives (default 0.50)
-            LAMBDA: float, weight D loss for updating K (default 1e-3)
-            K: float, how much to initially emphasize loss(D(G(z))) in total D loss (default 0.00)
+            LAMBDA: float, initial weight on constraint term (default 0.)
+            RHO: float, quadratic penalty weight (default 1e-6)
         """
+        # Initialize alpha
+        self.LAMBDA = to_var(torch.zeros(1))
+        self.RHO = to_var(torch.tensor(RHO))
 
-        # Adam optimizers
-        G_optimizer = optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=G_lr)
-        D_optimizer = optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=D_lr)
-
-        # Reduce learning rate by factor of 2 if convergence_metric stops decreasing by a threshold for last five epochs
-        G_scheduler = ReduceLROnPlateau(G_optimizer, factor=0.50, threshold=0.01, patience=5*len(train_iter))
-        D_scheduler = ReduceLROnPlateau(D_optimizer, factor=0.50, threshold=0.01, patience=5*len(train_iter))
+        # Initialize optimizers
+        G_optimizer = torch.optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=G_lr)
+        D_optimizer = torch.optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=D_lr)
 
         # Approximate steps/epoch given D_steps per epoch --> roughly train in the same way as if D_step (1) == G_step (1)
         epoch_steps = int(np.ceil(len(train_iter) / (D_steps)))
 
         # Begin training
-        for epoch in tqdm(range(1, num_epochs + 1)):
+        for epoch in tqdm_notebook(range(1, num_epochs+1)):
             self.model.train()
             G_losses, D_losses = [], []
 
@@ -148,60 +128,53 @@ class Trainer:
 
                 D_step_loss = []
 
-                # TRAINING D: Train D for D_steps
                 for _ in range(D_steps):
 
-                    # Retrieve batch
+                    # Reshape images
                     images = self.process_batch(self.train_iter)
 
-                    # Zero out gradients for D
+                    # TRAINING D: Zero out gradients for D
                     D_optimizer.zero_grad()
 
-                    # Train the discriminator using BEGAN loss
-                    D_loss, DX_loss, DG_loss = self.train_D(images, K)
+                    # Train the discriminator to learn to discriminate between real and generated images
+                    D_loss, IPM_ratio = self.train_D(images)
 
                     # Update parameters
                     D_loss.backward()
+
+                    # Minimize lambda for 'artisinal SGD'
+                    self.LAMBDA = self.LAMBDA + self.RHO*self.LAMBDA.grad
+                    self.LAMBDA = to_cuda(self.LAMBDA.detach().requires_grad_(True))
+
+                    # Now step optimizer
                     D_optimizer.step()
 
-                    # Save relevant output for progress logging
+                    # Log results, backpropagate the discriminator network
                     D_step_loss.append(D_loss.item())
 
-                # We report D_loss in this way so that G_loss and D_loss have the same number of entries
+                # So that G_loss and D_loss have the same number of entries.
                 D_losses.append(np.mean(D_step_loss))
 
-                # TRAINING G: Zero out gradients for G.
+                # TRAINING G: Zero out gradients for G
                 G_optimizer.zero_grad()
 
-                # Train the generator using BEGAN loss
+                # Train the generator to generate images that fool the discriminator
                 G_loss = self.train_G(images)
 
-                # Update parameters
+                # Log results, update parameters
+                G_losses.append(G_loss.item())
                 G_loss.backward()
                 G_optimizer.step()
 
-                # Save relevant output for progress logging
-                G_losses.append(G_loss.item())
-
-                # PROPORTIONAL CONTROL THEORY: Dynamically update K, log convergence measure
-                convergence_measure = (DX_loss + torch.abs(GAMMA*DX_loss - DG_loss)).item()
-                K_update = (K + LAMBDA*(GAMMA*DX_loss - DG_loss)).item()
-                K = min(max(0, K_update), 1)
-
-                # Learning rate scheduler
-                D_scheduler.step(convergence_measure)
-                G_scheduler.step(convergence_measure)
-
+            # Save progress
             self.Glosses.extend(G_losses)
             self.Dlosses.extend(D_losses)
 
             # Progress logging
-            print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f, K: %.4f, Convergence Measure: %.4f"
-                   %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses), K, convergence_measure))
+            print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f, IPM ratio: %.4f, Lambda: %.4f"
+                   %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses),
+                     IPM_ratio, self.LAMBDA))
             self.num_epochs = epoch
-
-            # Get metrics
-            self.metrics = gan_metrics(self)
 
             # Visualize generator progress
             # self.generate_images(epoch)
@@ -211,32 +184,41 @@ class Trainer:
 
         return self.metrics
 
-    def train_D(self, images, K):
+    def train_D(self, images):
         """ Run 1 step of training for discriminator
 
         Input:
             images: batch of images (reshaped to [batch_size, 784])
-            K: how much to emphasize loss(D(G(z))) in total D loss
         Output:
-            D_loss: BEGAN loss for discriminator, E[||x - AE(x)||1] - K*E[G(z) - AE(G(z))]
+            D_loss: FisherGAN IPM loss
         """
+        # Generate labels (ones indicate real images, zeros indicate generated)
+        X_labels = to_cuda(torch.ones(images.shape[0], 1))
+        G_labels = to_cuda(torch.zeros(images.shape[0], 1))
 
-        # Reconstruct the images using D (autoencoder), get reconstruction loss
-        DX_reconst = self.model.D(images)
-        DX_loss = torch.mean(torch.sum(torch.abs(DX_reconst - images), dim=1)) # ||DX_loss||1 == DX_loss
+        # Classify the real batch images, get the loss for these
+        DX_score = self.model.D(images)
 
-        # Sample outputs from the generator
-        noise = self.compute_noise(images.shape[0], self.model.z_dim)
+        # Sample noise z, generate output G(z), discriminate D(G(z))
+        noise = self.compute_noise(images.shape[0], model.z_dim)
         G_output = self.model.G(noise)
+        DG_score = self.model.D(G_output)
 
-        # Reconstruct the generation using D (autoencoder)
-        DG_reconst = self.model.D(G_output)
-        DG_loss = torch.mean(torch.sum(torch.abs(DG_reconst - G_output), dim=1)) # ||DG_loss||1 == DG_loss
+        # First and second order central moments (Gaussian assumed)
+        DX_moment_1, DG_moment_1  = DX_score.mean(), DG_score.mean()
+        DX_moment_2, DG_moment_2 = (DX_score**2).mean(), (DG_score**2).mean()
 
-        # Put it all together
-        D_loss = DX_loss - (K * DG_loss)
+        # Compute constraint on second order moments
+        OMEGA = 1 - (0.5*DX_moment_2 + 0.5*DG_moment_2)
 
-        return D_loss, DX_loss, DG_loss
+        # Compute loss (Eqn. 9, but differs slightly since we optimize negative gradients)
+        D_loss = -((DX_moment_1-DG_moment_1) + self.LAMBDA*OMEGA - (self.RHO/2)*(OMEGA**2))
+
+        # For progress logging
+        IPM_ratio = DX_moment_1.item() - DG_moment_1.item() \
+                    / 0.5*(DX_moment_2.item() - DG_moment_2.item())**0.5
+
+        return D_loss, IPM_ratio
 
     def train_G(self, images):
         """ Run 1 step of training for generator
@@ -244,16 +226,16 @@ class Trainer:
         Input:
             images: batch of images reshaped to [batch_size, -1]
         Output:
-            G_loss: BEGAN loss for G, E[||G(z) - AE(G(Z))||1]
+            G_loss: FisherGAN IPM loss
         """
 
-        # Get noise, classify it using G, then reconstruct the output of G using D (autoencoder).
+        # Get noise (denoted z), classify it using G, then classify the output of G using D.
         noise = self.compute_noise(images.shape[0], self.model.z_dim) # z
         G_output = self.model.G(noise) # G(z)
-        DG_reconst = self.model.D(G_output) # D(G(z))
+        DG_score = self.model.D(G_output) # D(G(z))
 
-        # Reconstruct the generation using D
-        G_loss = torch.mean(torch.sum(torch.abs(DG_reconst - G_output), dim=1)) # ||G_loss||1 == G_loss
+        # Compute loss by minimizing mean difference
+        G_loss = -DG_score.mean()
 
         return G_loss
 
@@ -326,7 +308,6 @@ class Trainer:
 
 
 if __name__ == '__main__':
-
     # Load in binarized MNIST data, separate into data loaders
     train_iter, val_iter, test_iter = load_mnist()
 
@@ -334,7 +315,7 @@ if __name__ == '__main__':
     model = Model(image_size=784,
                   hidden_dim=256,
                   z_dim=128)
-
+                  
     # Init trainer
     trainer = Trainer(model=model,
                        train_iter=train_iter,
