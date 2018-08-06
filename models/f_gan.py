@@ -34,8 +34,9 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
+from collections import defaultdict
 from itertools import product
-from tqdm import tqdm_notebook
+from tqdm import tqdm
 from .mnist_data import load_mnist
 from .gan_utils import *
 
@@ -163,7 +164,7 @@ class Trainer:
         self.viz = viz
         self.metrics = defaultdict(list)
 
-    def train(self, num_epochs, method='forward_kl', G_lr=1e-4, D_lr=1e-4, D_steps=1):
+    def train(self, num_epochs, method='forward_kl', lr=1e-4, D_steps=1):
         """ Train an NSGAN using f-divergence
             Logs progress using G loss, D loss, G(x), D(G(x)),
             visualizations of Generator output.
@@ -171,22 +172,22 @@ class Trainer:
         Inputs:
             num_epochs: int, number of epochs to train for
             method: str, divergence metric to optimize (default 'forward_kl')
-            G_lr: float, learning rate for generator's Adam optimizer (default 1e-4)
-            D_lr: float, learning rate for discriminator's Adam optimizer (default 1e-4)
+            lr: float, learning rate for Adam optimizers (default 1e-4)
             D_steps: int, training step ratio for how often to train D compared to G (default 1)
         """
         # Initialize loss
         self.loss_fnc = Divergence(method)
 
         # Initialize optimizers
-        G_optimizer = optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=G_lr)
-        D_optimizer = optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=D_lr)
+        G_optimizer = optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=lr)
+        D_optimizer = optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=lr)
+        self.__dict__.update(locals())
 
         # Approximate steps/epoch given D_steps per epoch --> roughly train in the same way as if D_step (1) == G_step (1)
-        epoch_steps = int(np.ceil(len(train_iter) / (D_steps)))
+        epoch_steps = int(np.ceil(len(self.train_iter) / (D_steps)))
 
         # Begin training
-        for epoch in tqdm_notebook(range(1, num_epochs+1)):
+        for epoch in tqdm(range(1, num_epochs+1)):
             self.model.train()
             G_losses, D_losses = [], []
 
@@ -230,13 +231,13 @@ class Trainer:
             self.Glosses.extend(G_losses)
             self.Dlosses.extend(D_losses)
 
+            # Get metrics
+            self.metrics = gan_metrics(self)
+
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
                    %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses)))
             self.num_epochs = epoch
-
-            # Get metrics
-            self.metrics = gan_metrics(self)
 
             # Visualize generator progress
             # self.generate_images(epoch)
@@ -262,7 +263,7 @@ class Trainer:
         DX_score = self.model.D(images)
 
         # Sample noise z, generate output G(z)
-        noise = self.compute_noise(images.shape[0], model.z_dim)
+        noise = self.compute_noise(images.shape[0], self.model.z_dim)
         G_output = self.model.G(noise)
 
         # Classify the fake batch images, get the loss for these using sigmoid cross entropy
@@ -381,6 +382,5 @@ if __name__ == '__main__':
     # Train
     trainer.train(num_epochs=25,
                   method='forward_kl',
-                  G_lr=1e-4,
-                  D_lr=1e-4,
+                  lr=1e-4,
                   D_steps=1)

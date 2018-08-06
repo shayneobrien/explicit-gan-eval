@@ -32,8 +32,9 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
+from collections import defaultdict
 from itertools import product
-from tqdm import tqdm_notebook
+from tqdm import tqdm
 from .mnist_data import load_mnist
 from .gan_utils import *
 
@@ -95,17 +96,15 @@ class Trainer:
         self.viz = viz
         self.metrics = defaultdict(list)
 
-    def train(self, num_epochs, G_lr=1e-4, D_lr=1e-4, D_steps=1, LAMBDA=0., RHO=1e-6):
+    def train(self, num_epochs, lr=1e-4, D_steps=1, RHO=1e-6):
         """ Train FisherGAN using IPM framework
-            Logs progress using G loss, D loss, G(x), D(G(x)), IPM ratio (want close to 0.50),
+            Logs progress using G loss, D loss, G(x), D(G(x)),
             Lambda (want close to 0), and visualizations of Generator output.
 
         Inputs:
             num_epochs: int, number of epochs to train for
-            G_lr: float, learning rate for generator's Adam optimizer (default 1e-4)
-            D_lr: float, learning rate for discriminator's Adam optimizer (default 1e-4)
+            lr: float, learning rate for Adam optimizers (default 1e-4)
             D_steps: int, training step ratio for how often to train D compared to G (default 1)
-            LAMBDA: float, initial weight on constraint term (default 0.)
             RHO: float, quadratic penalty weight (default 1e-6)
         """
         # Initialize alpha
@@ -113,14 +112,15 @@ class Trainer:
         self.RHO = to_var(torch.tensor(RHO))
 
         # Initialize optimizers
-        G_optimizer = torch.optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=G_lr)
-        D_optimizer = torch.optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=D_lr)
+        G_optimizer = torch.optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=lr)
+        D_optimizer = torch.optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=lr)
+        self.__dict__.update(locals())
 
         # Approximate steps/epoch given D_steps per epoch --> roughly train in the same way as if D_step (1) == G_step (1)
-        epoch_steps = int(np.ceil(len(train_iter) / (D_steps)))
+        epoch_steps = int(np.ceil(len(self.train_iter) / (D_steps)))
 
         # Begin training
-        for epoch in tqdm_notebook(range(1, num_epochs+1)):
+        for epoch in tqdm(range(1, num_epochs+1)):
             self.model.train()
             G_losses, D_losses = [], []
 
@@ -137,7 +137,7 @@ class Trainer:
                     D_optimizer.zero_grad()
 
                     # Train the discriminator to learn to discriminate between real and generated images
-                    D_loss, IPM_ratio = self.train_D(images)
+                    D_loss = self.train_D(images)
 
                     # Update parameters
                     D_loss.backward()
@@ -170,10 +170,13 @@ class Trainer:
             self.Glosses.extend(G_losses)
             self.Dlosses.extend(D_losses)
 
+            # Get metrics
+            self.metrics = gan_metrics(self)
+
             # Progress logging
-            print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f, IPM ratio: %.4f, Lambda: %.4f"
+            print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f, Lambda: %.4f"
                    %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses),
-                     IPM_ratio, self.LAMBDA))
+                     self.LAMBDA.item()))
             self.num_epochs = epoch
 
             # Visualize generator progress
@@ -200,11 +203,12 @@ class Trainer:
         DX_score = self.model.D(images)
 
         # Sample noise z, generate output G(z), discriminate D(G(z))
-        noise = self.compute_noise(images.shape[0], model.z_dim)
+        noise = self.compute_noise(images.shape[0], self.model.z_dim)
         G_output = self.model.G(noise)
         DG_score = self.model.D(G_output)
 
         # First and second order central moments (Gaussian assumed)
+        # TODO: is this problematic for non-Gaussian?
         DX_moment_1, DG_moment_1  = DX_score.mean(), DG_score.mean()
         DX_moment_2, DG_moment_2 = (DX_score**2).mean(), (DG_score**2).mean()
 
@@ -214,11 +218,7 @@ class Trainer:
         # Compute loss (Eqn. 9, but differs slightly since we optimize negative gradients)
         D_loss = -((DX_moment_1-DG_moment_1) + self.LAMBDA*OMEGA - (self.RHO/2)*(OMEGA**2))
 
-        # For progress logging
-        IPM_ratio = DX_moment_1.item() - DG_moment_1.item() \
-                    / 0.5*(DX_moment_2.item() - DG_moment_2.item())**0.5
-
-        return D_loss, IPM_ratio
+        return D_loss
 
     def train_G(self, images):
         """ Run 1 step of training for generator
@@ -315,7 +315,7 @@ if __name__ == '__main__':
     model = Model(image_size=784,
                   hidden_dim=256,
                   z_dim=128)
-                  
+
     # Init trainer
     trainer = Trainer(model=model,
                        train_iter=train_iter,
@@ -325,6 +325,5 @@ if __name__ == '__main__':
 
     # Train
     trainer.train(num_epochs=25,
-                  G_lr=1e-4,
-                  D_lr=1e-4,
+                  lr=1e-4,
                   D_steps=1)

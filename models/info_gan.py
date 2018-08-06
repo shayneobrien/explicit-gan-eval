@@ -36,8 +36,9 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
+from collections import defaultdict
 from itertools import product
-from tqdm import tqdm_notebook
+from tqdm import tqdm
 from .mnist_data import load_mnist
 from .gan_utils import *
 
@@ -96,7 +97,7 @@ class Q(nn.Module):
 class Model(nn.Module):
     """ Super class to contain both Discriminator (D) and Generator (G)
     """
-    def __init__(self, image_size, hidden_dim, z_dim, disc_dim, cont_dim, output_dim=1):
+    def __init__(self, image_size, hidden_dim, z_dim, disc_dim=2, cont_dim=10, output_dim=1):
         super().__init__()
 
         self.__dict__.update(locals())
@@ -124,14 +125,13 @@ class Trainer:
         self.viz = viz
         self.metrics = defaultdict(list)
 
-    def train(self, num_epochs, G_lr=2e-4, D_lr=2e-4, D_steps=1):
+    def train(self, num_epochs, lr=2e-4, D_steps=1):
         """ Train InfoGAN using the non-saturating setup from vanilla GAN.
             Logs progress using G loss, D loss, G(x), D(G(x)), visualizations of Generator output.
 
         Inputs:
             num_epochs: int, number of epochs to train for
-            G_lr: float, learning rate for generator's Adam optimizer (default 2e-4)
-            D_lr: float, learning rate for discriminator's Adam optimizer (default 2e-4)
+            lr: float, learning rate for Adam optimizers (default 2e-4)
             D_steps: int, training step ratio for how often to train D compared to G (default 1)
         """
         # Initialize optimizers
@@ -139,16 +139,17 @@ class Trainer:
                       'G': [p for p in self.model.G.parameters() if p.requires_grad],
                       'Q': [p for p in self.model.Q.parameters() if p.requires_grad]}
 
-        D_optimizer = optim.Adam(params=parameters['D'], lr=D_lr)
-        G_optimizer = optim.Adam(params=parameters['G'], lr=G_lr)
-        MI_optimizer = optim.Adam(params=(parameters['G']+parameters['Q']), lr=G_lr)
+        D_optimizer = optim.Adam(params=parameters['D'], lr=lr)
+        G_optimizer = optim.Adam(params=parameters['G'], lr=lr)
+        MI_optimizer = optim.Adam(params=(parameters['G']+parameters['Q']), lr=lr)
+        self.__dict__.update(locals())
 
         # Approximate steps/epoch given D_steps per epoch
         # --> roughly train in the same way as if D_step (1) == G_step (1)
-        epoch_steps = int(np.ceil(len(train_iter) / (D_steps)))
+        epoch_steps = int(np.ceil(len(self.train_iter) / (D_steps)))
 
         # Begin training
-        for epoch in tqdm_notebook(range(1, num_epochs+1)):
+        for epoch in tqdm(range(1, num_epochs+1)):
             self.model.train()
             G_losses, D_losses, MI_losses = [], [], []
 
@@ -203,6 +204,9 @@ class Trainer:
             self.Glosses.extend(G_losses)
             self.Dlosses.extend(D_losses)
             self.MIlosses.extend(MI_losses)
+
+            # Get metrics
+            self.metrics = gan_metrics(self)
 
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f, MI Loss: %.4f"
@@ -313,10 +317,16 @@ class Trainer:
 
         return MI_loss
 
-    def compute_noise(self, batch_size, z_dim, disc_dim, cont_dim, c=None):
+    def compute_noise(self, batch_size, z_dim,
+                        disc_dim=None, cont_dim=None, c=None):
         """ Compute random noise for the generator to learn to make images
         OPTIONAL: set c to explore latent dimension space.
         """
+        if disc_dim is None:
+            disc_dim = self.model.disc_dim
+
+        if cont_dim is None:
+            cont_dim = self.model.cont_dim
 
         # Noise vector (z)
         z = torch.randn(batch_size, z_dim)
@@ -411,13 +421,12 @@ if __name__ == '__main__':
 
     # Init trainer
     trainer = Trainer(model=model,
-                             train_iter=train_iter,
-                             val_iter=val_iter,
-                             test_iter=test_iter,
-                             viz=False)
+                        train_iter=train_iter,
+                         val_iter=val_iter,
+                         test_iter=test_iter,
+                         viz=False)
 
     # Train
     trainer.train(num_epochs=25,
-                  G_lr=2e-4,
-                  D_lr=2e-4,
+                  lr=2e-4,
                   D_steps=1)

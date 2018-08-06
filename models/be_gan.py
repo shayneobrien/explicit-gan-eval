@@ -47,6 +47,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
+from collections import defaultdict
 from itertools import product
 from tqdm import tqdm
 from .mnist_data import load_mnist
@@ -112,7 +113,7 @@ class Trainer:
         self.viz = viz
         self.metrics = defaultdict(list)
 
-    def train(self, num_epochs, G_lr=1e-4, D_lr=1e-4, D_steps=1,
+    def train(self, num_epochs, lr=1e-4, D_steps=1,
                     GAMMA=0.50, LAMBDA=1e-3, K=0.00):
         """ Train a Bounded Equilibrium GAN
             Logs progress using G loss, D loss, convergence metric,
@@ -120,8 +121,7 @@ class Trainer:
 
         Inputs:
             num_epochs: int, number of epochs to train for
-            G_lr: float, learning rate for generator's Adam optimizer (default 1e-4)
-            D_lr: float, learning rate for discriminator's Adam optimizer (default 1e-4)
+            lr: float, learning rate for Adam optimizers (default 1e-4)
             D_steps: int, training step ratio for how often to train D compared to G (default 1)
             GAMMA: float, balance equilibrium between G and D objectives (default 0.50)
             LAMBDA: float, weight D loss for updating K (default 1e-3)
@@ -129,15 +129,16 @@ class Trainer:
         """
 
         # Adam optimizers
-        G_optimizer = optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=G_lr)
-        D_optimizer = optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=D_lr)
+        G_optimizer = optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=lr)
+        D_optimizer = optim.Adam(params=[p for p in self.model.D.parameters() if p.requires_grad], lr=lr)
+        self.__dict__.update(locals())
 
         # Reduce learning rate by factor of 2 if convergence_metric stops decreasing by a threshold for last five epochs
-        G_scheduler = ReduceLROnPlateau(G_optimizer, factor=0.50, threshold=0.01, patience=5*len(train_iter))
-        D_scheduler = ReduceLROnPlateau(D_optimizer, factor=0.50, threshold=0.01, patience=5*len(train_iter))
+        G_scheduler = ReduceLROnPlateau(G_optimizer, factor=0.50, threshold=0.01, patience=5*len(self.train_iter))
+        D_scheduler = ReduceLROnPlateau(D_optimizer, factor=0.50, threshold=0.01, patience=5*len(self.train_iter))
 
         # Approximate steps/epoch given D_steps per epoch --> roughly train in the same way as if D_step (1) == G_step (1)
-        epoch_steps = int(np.ceil(len(train_iter) / (D_steps)))
+        epoch_steps = int(np.ceil(len(self.train_iter) / (D_steps)))
 
         # Begin training
         for epoch in tqdm(range(1, num_epochs + 1)):
@@ -195,13 +196,13 @@ class Trainer:
             self.Glosses.extend(G_losses)
             self.Dlosses.extend(D_losses)
 
+            # Get metrics
+            self.metrics = gan_metrics(self)
+
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f, K: %.4f, Convergence Measure: %.4f"
                    %(epoch, num_epochs, np.mean(G_losses), np.mean(D_losses), K, convergence_measure))
             self.num_epochs = epoch
-
-            # Get metrics
-            self.metrics = gan_metrics(self)
 
             # Visualize generator progress
             # self.generate_images(epoch)
@@ -344,6 +345,5 @@ if __name__ == '__main__':
 
     # Train
     trainer.train(num_epochs=25,
-                  G_lr=1e-4,
-                  D_lr=1e-4,
+                  lr=1e-4,
                   D_steps=1)

@@ -7,7 +7,7 @@ import numpy as np
 
 from torch.utils.data import TensorDataset
 from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
-from .autoencoder import Model, Trainer
+from .ae import Model, Trainer
 
 
 def get_the_data_mnist(BATCH_SIZE):

@@ -21,12 +21,12 @@ import torch, torchvision
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-from collections import defaultdict
 
 import os
 import matplotlib.pyplot as plt
 import numpy as np
 
+from collections import defaultdict
 from itertools import product
 from tqdm import tqdm
 from .mnist_data import load_mnist

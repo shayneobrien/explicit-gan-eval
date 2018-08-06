@@ -28,15 +28,15 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torchvision.transforms import ToPILImage
 from torchvision.utils import make_grid
-from collections import defaultdict
 
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from copy import deepcopy
 
-from tqdm import tqdm
+from collections import defaultdict
 from itertools import product
+from tqdm import tqdm
 from .mnist_data import load_mnist
 from .gan_utils import *
 

@@ -4,7 +4,10 @@ import matplotlib.pyplot as plt
 from torch.utils.data import TensorDataset
 
 import data
-from models import w_gan, w_gp_gan, ns_gan, mm_gan, ls_gan, dra_gan, be_gan, vae, autoencoder
+from models import w_gan, w_gp_gan, ns_gan, mm_gan, \
+                   f_gan, fisher_gan, ra_gan, info_gan, \
+                   ls_gan, dra_gan, be_gan, vae, ae \
+
 from utils import *
 
 plt.switch_backend('agg')
@@ -58,14 +61,18 @@ if __name__ == "__main__":
     # Specify models to test
     models = {
         "wgan": w_gan,
-        # "wgpgan": w_gp_gan,
-        # "nsgan": ns_gan,
-        # "lsgan": ls_gan,
-        # "mmgan": mm_gan,
-        # "dragan": dra_gan,
-        # "began": be_gan,
-        # "vae": vae,
-        # "autoencoder": autoencoder,
+        "wgpgan": w_gp_gan,
+        "nsgan": ns_gan,
+        "lsgan": ls_gan,
+        "mmgan": mm_gan,
+        "dragan": dra_gan,
+        "began": be_gan,
+        "ragan": ra_gan,
+        "infogan": info_gan, #TODO: set cont_dim, disc_dim appropriately?
+        "fishergan": fisher_gan, #TODO: moments may be problematic
+        "fgan": f_gan, #TODO: cycle through divergences?
+        "vae": vae,
+        # "autoencoder": ae,
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
@@ -93,13 +100,17 @@ if __name__ == "__main__":
             elif data_type == "mnist":
                 # pass
                 results = get_mnist_results(models, 784, epochs, hyperparam)  # TODO: MNIST
+
             with open(out_path, 'w') as outfile:
                 json.dump(results, outfile)
+
         results = get_best_performance(data_type)
         with open("best/{}/results_{}_{}.json".format(data_type, t, datetime.datetime.now().strftime("%Y-%m-%d")), 'w') as outfile:
                 json.dump(results, outfile)
+
     ci = get_confidence_intervals(data_type)
     with open("confidence_intervals/{}/data.json".format(data_type), 'w') as outfile:
         json.dump(ci, outfile)
+
     get_best_graph(results, models, distributions, distance_metrics, epochs)
     print("Le Fin.")
