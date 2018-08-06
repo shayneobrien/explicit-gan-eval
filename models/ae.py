@@ -55,7 +55,7 @@ class Decoder(nn.Module):
         self.linear = nn.Linear(hidden_dim, image_size)
 
     def forward(self, encoder_output):
-        return F.sigmoid(self.linear(encoder_output))
+        return torch.sigmoid(self.linear(encoder_output))
 
 
 class Model(nn.Module):
@@ -160,9 +160,9 @@ class Trainer:
 
         output = self.model(images)
 
-        recon_loss = F.binary_cross_entropy(output, images, size_average=False)
+        recon_loss = -torch.sum(torch.log(torch.abs(output - images) + 1e-8))
 
-        return output, recon_loss
+        return recon_loss
 
     def evaluate(self, iterator):
         """ Evaluate on a given dataset """

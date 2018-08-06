@@ -59,6 +59,7 @@ if __name__ == "__main__":
 
 
     # Specify models to test
+    # TODO: generator activation function with respect to distribution???
     models = {
         "wgan": w_gan,
         "wgpgan": w_gp_gan,
@@ -68,8 +69,8 @@ if __name__ == "__main__":
         "dragan": dra_gan,
         "began": be_gan,
         "ragan": ra_gan,
-        "infogan": info_gan, #TODO: set cont_dim, disc_dim appropriately?
-        "fishergan": fisher_gan, #TODO: moments may be problematic
+        "infogan": info_gan,
+        "fishergan": fisher_gan, #TODO: assumed Gaussian moments may be problematic
         "fgan": f_gan, #TODO: cycle through divergences?
         "vae": vae,
         # "autoencoder": ae,

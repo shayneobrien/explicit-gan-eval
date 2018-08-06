@@ -42,7 +42,7 @@ class Generator(nn.Module):
 
     def forward(self, x):
         activated = F.relu(self.linear(x))
-        generation = F.sigmoid(self.generate(activated))
+        generation = torch.sigmoid(self.generate(activated))
         return generation
 
 
@@ -58,7 +58,7 @@ class Discriminator(nn.Module):
 
     def forward(self, x):
         activated = F.relu(self.linear(x))
-        discrimination = F.sigmoid(self.discriminate(activated))
+        discrimination = self.discriminate(activated)
         return discrimination
 
 
@@ -99,7 +99,7 @@ class Trainer:
         Inputs:
             num_epochs: int, number of epochs to train for
             lr: float, learning rate for Adam optimizers (default 1e-4)
-            D_steps: int, training step ratio for how often to train D compared to G (default 1)
+            D_steps: int, training step ratio for how often to train D compared to G (default 3)
         """
         # Initialize optimizers
         G_optimizer = torch.optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=lr)
