@@ -7,8 +7,9 @@ import numpy as np
 
 from torch.utils.data import TensorDataset
 from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
-from .ae import Model, Trainer
 
+import models.ae as ae
+from models.gan_utils import to_cuda
 
 def get_the_data_mnist(BATCH_SIZE):
     """ Load data for binared MNIST """
@@ -50,33 +51,53 @@ def get_the_data_mnist(BATCH_SIZE):
 
 
 def preprocess_mnist(BATCH_SIZE=100):
-    """ Create data iterators """
+    """ Here the intention is to run the autoencoder on the MNIST data
+    and output the autoencoded data as train_iter, val_iter, test_iter
+    """
+    # Load MNIST data
     train_iter, val_iter, test_iter = get_the_data_mnist(BATCH_SIZE)
-    # Here the intention is to run the autoencoder on the MNIST data and output the autoencoded data as train_iter, val_iter, test_iter
-    model = Model(image_size=784,
-                  hidden_dim=32)
 
-    trainer = Trainer(model=model,
-                      train_iter=train_iter,
-                      val_iter=val_iter,
-                      test_iter=test_iter,
-                      viz=False)
+    # Train autoencoder
+    print('Training autoencoder...')
+    model = ae.Model(image_size=784,
+                     hidden_dim=32)
+
+    trainer = ae.Trainer(model=model,
+                          train_iter=train_iter,
+                          val_iter=val_iter,
+                          test_iter=test_iter,
+                          viz=False)
 
     trainer.train(num_epochs=1,
                   lr=1e-3,
                   weight_decay=1e-5)
 
-    autoencoder_mnist = {}
+    autoencoder_mnist, results = {}, []
     for count, dataset in enumerate([train_iter, val_iter, test_iter]):
-        for index, data in enumerate(dataset):
-            img, _ = data
-            img = img.view(img.size(0), -1)
-            img = Variable(img)
-            result = trainer.model.forward(img)
-            result = result/torch.max(result)
-            if index == 0:
-                results = result
-            else:
-                results = torch.cat([results, result])
-        autoencoder_mnist[str(count)] = results
-    return  autoencoder_mnist["0"], autoencoder_mnist["1"], autoencoder_mnist["2"]
+
+        # Autoencode all images
+        for batch in dataset:
+
+            images, labels = batch
+            images = to_cuda(images.view(images.shape[0], -1))
+
+            output = trainer.model(images)
+            results.append((output.detach(), labels.detach()))
+
+        # Make a dataset out of the autoencoded images, copy attributes
+        autoencoded_data = list_obj(results)
+        autoencoded_data.__dict__ = dataset.__dict__.copy()
+
+        # Store into dictionary
+        autoencoder_mnist[str(count)] = autoencoded_data
+
+        # Reinitialize results for the next dataset
+        results = []
+
+    return autoencoder_mnist["0"], autoencoder_mnist["1"], autoencoder_mnist["2"]
+
+
+class list_obj(list):
+    """ Used in preprocess_mnist so we can set attributes that are later
+    used in metrics functions """
+    pass

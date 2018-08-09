@@ -197,7 +197,7 @@ class Trainer:
         # Compute D loss
         D_loss = -torch.mean(torch.log(torch.sigmoid(DX_score-torch.mean(DG_score)) + 1e-8) \
                               + torch.log(torch.sigmoid(1 - DG_score) + 1e-8)) / 2
-            
+
         return D_loss
 
     def train_G(self, images):

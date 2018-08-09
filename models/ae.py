@@ -162,7 +162,7 @@ class Trainer:
 
         recon_loss = -torch.sum(torch.log(torch.abs(output - images) + 1e-8))
 
-        return recon_loss
+        return output, recon_loss
 
     def evaluate(self, iterator):
         """ Evaluate on a given dataset """

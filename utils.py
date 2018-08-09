@@ -72,11 +72,6 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions):
     return metrics
 
 
-def nested_pickle_dict():
-    """ Picklable defaultdict nested dictionaries """
-    return defaultdict(nested_pickle_dict)
-
-
 def get_best_performance(data_type):
     mypath = "hypertuning/{}".format(data_type)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
@@ -163,9 +158,17 @@ def model_results_mnist(module, epochs, hyperparameters, dimensions):
     train_iter, val_iter, test_iter = preprocess_mnist(bsize)
 
     # Model, trainer, metrics
-    model = module.Model(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
-    trainer = module.Trainer(model, train_iter, val_iter, test_iter)
-    metrics = trainer.train(num_epochs=epochs, lr=lr)  # ... this: ValueError: too many values to unpack (expected 2)
+    model = module.Model(image_size=dimensions,
+                        hidden_dim=dim,
+                        z_dim=int(round(dimensions/4)))
+
+    trainer = module.Trainer(model,
+                            train_iter,
+                            val_iter,
+                            test_iter)
+
+    metrics = trainer.train(num_epochs=epochs,
+                            lr=lr)  # ... this: ValueError: too many values to unpack (expected 2)
 
     return metrics
 
@@ -247,3 +250,8 @@ def get_mixture_graphs(results, models, distributions,
 #             plt.legend()
 #             plt.savefig('graphs/{0}_{1}.png'.format(gan, dist), dpi=100)
 #             plt.clf()
+
+
+def nested_pickle_dict():
+    """ Picklable defaultdict nested dictionaries """
+    return defaultdict(nested_pickle_dict)

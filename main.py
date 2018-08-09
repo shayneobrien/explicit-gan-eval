@@ -45,9 +45,9 @@ if __name__ == "__main__":
 
 
     # Set hyperparameters
-    learning_rates = [1e-3, 5e-4, 1e-4, 5e-5]
-    hidden_dims = [16, 32, 64, 128, 256]
-    BATCH_SIZE = [100, 150, 200, 250]
+    learning_rates = [1e-3, 5e-4, 1e-4, 5e-5] # np.linspace()
+    hidden_dims = [16, 32, 64, 128, 256] # 2, 4, 8, 16, 32, 64, 128, 256
+    BATCH_SIZE = [100, 150, 200, 250] # 16, 32, 64, 128, 256, 512, 1024, 2048, 4096
     distributions = [
                      'normal',
                      'beta',
@@ -59,21 +59,21 @@ if __name__ == "__main__":
 
 
     # Specify models to test
-    # TODO: generator activation function with respect to distribution???
+    # TODO: GENERATOR activation functions: sigmoid for MNIST/circles, ReLU for others)
     models = {
-        "wgan": w_gan,
+        # "wgan": w_gan,
         "wgpgan": w_gp_gan,
-        "nsgan": ns_gan,
-        "lsgan": ls_gan,
-        "mmgan": mm_gan,
-        "dragan": dra_gan,
-        "began": be_gan,
-        "ragan": ra_gan,
-        "infogan": info_gan,
-        "fishergan": fisher_gan, #TODO: assumed Gaussian moments may be problematic
-        "fgan": f_gan, #TODO: cycle through divergences?
-        "vae": vae,
-        # "autoencoder": ae,
+        # "nsgan": ns_gan,
+        # "lsgan": ls_gan,
+        # "mmgan": mm_gan,
+        # "dragan": dra_gan,
+        # "began": be_gan,
+        # "ragan": ra_gan,
+        # "infogan": info_gan,
+        # "fishergan": fisher_gan, #TODO: assumed Gaussian moments may be problematic, fix softmax thing from loss (?)
+        # "fgan": f_gan, #TODO: cycle through divergences, fix NaN issue, double check activation fnc..
+        # "vae": vae,
+        # "autoencoder": ae, #TODO: Matt fix
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
@@ -97,10 +97,11 @@ if __name__ == "__main__":
                 # TODO: compatibility with images
                 results = get_circle_results(models, dimensions,
                                             epochs, samples, hyperparam)
+
                 # TODO: Graphing circles
             elif data_type == "mnist":
                 # pass
-                results = get_mnist_results(models, 784, epochs, hyperparam)  # TODO: MNIST
+                results = get_mnist_results(models, 784, epochs, hyperparam)
 
             with open(out_path, 'w') as outfile:
                 json.dump(results, outfile)
