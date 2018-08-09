@@ -36,13 +36,17 @@ class Encoder(nn.Module):
     """ Feedforward network encoder. Input is an image, output is encoded
     vector representation of that image.
     """
-    def __init__(self, image_size, hidden_dim):
+    def __init__(self, image_size, hidden_dim, atype):
         super(Encoder, self).__init__()
 
+        self.__dict__.update(locals())
         self.linear = nn.Linear(image_size, hidden_dim)
 
     def forward(self, x):
-        return F.relu(self.linear(x))
+        if self.atype == 'relu':
+            return F.relu(self.linear(x))
+        elif self.atype == 'sigmoid':
+            return torch.sigmoid(self.linear(x))
 
 
 class Decoder(nn.Module):
@@ -61,11 +65,11 @@ class Decoder(nn.Module):
 class Model(nn.Module):
     """ Autoencoder super class to encode then decode an image
     """
-    def __init__(self, image_size=784, hidden_dim=32, z_dim=None):
+    def __init__(self, image_size, hidden_dim, z_dim, atype):
         super().__init__()
         self.__dict__.update(locals())
 
-        self.encoder = Encoder(image_size=image_size, hidden_dim=hidden_dim)
+        self.encoder = Encoder(image_size=image_size, hidden_dim=hidden_dim, atype=atype)
         self.decoder = Decoder(hidden_dim=hidden_dim, image_size=image_size)
 
     def forward(self, x):
@@ -206,24 +210,3 @@ class Trainer:
         """ Load state dictionary into model. If model not specified, instantiate it """
         state = torch.load(loadpath)
         self.model.load_state_dict(state)
-
-
-if __name__ == '__main__':
-    # Load in binzarized MNIST data, separate into data loaders
-    train_iter, val_iter, test_iter = load_mnist(100)
-
-    # Init model
-    model = Model(image_size=784,
-                  hidden_dim=32)
-
-    # Init trainer
-    trainer = Trainer(model=model,
-                      train_iter=train_iter,
-                      val_iter=val_iter,
-                      test_iter=test_iter,
-                      viz=False)
-
-    # Train
-    trainer.train(num_epochs=10,
-                  lr=1e-3,
-                  weight_decay=1e-5)

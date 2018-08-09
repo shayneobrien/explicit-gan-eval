@@ -56,6 +56,7 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
     """ Here the intention is to run the autoencoder on the MNIST data
     and output the autoencoded data as train_iter, val_iter, test_iter
     """
+    activation_type = 'sigmoid'
 
     # If model not yet trained train and save it
     if (not os.path.exists(save_path + '/cached_autoencoder.pth')) and (not overwrite):
@@ -70,7 +71,9 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
         # Train autoencoder
         print('Training autoencoder...')
         model = ae.Model(image_size=784,
-                         hidden_dim=512)
+                         hidden_dim=512,
+                         z_dim=0,
+                         atype=activation_type)
 
         trainer = ae.Trainer(model=model,
                               train_iter=train_iter,
@@ -88,7 +91,9 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
     else:
 
         model = ae.Model(image_size=784,
-                         hidden_dim=512)
+                         hidden_dim=512,
+                         z_dim=0,
+                         atype=activation_type)
 
         trainer = ae.Trainer(model=model,
                               train_iter=None,
@@ -101,6 +106,7 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
 
     # Load cached predictions if they exist, otherwise make them
     if not os.path.exists(save_path + '/cached_preds.txt') and not overwrite:
+        print('Initializing autoencoded data...')
         try:
             os.makedirs(save_path)
         except FileExistsError:

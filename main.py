@@ -25,6 +25,7 @@ if __name__ == "__main__":
         (6) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
         e.g. python main.py multivariate 3 3 3 3 \n
              python main.py mixture 3 3 5 10 10
+             python main.py mnist 3 3 3 3
         """)
     # TODO: argparse once we're ready to send to GPUs
     data_type = sys.argv[1]

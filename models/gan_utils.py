@@ -113,12 +113,12 @@ def compute_divergences(A, B):
 def get_pdf(data, iqr, r, samples):
     """ Compute optimally binned probability distribution function  """
     x = []
-    bin_width = 2*iqr/np.cbrt(samples)
 
-    # MNIST (since it's really only supposed to be either 0 or 1 as output
     if iqr > 1e-5:
+        bin_width = 2*iqr/np.cbrt(samples)
         bins = int(round(r/bin_width, 0))
     else:
+        # MNIST (since it's really only supposed to be either 0 or 1 as output
         bins = 2
 
     # Bin data

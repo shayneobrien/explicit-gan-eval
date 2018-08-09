@@ -14,13 +14,14 @@ plt.switch_backend('agg')
 
 def get_multivariate_results(models, distributions, dimensions,
                              epochs, samples, hyperparameters):
-    results = nested_pickle_dict()
+    """ Multivariate distribution results """
+    results, activation_type = nested_pickle_dict(), 'relu'
     for model_name, module in models.items():
         for dist in distributions:
             print('\n', model_name, dist)
             gen = data.Distribution(dist_type=dist, dim=dimensions)
             metrics = model_results(module, epochs, hyperparameters,
-                                    gen, samples, dimensions)
+                                    gen, samples, dimensions, activation_type)
             results[model_name][dist].update(metrics)
 
     return results
@@ -28,7 +29,8 @@ def get_multivariate_results(models, distributions, dimensions,
 
 def get_mixture_results(models, distributions, dimensions,
                         epochs, samples, n_mixtures, hyperparameters):
-    results = nested_pickle_dict()
+    """ Mixture model results """
+    results, activation_type = nested_pickle_dict(), 'relu'
     for model_name, module in models.items():
         for dist_i in distributions[0:1]: # Just normal and other mixture models at the moment
             for dist_j in distributions:
@@ -36,7 +38,7 @@ def get_mixture_results(models, distributions, dimensions,
                                                 n_mixtures=n_mixtures, dim=dimensions)
 
                 metrics = model_results(module, epochs, hyperparameters,
-                                        gen, samples, dimensions)
+                                        gen, samples, dimensions, activation_type)
                 results[model_name][dist_i][dist_j].update(metrics)
 
     return results
@@ -45,14 +47,16 @@ def get_mixture_results(models, distributions, dimensions,
 def get_mnist_results(models, mnist_dim,
                         epochs, hyperparameters):
     """ Autoencoded MNIST results """
-    # Unpack hyperparameters
-    lr, dim, bsize = hyperparameters
 
-    # Initialize results dictionary
-    results = nested_pickle_dict()
+    # Unpack hyperparameters, initialize results dict
+    lr, dim, bsize = hyperparameters
+    results, activation_type = nested_pickle_dict(), 'sigmoid'
 
     # Create data iterators by training autoencoder on MNIST and using
-    # its output as our 'ground truth'
+    # its output as our 'ground truth'. We have to repredict for each
+    # batch size, so remove the file if it exists already (force)
+    if os.path.exists('data/autoencoder/cached_preds.txt'):
+        os.remove('data/autoencoder/cached_preds.txt')
     train_iter, val_iter, test_iter = preprocess_mnist(BATCH_SIZE=bsize)
 
     # Normal passover routine
@@ -61,21 +65,13 @@ def get_mnist_results(models, mnist_dim,
         # Doesn't make sense to consider autoencoder vs. weaker autoencoder
         if model_name == 'autoencoder':
             continue
-
         print('\n', model_name, "MNIST")
 
         # Model, trainer, metrics
-        model = module.Model(image_size=mnist_dim,
-                             hidden_dim=dim,
-                             z_dim=int(round(dim/4)))
-
-        trainer = module.Trainer(model,
-                                 train_iter,
-                                 val_iter,
-                                 test_iter)
-
-        metrics = trainer.train(num_epochs=epochs,
-                                lr=lr)
+        model = module.Model(image_size=mnist_dim, hidden_dim=dim,
+                             z_dim=int(round(dim/4)), atype=activation_type)
+        trainer = module.Trainer(model, train_iter, val_iter, test_iter)
+        metrics = trainer.train(num_epochs=epochs, lr=lr)
 
         # Update metrics
         results[model_name]["mnist"].update(metrics)
@@ -84,31 +80,43 @@ def get_mnist_results(models, mnist_dim,
 
 
 def get_circle_results(models, dimensions,
-                       epochs, samples, hyperparameters):
-    results = nested_pickle_dict()
+                       epochs, samples, hyperparameters, activation_type):
+    """ Circles dataset results """
+    results, activation_type = nested_pickle_dict(), 'sigmoid'
     for model_name, module in models.items():
         gen = data.CirclesDatasetGenerator(size=dimensions, n_circles=samples,
                                             random_colors=True, random_sizes=True,
                                             modes=20)
         metrics = model_results(module, epochs, hyperparameters,
-                                gen, samples, dimensions)
+                                gen, samples, dimensions, activation_type)
         results[model_name].update(metrics)
 
     return results
 
 
-def model_results(module, epochs, hyperparameters, gen, samples, dimensions):
+def model_results(module, epochs, hyperparameters, gen, samples, dimensions, activation_type):
     """ Train a model, get metrics dictionary out """
-    # Unpack hyperparameters, initialize results dictionary
+    # Unpack hyperparameters
     lr, dim, bsize = hyperparameters
 
     # Create data iterators
     train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
 
-    # Model, trainer, metrics
-    model = module.Model(image_size=dimensions, hidden_dim=dim, z_dim=int(round(dimensions/4, 0)))
-    trainer = module.Trainer(model, train_iter, val_iter, test_iter)
-    metrics = trainer.train(num_epochs=epochs, lr=lr)
+    # Init model
+    model = module.Model(image_size=dimensions,
+                         hidden_dim=dim,
+                         z_dim=int(round(dimensions/4, 0)),
+                         atype=activation_type)
+
+    # Init trainer
+    trainer = module.Trainer(model,
+                             train_iter,
+                             val_iter,
+                             test_iter)
+
+    # Train and get output metrics
+    metrics = trainer.train(num_epochs=epochs,
+                            lr=lr)
 
     return metrics
 
@@ -263,9 +271,6 @@ def get_confidence_intervals_mixture(data_type):
     return optimal
 
 
-
-
-
 def get_best_graph(results,
                    models,
                    distributions,
@@ -286,8 +291,7 @@ def get_best_graph(results,
             plt.savefig('graphs/multivariate/{0}_{1}.png'.format(metric, model_name), dpi=100)
             plt.clf()
 
-
-
+# TODO fix these graphing functions
 def get_multivariate_graphs(results, models, distributions,
                             distance_metrics, num_epochs):
     # TODO: fix save error, legend, make pretty

@@ -44,17 +44,21 @@ from .gan_utils import *
 
 
 class Generator(nn.Module):
-    """ Generator. Input is noise and latent variables, output is a generated image.
+    """ Generator. Input is noise, output is a generated image.
     """
-    def __init__(self, image_size, hidden_dim, z_dim, disc_dim, cont_dim):
+    def __init__(self, image_size, hidden_dim, z_dim, atype, disc_dim, cont_dim):
         super().__init__()
+
+        self.__dict__.update(locals())
         self.linear = nn.Linear(z_dim + disc_dim + cont_dim, hidden_dim)
         self.generate = nn.Linear(hidden_dim, image_size)
 
     def forward(self, x):
         activated = F.relu(self.linear(x))
-        generation = torch.sigmoid(self.generate(activated))
-        return generation
+        if self.atype == 'relu':
+            return F.relu(self.generate(activated))
+        elif self.atype == 'sigmoid':
+            return torch.sigmoid(self.generate(activated))
 
 
 class Discriminator(nn.Module):
@@ -97,12 +101,13 @@ class Q(nn.Module):
 class Model(nn.Module):
     """ Super class to contain both Discriminator (D) and Generator (G)
     """
-    def __init__(self, image_size, hidden_dim, z_dim, disc_dim=2, cont_dim=10, output_dim=1):
+    def __init__(self, image_size, hidden_dim, z_dim, atype,
+                    disc_dim=2, cont_dim=10, output_dim=1):
         super().__init__()
 
         self.__dict__.update(locals())
 
-        self.G = Generator(image_size, hidden_dim, z_dim, disc_dim, cont_dim)
+        self.G = Generator(image_size, hidden_dim, z_dim, atype, disc_dim, cont_dim)
         self.D = Discriminator(image_size, hidden_dim, output_dim)
         self.Q = Q(image_size, hidden_dim, disc_dim, cont_dim)
 
@@ -396,26 +401,3 @@ class Trainer:
         """ Load state dictionary into model """
         state = torch.load(loadpath)
         self.model.load_state_dict(state)
-
-if __name__ == '__main__':
-    # Load in binarized MNIST data, separate into data loaders
-    train_iter, val_iter, test_iter = load_mnist()
-
-    # Init model
-    model = Model(image_size=784,
-                    hidden_dim=256,
-                    z_dim=128,
-                    disc_dim=10,
-                    cont_dim=10)
-
-    # Init trainer
-    trainer = Trainer(model=model,
-                        train_iter=train_iter,
-                         val_iter=val_iter,
-                         test_iter=test_iter,
-                         viz=False)
-
-    # Train
-    trainer.train(num_epochs=25,
-                  lr=2e-4,
-                  D_steps=1)

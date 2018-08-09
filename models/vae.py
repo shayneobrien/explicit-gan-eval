@@ -76,7 +76,7 @@ class Decoder(nn.Module):
 class Model(nn.Module):
     """ VAE super class to reconstruct an image. Contains reparametrization method
     """
-    def __init__(self, image_size=784, hidden_dim=400, z_dim=20):
+    def __init__(self, image_size, hidden_dim, z_dim, atype):
         super().__init__()
         self.__dict__.update(locals())
 
@@ -326,19 +326,3 @@ class Viz:
 
         print('Exploring latent representations')
         self.explore_latent_space()
-
-
-if __name__ == "__main__":
-    # Load in binarized MNIST data, separate into data loaders
-    train_iter, val_iter, test_iter = load_mnist()
-    model = Model(image_size=784,
-                hidden_dim=400,
-                z_dim=20)
-    trainer = Trainer(model=model,
-                      train_iter=train_iter,
-                      val_iter=val_iter,
-                      test_iter=test_iter,
-                      viz=False)
-    trainer.train(num_epochs=5,
-              lr=1e-3,
-              weight_decay=1e-5)
