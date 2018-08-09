@@ -247,7 +247,7 @@ def get_mixture_graphs(results, models, distributions,
     plt.clf()
 
 
-def get_mnist_graphs(res, gans_index, distance_metrics):
+def get_mnist_graphs(res, gans_index, distance_metrics, num_epochs):
     for gan, value in gans.items():
         normal = pd.DataFrame(res[gan]['mnist'])
         for dist in distance_metrics:
@@ -256,7 +256,7 @@ def get_mnist_graphs(res, gans_index, distance_metrics):
             plt.ylabel(dist)
             plt.title("{0}: {1}".format(gan.upper(), dist))
             plt.legend()
-            plt.savefig('graphs/{0}_{1}.png'.format(gan, dist), dpi=100)
+            plt.savefig('graphs/mnist/{0}_{1}.png'.format(gan, dist), dpi=100)
             plt.clf()
 
 
