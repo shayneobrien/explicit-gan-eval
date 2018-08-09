@@ -82,8 +82,9 @@ class Trainer:
         self.val_iter = val_iter
         self.test_iter = test_iter
 
-        self.debugging_image, _ = next(iter(val_iter))
         self.viz = viz
+        if self.viz:
+            self.debugging_image, _ = next(iter(test_iter))
 
         self.metrics = defaultdict(list)
         self.losses = []
@@ -160,7 +161,7 @@ class Trainer:
 
         output = self.model(images)
 
-        recon_loss = -torch.sum(torch.log(torch.abs(output - images) + 1e-8))
+        recon_loss = -torch.sum(torch.log(torch.abs(images - output) + 1e-8))
 
         return output, recon_loss
 
@@ -207,32 +208,22 @@ class Trainer:
         self.model.load_state_dict(state)
 
 
-# if __name__ == '__main__':
-#     # Load in binzarized MNIST data, separate into data loaders
-#     train_iter, val_iter, test_iter = load_mnist(100)
+if __name__ == '__main__':
+    # Load in binzarized MNIST data, separate into data loaders
+    train_iter, val_iter, test_iter = load_mnist(100)
 
-#     model = Model(image_size=784,
-#                   hidden_dim=32)
+    # Init model
+    model = Model(image_size=784,
+                  hidden_dim=32)
 
-#     trainer = Trainer(model=model,
-#                       train_iter=train_iter,
-#                       val_iter=val_iter,
-#                       test_iter=test_iter,
-#                       viz=False)
+    # Init trainer
+    trainer = Trainer(model=model,
+                      train_iter=train_iter,
+                      val_iter=val_iter,
+                      test_iter=test_iter,
+                      viz=False)
 
-#     trainer.train(num_epochs=1,
-#                   lr=1e-3,
-#                   weight_decay=1e-5)
-
-#     for index, data in enumerate(train_iter):
-#         img, _ = data
-#         img = img.view(img.size(0), -1)
-#         img = Variable(img)
-#         result = trainer.model.forward(img)
-#         result = result/torch.max(result)
-#         if index == 0:
-#             results = result
-#         else:
-#             results = torch.cat([results, result])
-#     print(results.shape)
-#     print("Booyakasha baby")
+    # Train
+    trainer.train(num_epochs=10,
+                  lr=1e-3,
+                  weight_decay=1e-5)

@@ -59,6 +59,10 @@ def get_mnist_results(models, mnist_dim,
     # Normal passover routine
     for model_name, module in models.items():
 
+        # Doesn't make sense to consider autoencoder vs. weaker autoencoder
+        if model_name == 'autoencoder':
+            continue
+
         print('\n', model_name, "MNIST")
 
         # Model, trainer, metrics
@@ -202,6 +206,7 @@ def get_best_graph(results,
                 data = results[model_name][dist][metric]['value']
                 print(model_name, dist, metric, data)
                 plt.plot(np.linspace(1, num_epochs, len(data)), data, label=dist)
+
             plt.xlabel("Epoch")
             plt.ylabel(metric)
             plt.title("{0}: {1}".format(model_name.upper(), metric))
@@ -221,12 +226,12 @@ def get_multivariate_graphs(results, models, distributions,
                 print(model_name, dist, metric, data)
                 plt.plot(np.linspace(1, num_epochs, len(data)), data)
 
-    plt.xlabel("Epoch")
-    plt.ylabel(metric)
-    plt.title("{0}: {1}".format(model_name.upper(), dist))
-    plt.legend()
-    plt.savefig('graphs/mutlivariate/{0}_{1}.png'.format(model_name, dist), dpi=100)
-    plt.clf()
+            plt.xlabel("Epoch")
+            plt.ylabel(metric)
+            plt.title("{0}: {1}".format(model_name.upper(), metric))
+            plt.legend()
+            plt.savefig('graphs/multivariate/{0}_{1}.png'.format(model_name, metric), dpi=100)
+            plt.clf()
 
 
 def get_mixture_graphs(results, models, distributions,
@@ -252,12 +257,13 @@ def get_mnist_graphs(results, models, distance_metrics, num_epochs):
         normal = pd.DataFrame(results[model_name]['mnist'])
         for dist in distance_metrics:
             plt.plot(range(len(normal['mnist'])), normal['mnist'], label="MNIST")
-            plt.xlabel("Epoch")
-            plt.ylabel(dist)
-            plt.title("{0}: {1}".format(gan.upper(), dist))
-            plt.legend()
-            plt.savefig('graphs/mnist/{0}_{1}.png'.format(gan, dist), dpi=100)
-            plt.clf()
+
+        plt.xlabel("Epoch")
+        plt.ylabel(dist)
+        plt.title("{0}: {1}".format(model_name.upper(), dist))
+        plt.legend()
+        plt.savefig('graphs/mnist/{0}_{1}.png'.format(model_name, dist), dpi=100)
+        plt.clf()
 
 
 def nested_pickle_dict():

@@ -80,8 +80,8 @@ class Model(nn.Module):
         super().__init__()
         self.__dict__.update(locals())
 
-        self.encoder = Encoder(image_size = image_size, hidden_dim = hidden_dim, z_dim = z_dim)
-        self.decoder = Decoder(z_dim = z_dim, hidden_dim = hidden_dim, image_size = image_size)
+        self.encoder = Encoder(image_size=image_size, hidden_dim=hidden_dim, z_dim=z_dim)
+        self.decoder = Decoder(z_dim=z_dim, hidden_dim=hidden_dim, image_size=image_size)
 
     def forward(self, x):
         mu, log_var = self.encoder(x)
@@ -106,7 +106,7 @@ class Trainer:
         self.val_iter = val_iter
         self.test_iter = test_iter
 
-        self.debugging_image, _ = next(iter(val_iter))
+        self.debugging_image, _ = next(iter(test_iter))
         self.viz = viz
         self.metrics = defaultdict(list)
 
@@ -187,7 +187,7 @@ class Trainer:
 
         output, mu, log_var = self.model(images)
 
-        recon_loss = -torch.sum(torch.log(torch.abs(output - images) + 1e-8))
+        recon_loss = -torch.sum(torch.log(torch.abs(images - output) + 1e-8))
         kl_diverge = self.kl_divergence(mu, log_var)
 
         return recon_loss, kl_diverge

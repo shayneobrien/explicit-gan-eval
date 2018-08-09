@@ -1,14 +1,14 @@
 import torch
 from torch.autograd import Variable
 import torchvision.datasets as datasets
-import torchvision.transforms as transforms
-import pandas as pd
-import numpy as np
-
 from torch.utils.data import TensorDataset
-from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
+import torchvision.transforms as transforms
 
 import os
+import pandas as pd
+import numpy as np
+from klepto.archives import file_archive
+
 import models.ae as ae
 from models.gan_utils import to_cuda
 
@@ -45,23 +45,27 @@ def get_the_data_mnist(BATCH_SIZE):
     train = torch.utils.data.TensorDataset(train_img, train_label)
     val = torch.utils.data.TensorDataset(val_img, val_label)
     test = torch.utils.data.TensorDataset(test_img, test_label)
-    # BATCH_SIZE = 100
+
     train_iter = torch.utils.data.DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
     val_iter = torch.utils.data.DataLoader(val, batch_size=BATCH_SIZE, shuffle=True)
     test_iter = torch.utils.data.DataLoader(test, batch_size=BATCH_SIZE, shuffle=True)
     return train_iter, val_iter, test_iter
 
 
-def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder/', overwrite=False):
+def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=False):
     """ Here the intention is to run the autoencoder on the MNIST data
     and output the autoencoded data as train_iter, val_iter, test_iter
     """
-    # Load MNIST data
-    train_iter, val_iter, test_iter = get_the_data_mnist(BATCH_SIZE)
 
     # If model not yet trained train and save it
-    if not os.path.exists(save_path + 'cached_autoencoder.pth') and not overwrite:
-        os.makedirs(save_path)
+    if (not os.path.exists(save_path + '/cached_autoencoder.pth')) and (not overwrite):
+        try:
+            os.makedirs(save_path)
+        except FileExistsError:
+            pass
+
+        # Load MNIST data
+        train_iter, val_iter, test_iter = get_the_data_mnist(BATCH_SIZE)
 
         # Train autoencoder
         print('Training autoencoder...')
@@ -78,7 +82,8 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder/', overwrite=Fa
                       lr=1e-3,
                       weight_decay=1e-5)
 
-        trainer.save_model(save_path + 'cached_autoencoder.pth')
+        # Cache autoencoder
+        trainer.save_model(save_path + '/cached_autoencoder.pth')
 
     else:
 
@@ -86,36 +91,59 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder/', overwrite=Fa
                          hidden_dim=512)
 
         trainer = ae.Trainer(model=model,
-                              train_iter=train_iter,
-                              val_iter=val_iter,
-                              test_iter=test_iter,
+                              train_iter=None,
+                              val_iter=None,
+                              test_iter=None,
                               viz=False)
 
-        trainer.load_model(save_path + 'cached_autoencoder.pth')
+        # Load cached autoencoder
+        trainer.load_model(save_path + '/cached_autoencoder.pth')
 
-    autoencoder_mnist, results = {}, []
-    for count, dataset in enumerate([train_iter, val_iter, test_iter]):
+    # Load cached predictions if they exist, otherwise make them
+    if not os.path.exists(save_path + '/cached_preds.txt') and not overwrite:
+        try:
+            os.makedirs(save_path)
+        except FileExistsError:
+            pass
 
-        # Autoencode all images
-        for batch in dataset:
+        if 'train_iter' not in locals():
+            # Load MNIST data
+            train_iter, val_iter, test_iter = get_the_data_mnist(BATCH_SIZE)
 
-            images, labels = batch
-            images = to_cuda(images.view(images.shape[0], -1))
+        # Init cache
+        cache = file_archive(save_path + '/cached_preds.txt')
 
-            output = trainer.model(images)
-            results.append((output.detach(), labels.detach()))
-
-        # Make a dataset out of the autoencoded images, copy attributes
-        autoencoded_data = list_obj(results)
-        autoencoded_data.__dict__ = dataset.__dict__.copy()
-
-        # Store into dictionary
-        autoencoder_mnist[str(count)] = autoencoded_data
-
-        # Reinitialize results for the next dataset
+        # Set to evaluation mode
+        trainer.model.eval()
         results = []
+        for count, dataset in enumerate([train_iter, val_iter, test_iter]):
 
-    return autoencoder_mnist["0"], autoencoder_mnist["1"], autoencoder_mnist["2"]
+            # Autoencode all images
+            for batch in dataset:
+
+                images, labels = batch
+                images = to_cuda(images.view(images.shape[0], -1))
+
+                output = trainer.model(images)
+                results.append((output.detach(), labels.detach()))
+
+            # Make a dataset out of the autoencoded images, copy attributes
+            autoencoded_data = list_obj(results)
+            autoencoded_data.__dict__ = dataset.__dict__.copy()
+
+            # Store into dictionary
+            cache[str(count)] = autoencoded_data
+
+            # Reinitialize results for the next dataset
+            results = []
+
+        cache.dump()
+
+    else:
+        cache = file_archive(save_path + '/cached_preds.txt')
+        cache.load()
+
+    return cache["0"], cache["1"], cache["2"]
 
 
 class list_obj(list):

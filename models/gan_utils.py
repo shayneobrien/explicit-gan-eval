@@ -24,12 +24,14 @@ def get_pdf(data, iqr, r, samples):
     """ Compute optimally binned probability distribution function  """
     x = []
     bin_width = 2*iqr/np.cbrt(samples)
-    bins = int(round(r/bin_width, 0))
 
-    # MNIST
-    if iqr < 1e-5:
-        bins = 100
+    # MNIST (since it's really only supposed to be either 0 or 1 as output
+    if iqr > 1e-5:
+        bins = int(round(r/bin_width, 0))
+    else:
+        bins = 2
 
+    # Bin data
     for i in range(data.shape[1]):
         x.append(list(np.histogram(data[:, i], bins=bins, density=True)[0]))
     res = np.array(x).T
@@ -45,6 +47,7 @@ def get_the_data(generator, samples, BATCH_SIZE=100):
     data = TensorDataset(data, labels)
     data_iter = torch.utils.data.DataLoader(data, batch_size=BATCH_SIZE, shuffle=True)
     return data_iter
+
 
 def get_the_data_mnist(BATCH_SIZE):
     """ Load data for binared MNIST """
@@ -100,7 +103,6 @@ def compute_divergences(A, B):
     and true distribution B """
 
     # Get number of samples, IQR statistics, range
-    # TODO: warnings
     samples = A.shape[0]
     iqr = np.percentile(A, 75)-np.percentile(A, 25)
     r = np.max(A) - np.min(A)
@@ -108,7 +110,6 @@ def compute_divergences(A, B):
     # Get PDFs of predicted distribution A, true distribution B
     A = get_pdf(A, iqr, r, samples)
     B = get_pdf(B, iqr, r, samples)
-    print(A,B)
 
     # Mean
     m = (np.array(A)+np.array(B))/2
@@ -125,6 +126,7 @@ def compute_divergences(A, B):
                     "Energy-Distance": ed,}
 
     return divergences
+
 
 def gan_metrics(trainer):
     """ Generate samples, compute divergences, get losses for GANs """
@@ -149,12 +151,16 @@ def gan_metrics(trainer):
 
     return metrics
 
+
 def vae_metrics(trainer, output, batch):
     """ Generate samples, compute divergences, get losses for VAEs """
     images, _ = batch
 
     A = output.data.numpy()
     B = images.data.numpy()
+    # MNIST
+    if A.shape != B.shape:
+        B = np.reshape(B, A.shape)
 
     metrics = compute_divergences(A, B)
     for key, value in metrics.items():
@@ -168,11 +174,16 @@ def vae_metrics(trainer, output, batch):
 
     return metrics
 
+
 def autoencoder_metrics(trainer, output, batch):
+    """ Generate samples, compute divergences, get losses for autoencoders """
     images, _ = batch
 
+    # MNIST
     A = output.data.numpy()
     B = images.data.numpy()
+    if A.shape != B.shape:
+        B = np.reshape(B, A.shape)
 
     metrics = compute_divergences(A, B)
     metrics = {}

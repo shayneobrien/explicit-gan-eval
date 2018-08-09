@@ -9,3 +9,4 @@ torchvision
 sklearn
 scipy
 opencv-python
+klepto

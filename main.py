@@ -73,7 +73,7 @@ if __name__ == "__main__":
         # "fishergan": fisher_gan, #TODO: assumed Gaussian moments may be problematic, fix softmax thing from loss (?)
         # "fgan": f_gan, #TODO: cycle through divergences, fix NaN issue, double check activation fnc..
         # "vae": vae,
-        # "autoencoder": ae, #TODO: Matt fix
+        # "autoencoder": ae,
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
@@ -86,7 +86,7 @@ if __name__ == "__main__":
             if data_type == "multivariate":
                 results = get_multivariate_results(models, distributions, dimensions,
                                                 epochs, samples, hyperparam)
-                # get_multivariate_graphs(results, models, distributions, distance_metrics, epochs)
+                get_multivariate_graphs(results, models, distributions, distance_metrics, epochs)
 
             elif data_type == "mixture":
                 results = get_mixture_results(models, distributions, dimensions,
@@ -99,9 +99,8 @@ if __name__ == "__main__":
 
                 # TODO: Graphing circles
             elif data_type == "mnist":
-                # TODO: comment out autoencoder for this one
                 results = get_mnist_results(models, 784, epochs, hyperparam)
-                # get_mnist_graphs(results, models, distributions, epochs)
+                # get_mnist_graphs(results, models, distance_metrics, epochs)
 
             with open(out_path, 'w') as outfile:
                 json.dump(results, outfile)
