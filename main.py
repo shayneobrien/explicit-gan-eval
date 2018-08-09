@@ -102,6 +102,7 @@ if __name__ == "__main__":
             elif data_type == "mnist":
                 # pass
                 results = get_mnist_results(models, 784, epochs, hyperparam)
+                get_mnist_graphs(results, models, distributions, epochs)
 
             with open(out_path, 'w') as outfile:
                 json.dump(results, outfile)
