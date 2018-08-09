@@ -99,9 +99,9 @@ if __name__ == "__main__":
 
                 # TODO: Graphing circles
             elif data_type == "mnist":
-                # pass
-                results = get_mnist_results(models, dimensions, epochs, hyperparam)
-                get_mnist_graphs(results, models, distributions, epochs)
+                # TODO: comment out autoencoder for this one
+                results = get_mnist_results(models, 784, epochs, hyperparam)
+                # get_mnist_graphs(results, models, distributions, epochs)
 
             with open(out_path, 'w') as outfile:
                 json.dump(results, outfile)
@@ -114,5 +114,6 @@ if __name__ == "__main__":
     with open("confidence_intervals/{}/data.json".format(data_type), 'w') as outfile:
         json.dump(ci, outfile)
 
-    get_best_graph(results, models, distributions, distance_metrics, epochs)
+    # TODO: fix
+    # get_best_graph(results, models, distributions, distance_metrics, epochs)
     print("Le Fin.")

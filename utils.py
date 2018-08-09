@@ -43,7 +43,7 @@ def get_mixture_results(models, distributions, dimensions,
     return results
 
 
-def get_mnist_results(models, dimensions,
+def get_mnist_results(models, mnist_dim,
                         epochs, hyperparameters):
     """ Autoencoded MNIST results """
     # Unpack hyperparameters
@@ -62,9 +62,9 @@ def get_mnist_results(models, dimensions,
         print('\n', model_name, "MNIST")
 
         # Model, trainer, metrics
-        model = module.Model(image_size=dimensions,
+        model = module.Model(image_size=mnist_dim,
                              hidden_dim=dim,
-                             z_dim=int(round(dimensions/4)))
+                             z_dim=int(round(dim/4)))
 
         trainer = module.Trainer(model,
                                  train_iter,
@@ -247,9 +247,9 @@ def get_mixture_graphs(results, models, distributions,
     plt.clf()
 
 
-def get_mnist_graphs(res, gans_index, distance_metrics, num_epochs):
-    for gan, value in gans.items():
-        normal = pd.DataFrame(res[gan]['mnist'])
+def get_mnist_graphs(results, models, distance_metrics, num_epochs):
+    for model_name, module in models.items():
+        normal = pd.DataFrame(results[model_name]['mnist'])
         for dist in distance_metrics:
             plt.plot(range(len(normal['mnist'])), normal['mnist'], label="MNIST")
             plt.xlabel("Epoch")

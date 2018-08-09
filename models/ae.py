@@ -61,7 +61,7 @@ class Decoder(nn.Module):
 class Model(nn.Module):
     """ Autoencoder super class to encode then decode an image
     """
-    def __init__(self, image_size=784, hidden_dim=32, z_dim=None):
+    def __init__(self, image_size=784, hidden_dim=32):
         super().__init__()
         self.__dict__.update(locals())
 

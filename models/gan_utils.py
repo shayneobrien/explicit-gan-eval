@@ -25,6 +25,11 @@ def get_pdf(data, iqr, r, samples):
     x = []
     bin_width = 2*iqr/np.cbrt(samples)
     bins = int(round(r/bin_width, 0))
+
+    # MNIST
+    if iqr < 1e-5:
+        bins = 100
+
     for i in range(data.shape[1]):
         x.append(list(np.histogram(data[:, i], bins=bins, density=True)[0]))
     res = np.array(x).T
@@ -89,47 +94,13 @@ def preprocess(generator, samples, BATCH_SIZE=100):
     return train_iter, val_iter, test_iter
 
 
-def preprocess_mnist(BATCH_SIZE=100):
-    """ Create data iterators """
-    train_iter, val_iter, test_iter = get_the_data_mnist(BATCH_SIZE)
-    # Here the intention is to run the autoencoder on the MNIST data and output the autoencoded data as train_iter, val_iter, test_iter
-    model = Model(image_size=784,
-                  hidden_dim=32)
-
-    trainer = Trainer(model=model,
-                      train_iter=train_iter,
-                      val_iter=val_iter,
-                      test_iter=test_iter,
-                      viz=False)
-
-    trainer.train(num_epochs=1,
-                  lr=1e-3,
-                  weight_decay=1e-5)
-
-    autoencoder_mnist = {}
-    for count, dataset in enumerate([train_iter, val_iter, test_iter]):
-        for index, data in enumerate(dataset):
-            img, _ = data
-            img = img.view(img.size(0), -1)
-            img = Variable(img)
-            result = trainer.model.forward(img)
-            result = result/torch.max(result)
-            if index == 0:
-                results = result
-            else:
-                results = torch.cat([results, result])
-        autoencoder_mnist[str(count)] = results
-    # TO DO
-    # trainer.model...?...
-    return  autoencoder_mnist["0"], autoencoder_mnist["1"], autoencoder_mnist["2"]
-
-
 def compute_divergences(A, B):
     """ Compute divergence metrics (Jensen Shannon, Kullback-Liebler,
     Wasserstein Distance, Energy Distance) between predicted distribution A
     and true distribution B """
 
     # Get number of samples, IQR statistics, range
+    # TODO: warnings
     samples = A.shape[0]
     iqr = np.percentile(A, 75)-np.percentile(A, 25)
     r = np.max(A) - np.min(A)
@@ -137,8 +108,9 @@ def compute_divergences(A, B):
     # Get PDFs of predicted distribution A, true distribution B
     A = get_pdf(A, iqr, r, samples)
     B = get_pdf(B, iqr, r, samples)
+    print(A,B)
 
-    # TODO: Matt what does this variable stand for again?
+    # Mean
     m = (np.array(A)+np.array(B))/2
 
     # Compute metrics
@@ -166,6 +138,7 @@ def gan_metrics(trainer):
     for key, value in metrics.items():
         trainer.metrics[key].append(value)
     metrics = trainer.metrics
+
     metrics['GLoss'] = trainer.Glosses
     metrics['DLoss'] = trainer.Dlosses
     metrics["LR"] = trainer.lr
@@ -201,7 +174,7 @@ def autoencoder_metrics(trainer, output, batch):
     A = output.data.numpy()
     B = images.data.numpy()
 
-    # metrics = compute_divergences(A, B)  # This line is a bug for running the autoencoder.py script
+    metrics = compute_divergences(A, B)
     metrics = {}
     for key, value in metrics.items():
         trainer.metrics[key].append(value)

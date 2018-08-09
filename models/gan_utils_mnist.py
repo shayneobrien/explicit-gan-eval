@@ -12,6 +12,7 @@ import os
 import models.ae as ae
 from models.gan_utils import to_cuda
 
+
 def get_the_data_mnist(BATCH_SIZE):
     """ Load data for binared MNIST """
     torch.manual_seed(3435)
@@ -82,7 +83,7 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder/', overwrite=Fa
     else:
 
         model = ae.Model(image_size=784,
-                         hidden_dim=32)
+                         hidden_dim=512)
 
         trainer = ae.Trainer(model=model,
                               train_iter=train_iter,
