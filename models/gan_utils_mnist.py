@@ -8,6 +8,7 @@ import numpy as np
 from torch.utils.data import TensorDataset
 from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
 
+import os
 import models.ae as ae
 from models.gan_utils import to_cuda
 
@@ -50,27 +51,46 @@ def get_the_data_mnist(BATCH_SIZE):
     return train_iter, val_iter, test_iter
 
 
-def preprocess_mnist(num_epochs, BATCH_SIZE):
+def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder/', overwrite=False):
     """ Here the intention is to run the autoencoder on the MNIST data
     and output the autoencoded data as train_iter, val_iter, test_iter
     """
     # Load MNIST data
     train_iter, val_iter, test_iter = get_the_data_mnist(BATCH_SIZE)
 
-    # Train autoencoder
-    print('Training autoencoder...')
-    model = ae.Model(image_size=784,
-                     hidden_dim=32)
+    # If model not yet trained train and save it
+    if not os.path.exists(save_path + 'cached_autoencoder.pth') and not overwrite:
+        os.makedirs(save_path)
 
-    trainer = ae.Trainer(model=model,
-                          train_iter=train_iter,
-                          val_iter=val_iter,
-                          test_iter=test_iter,
-                          viz=False)
+        # Train autoencoder
+        print('Training autoencoder...')
+        model = ae.Model(image_size=784,
+                         hidden_dim=512)
 
-    trainer.train(num_epochs=num_epochs,
-                  lr=1e-3,
-                  weight_decay=1e-5)
+        trainer = ae.Trainer(model=model,
+                              train_iter=train_iter,
+                              val_iter=val_iter,
+                              test_iter=test_iter,
+                              viz=False)
+
+        trainer.train(num_epochs=25,
+                      lr=1e-3,
+                      weight_decay=1e-5)
+
+        trainer.save_model(save_path + 'cached_autoencoder.pth')
+
+    else:
+
+        model = ae.Model(image_size=784,
+                         hidden_dim=32)
+
+        trainer = ae.Trainer(model=model,
+                              train_iter=train_iter,
+                              val_iter=val_iter,
+                              test_iter=test_iter,
+                              viz=False)
+
+        trainer.load_model(save_path + 'cached_autoencoder.pth')
 
     autoencoder_mnist, results = {}, []
     for count, dataset in enumerate([train_iter, val_iter, test_iter]):
