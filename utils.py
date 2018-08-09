@@ -53,7 +53,7 @@ def get_mnist_results(models, dimensions,
 
     # Create data iterators by training autoencoder on MNIST and using
     # its output as our 'ground truth'
-    train_iter, val_iter, test_iter = preprocess_mnist(epochs, bsize)
+    train_iter, val_iter, test_iter = preprocess_mnist(BATCH_SIZE=bsize)
 
     # Normal passover routine
     for model_name, module in models.items():
