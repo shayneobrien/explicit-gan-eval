@@ -140,6 +140,8 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
         cache.dump()
 
     else:
+
+        # Load data
         cache = file_archive(save_path + '/cached_preds.txt')
         cache.load()
 

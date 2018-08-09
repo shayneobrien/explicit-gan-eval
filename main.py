@@ -45,9 +45,9 @@ if __name__ == "__main__":
 
 
     # Set hyperparameters
-    learning_rates = [1e-3, 5e-4, 1e-4, 5e-5] # np.linspace()
-    hidden_dims = [16, 32, 64, 128, 256] # 2, 4, 8, 16, 32, 64, 128, 256
-    BATCH_SIZE = [100, 150, 200, 250] # 16, 32, 64, 128, 256, 512, 1024, 2048, 4096
+    learning_rates = [1e-3, ]#5e-4, 1e-4, 5e-5] # np.linspace()
+    hidden_dims = [16, ]#32, 64, 128, 256] # 2, 4, 8, 16, 32, 64, 128, 256
+    BATCH_SIZE = [100, ]# 150, 200, 250] # 16, 32, 64, 128, 256, 512, 1024, 2048, 4096
     distributions = [
                      'normal',
                      'beta',
@@ -61,19 +61,19 @@ if __name__ == "__main__":
     # Specify models to test
     # TODO: GENERATOR activation functions: sigmoid for MNIST/circles, ReLU for others)
     models = {
-        # "wgan": w_gan,
+        "wgan": w_gan,
         "wgpgan": w_gp_gan,
-        # "nsgan": ns_gan,
-        # "lsgan": ls_gan,
-        # "mmgan": mm_gan,
-        # "dragan": dra_gan,
-        # "began": be_gan,
-        # "ragan": ra_gan,
-        # "infogan": info_gan,
-        # "fishergan": fisher_gan, #TODO: assumed Gaussian moments may be problematic, fix softmax thing from loss (?)
-        # "fgan": f_gan, #TODO: cycle through divergences, fix NaN issue, double check activation fnc..
-        # "vae": vae,
-        # "autoencoder": ae,
+        "nsgan": ns_gan,
+        "lsgan": ls_gan,
+        "mmgan": mm_gan,
+        "dragan": dra_gan,
+        "began": be_gan,
+        "ragan": ra_gan,
+        "infogan": info_gan,
+        "fishergan": fisher_gan, #TODO: assumed Gaussian moments may be problematic, fix softmax thing from loss (?)
+        "fgan": f_gan, #TODO: cycle through divergences, fix NaN issue, double check activation fnc..
+        "vae": vae,
+        "autoencoder": ae,
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
@@ -86,33 +86,32 @@ if __name__ == "__main__":
             if data_type == "multivariate":
                 results = get_multivariate_results(models, distributions, dimensions,
                                                 epochs, samples, hyperparam)
-                get_multivariate_graphs(results, models, distributions, distance_metrics, epochs)
 
             elif data_type == "mixture":
                 results = get_mixture_results(models, distributions, dimensions,
                                             epochs, samples, n_mixtures, hyperparam)
-                # get_mixture_graphs(results, models, distributions, distance_metrics, epochs)
 
             elif data_type == "circles":
                 results = get_circle_results(models, dimensions,
                                             epochs, samples, hyperparam)
 
-                # TODO: Graphing circles
             elif data_type == "mnist":
-                results = get_mnist_results(models, 784, epochs, hyperparam)
-                # get_mnist_graphs(results, models, distance_metrics, epochs)
+                results = get_mnist_results(models, 784,
+                                          epochs, hyperparam)
 
             with open(out_path, 'w') as outfile:
                 json.dump(results, outfile)
 
-        results = get_best_performance(data_type)
+        find_best = eval('get_best_performance_' + data_type)
+        results = find_best(data_type)
         with open("best/{}/results_{}_{}.json".format(data_type, t, datetime.datetime.now().strftime("%Y-%m-%d")), 'w') as outfile:
                 json.dump(results, outfile)
 
-    ci = get_confidence_intervals(data_type)
+    get_ci = eval('get_confidence_intervals_' + data_type)
+    ci = get_ci(data_type)
     with open("confidence_intervals/{}/data.json".format(data_type), 'w') as outfile:
         json.dump(ci, outfile)
 
-    # TODO: fix
+    # TODO: Getting all the graphs working
     # get_best_graph(results, models, distributions, distance_metrics, epochs)
     print("Le Fin.")

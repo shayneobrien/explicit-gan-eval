@@ -208,7 +208,6 @@ class Trainer:
         DG_score = self.model.D(G_output)
 
         # First and second order central moments (Gaussian assumed)
-        # TODO: is this problematic for non-Gaussian?
         DX_moment_1, DG_moment_1  = DX_score.mean(), DG_score.mean()
         DX_moment_2, DG_moment_2 = (DX_score**2).mean(), (DG_score**2).mean()
 

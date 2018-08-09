@@ -190,7 +190,7 @@ class Trainer:
         recon_loss = -torch.sum(torch.log(torch.abs(images - output) + 1e-8))
         kl_diverge = self.kl_divergence(mu, log_var)
 
-        return recon_loss, kl_diverge
+        return output, recon_loss, kl_diverge
 
     def evaluate(self, iterator):
         """ Evaluate on a given dataset """

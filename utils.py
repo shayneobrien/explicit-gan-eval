@@ -32,7 +32,6 @@ def get_mixture_results(models, distributions, dimensions,
     for model_name, module in models.items():
         for dist_i in distributions[0:1]: # Just normal and other mixture models at the moment
             for dist_j in distributions:
-                # TODO: Fix mix_type='uniform', or mix_type = 'random'
                 gen = data.MixtureDistribution(dist_type=dist_i, mix_type=dist_j,
                                                 n_mixtures=n_mixtures, dim=dimensions)
 
@@ -140,7 +139,7 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions):
 #
 
 
-def get_best_performance(data_type):
+def get_best_performance_multivariate(data_type):
     mypath = "hypertuning/{}".format(data_type)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
     results = []
@@ -164,7 +163,36 @@ def get_best_performance(data_type):
     return optimal
 
 
-def get_confidence_intervals(data_type):
+def get_best_performance_mnist(data_type):
+    return get_best_performance_multivariate(data_type)
+
+
+def get_best_performance_mixture(data_type):
+    mypath = "hypertuning/{}".format(data_type)
+    files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+    results = []
+    for file in files:
+        with open("{}/{}".format(mypath, file)) as f:
+            data = json.load(f)
+        results.append(data)
+    optimal = nested_pickle_dict()
+    for result in results:
+        for gan, mixtures in result.items():
+            for mixture, distributions in mixtures.items():
+                for distribution, metrics in distributions.items():
+                    for metric, values in metrics.items():
+                        if metric not in ["LR", "HDIM", "BSIZE"]:
+                            if metric not in optimal[gan][mixture][distribution]:
+                                optimal[gan][mixture][distribution][metric]["value"] = values
+                                optimal[gan][mixture][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
+                            elif optimal[gan][mixture][distribution][metric]["value"][-1] > values[-1]:
+                                optimal[gan][mixture][distribution][metric]["value"] = values
+                                optimal[gan][mixture][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
+
+    return optimal
+
+
+def get_confidence_intervals_multivariate(data_type):
     mypath = "best/{}".format(data_type)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
     results = []
@@ -184,6 +212,7 @@ def get_confidence_intervals(data_type):
                     if metric not in optimal[gan][distribution]:
                         optimal[gan][distribution][metric] = {"original": []}
                     optimal[gan][distribution][metric]["original"].append(values['value'])
+
     for result in results:
         for gan, distributions in result.items():
             for distribution, metrics in distributions.items():
@@ -191,7 +220,50 @@ def get_confidence_intervals(data_type):
                     data = np.array(optimal[gan][distribution][metric]["original"])
                     optimal[gan][distribution][metric]['5'] = list(np.percentile(data, 5, axis=0))
                     optimal[gan][distribution][metric]['95'] = list(np.percentile(data, 95, axis=0))
+
     return optimal
+
+def get_confidence_intervals_mnist(data_type):
+    return get_confidence_intervals_multivariate(data_type)
+
+
+def get_confidence_intervals_mixture(data_type):
+    mypath = "best/{}".format(data_type)
+    files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+    results = []
+    for file in files:
+        with open("{}/{}".format(mypath, file)) as f:
+            data = json.load(f)
+        results.append(data)
+    optimal = nested_pickle_dict()
+    for result in results:
+        for gan, mixtures in result.items():
+            if gan not in optimal:
+                optimal[gan] = {}
+            for mixture, distributions in mixtures.items():
+                if mixture not in optimal[gan]:
+                    optimal[gan][mixture] = {}
+            for distribution, metrics in distributions.items():
+                if distribution not in optimal[gan][mixture]:
+                    optimal[gan][mixture][distribution] = {}
+                for metric, values in metrics.items():
+                    if metric not in optimal[gan][mixture][distribution]:
+                        optimal[gan][mixture][distribution][metric] = {"original": []}
+                    optimal[gan][mixture][distribution][metric]["original"].append(values['value'])
+
+    for result in results:
+        for gan, mixtures in result.items():
+            for mixture, distributions in mixtures.items():
+                for distribution, metrics in distributions.items():
+                    for metric, values in metrics.items():
+                        data = np.array(optimal[gan][mixture][distribution][metric]["original"])
+                        optimal[gan][mixture][distribution][metric]['5'] = list(np.percentile(data, 5, axis=0))
+                        optimal[gan][mixture][distribution][metric]['95'] = list(np.percentile(data, 95, axis=0))
+
+    return optimal
+
+
+
 
 
 def get_best_graph(results,

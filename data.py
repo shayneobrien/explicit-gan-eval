@@ -47,7 +47,6 @@ class Distribution:
 
         elif self.dist_type == 'gamma':
 
-            # TODO: test
             k = np.random.rand(dim, 1) * 10
             theta = np.random.rand(dim, 1) * 2
 

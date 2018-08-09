@@ -16,8 +16,6 @@ They test (forward) Kullback-Leibler, reverse Kullback-Leibler, Pearson
 chi-squared, Neyman chi-squared, squared Hellinger, Jensen-Shannon,
 and Jeffrey divergences.
 
-# TODO: fix Neyman, tweak JS
-
 We exclude Jeffrey due to poor performance and nontrivial implementation.
 (see scipy.special.lambertw otherwise)
 

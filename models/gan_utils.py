@@ -8,6 +8,7 @@ import numpy as np
 from torch.utils.data import TensorDataset
 from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
 
+# Gradient, CUDA
 def to_var(x):
     """ Make a tensor cuda-erized and requires gradient """
     return to_cuda(x).requires_grad_()
@@ -19,26 +20,7 @@ def to_cuda(x):
         x = x.cuda()
     return x
 
-
-def get_pdf(data, iqr, r, samples):
-    """ Compute optimally binned probability distribution function  """
-    x = []
-    bin_width = 2*iqr/np.cbrt(samples)
-
-    # MNIST (since it's really only supposed to be either 0 or 1 as output
-    if iqr > 1e-5:
-        bins = int(round(r/bin_width, 0))
-    else:
-        bins = 2
-
-    # Bin data
-    for i in range(data.shape[1]):
-        x.append(list(np.histogram(data[:, i], bins=bins, density=True)[0]))
-    res = np.array(x).T
-    res[res == 0] = .00001
-    return res
-
-
+# Loading data
 def get_the_data(generator, samples, BATCH_SIZE=100):
     """ Sample data from respective distribution under consideration,
     make a data loader out of it """
@@ -88,7 +70,6 @@ def get_the_data_mnist(BATCH_SIZE):
     return train_iter, val_iter, test_iter
 
 
-
 def preprocess(generator, samples, BATCH_SIZE=100):
     """ Create data iterators """
     train_iter = get_the_data(generator, samples, BATCH_SIZE)
@@ -97,6 +78,7 @@ def preprocess(generator, samples, BATCH_SIZE=100):
     return train_iter, val_iter, test_iter
 
 
+# Computing metrics for different archtypes
 def compute_divergences(A, B):
     """ Compute divergence metrics (Jensen Shannon, Kullback-Liebler,
     Wasserstein Distance, Energy Distance) between predicted distribution A
@@ -126,6 +108,25 @@ def compute_divergences(A, B):
                     "Energy-Distance": ed,}
 
     return divergences
+
+
+def get_pdf(data, iqr, r, samples):
+    """ Compute optimally binned probability distribution function  """
+    x = []
+    bin_width = 2*iqr/np.cbrt(samples)
+
+    # MNIST (since it's really only supposed to be either 0 or 1 as output
+    if iqr > 1e-5:
+        bins = int(round(r/bin_width, 0))
+    else:
+        bins = 2
+
+    # Bin data
+    for i in range(data.shape[1]):
+        x.append(list(np.histogram(data[:, i], bins=bins, density=True)[0]))
+    res = np.array(x).T
+    res[res == 0] = .00001
+    return res
 
 
 def gan_metrics(trainer):
@@ -179,9 +180,10 @@ def autoencoder_metrics(trainer, output, batch):
     """ Generate samples, compute divergences, get losses for autoencoders """
     images, _ = batch
 
-    # MNIST
     A = output.data.numpy()
     B = images.data.numpy()
+
+    # MNIST
     if A.shape != B.shape:
         B = np.reshape(B, A.shape)
 
