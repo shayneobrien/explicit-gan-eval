@@ -42,6 +42,43 @@ def get_mixture_results(models, distributions, dimensions,
     return results
 
 
+def get_mnist_results(models, dimensions,
+                        epochs, hyperparameters):
+    """ Autoencoded MNIST results """
+    # Unpack hyperparameters
+    lr, dim, bsize = hyperparameters
+
+    # Initialize results dictionary
+    results = nested_pickle_dict()
+
+    # Create data iterators by training autoencoder on MNIST and using
+    # its output as our 'ground truth'
+    train_iter, val_iter, test_iter = preprocess_mnist(epochs, bsize)
+
+    # Normal passover routine
+    for model_name, module in models.items():
+
+        print('\n', model_name, "MNIST")
+
+        # Model, trainer, metrics
+        model = module.Model(image_size=dimensions,
+                             hidden_dim=dim,
+                             z_dim=int(round(dimensions/4)))
+
+        trainer = module.Trainer(model,
+                                 train_iter,
+                                 val_iter,
+                                 test_iter)
+
+        metrics = trainer.train(num_epochs=epochs,
+                                lr=lr)
+
+        # Update metrics
+        results[model_name]["mnist"].update(metrics)
+
+    return results
+
+
 def get_circle_results(models, dimensions,
                        epochs, samples, hyperparameters):
     results = nested_pickle_dict()
@@ -70,6 +107,32 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions):
     metrics = trainer.train(num_epochs=epochs, lr=lr)
 
     return metrics
+
+
+# def get_circle_results(gans, dimensions, epochs, samples):
+#     res = {}
+#     for key, gan in gans.items():
+#         res[key] = {}
+#         print(key)
+#         res[key]["circle"] = {}
+#         generator = data.CirclesDatasetGenerator(size=dimensions, n_circles=samples, random_colors=True, random_sizes=True, modes=20)
+#         train_iter, val_iter, test_iter = preprocess(generator, samples)
+#         if key == "vae":
+#             continue
+#             # model = vae.VAE(image_size=dimensions, hidden_dim=400, z_dim=20)
+#             # trainer = vae.Trainer(model, train_iter, val_iter, test_iter)
+#             # model, kl, ks, js, wd, ed = trainer.train(model, num_epochs=epochs)
+#         else:
+#             model = gan.GAN(image_size=dimensions, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
+#             trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
+#             model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)
+#         res[key]["circle"]["KL-Divergence"] = kl
+#         res[key]["circle"]["Jensen-Shannon"] = js
+#         res[key]["circle"]["Wasserstein-Distance"] = wd
+#         res[key]["circle"]["Energy-Distance"] = ed
+#     return res
+#
+#
 
 
 def get_best_performance(data_type):
@@ -125,63 +188,6 @@ def get_confidence_intervals(data_type):
                     optimal[gan][distribution][metric]['95'] = list(np.percentile(data, 95, axis=0))
     return optimal
 
-# def get_circle_results(gans, dimensions, epochs, samples):
-#     res = {}
-#     for key, gan in gans.items():
-#         res[key] = {}
-#         print(key)
-#         res[key]["circle"] = {}
-#         generator = data.CirclesDatasetGenerator(size=dimensions, n_circles=samples, random_colors=True, random_sizes=True, modes=20)
-#         train_iter, val_iter, test_iter = preprocess(generator, samples)
-#         if key == "vae":
-#             continue
-#             # model = vae.VAE(image_size=dimensions, hidden_dim=400, z_dim=20)
-#             # trainer = vae.Trainer(model, train_iter, val_iter, test_iter)
-#             # model, kl, ks, js, wd, ed = trainer.train(model, num_epochs=epochs)
-#         else:
-#             model = gan.GAN(image_size=dimensions, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
-#             trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
-#             model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)
-#         res[key]["circle"]["KL-Divergence"] = kl
-#         res[key]["circle"]["Jensen-Shannon"] = js
-#         res[key]["circle"]["Wasserstein-Distance"] = wd
-#         res[key]["circle"]["Energy-Distance"] = ed
-#     return res
-#
-#
-def model_results_mnist(module, epochs, hyperparameters, dimensions):
-    """ Train a model, get metrics dictionary out """
-    # Unpack hyperparameters, initialize results dictionary
-    lr, dim, bsize = hyperparameters
-
-    # Create data iterators
-    train_iter, val_iter, test_iter = preprocess_mnist(bsize)
-
-    # Model, trainer, metrics
-    model = module.Model(image_size=dimensions,
-                        hidden_dim=dim,
-                        z_dim=int(round(dimensions/4)))
-
-    trainer = module.Trainer(model,
-                            train_iter,
-                            val_iter,
-                            test_iter)
-
-    metrics = trainer.train(num_epochs=epochs,
-                            lr=lr)  # ... this: ValueError: too many values to unpack (expected 2)
-
-    return metrics
-
-
-def get_mnist_results(models, dimensions,
-                             epochs, hyperparameters):
-    results = nested_pickle_dict()
-    for model_name, module in models.items():
-        print('\n', model_name, "mnist")
-        metrics = model_results_mnist(module, epochs, hyperparameters, dimensions)
-        results[model_name]["mnist"].update(metrics)
-    return results
-
 
 def get_best_graph(results,
                    models,
@@ -220,6 +226,7 @@ def get_multivariate_graphs(results, models, distributions,
     plt.legend()
     plt.savefig('graphs/mutlivariate/{0}_{1}.png'.format(model_name, dist), dpi=100)
     plt.clf()
+
 
 def get_mixture_graphs(results, models, distributions,
                         distance_metrics, num_epochs):

@@ -50,7 +50,7 @@ def get_the_data_mnist(BATCH_SIZE):
     return train_iter, val_iter, test_iter
 
 
-def preprocess_mnist(BATCH_SIZE=100):
+def preprocess_mnist(num_epochs, BATCH_SIZE):
     """ Here the intention is to run the autoencoder on the MNIST data
     and output the autoencoded data as train_iter, val_iter, test_iter
     """
@@ -68,7 +68,7 @@ def preprocess_mnist(BATCH_SIZE=100):
                           test_iter=test_iter,
                           viz=False)
 
-    trainer.train(num_epochs=1,
+    trainer.train(num_epochs=num_epochs,
                   lr=1e-3,
                   weight_decay=1e-5)
 
