@@ -22,6 +22,7 @@ def get_multivariate_results(models, distributions, dimensions,
             metrics = model_results(module, epochs, hyperparameters,
                                     gen, samples, dimensions)
             results[model_name][dist].update(metrics)
+
     return results
 
 
@@ -246,17 +247,17 @@ def get_mixture_graphs(results, models, distributions,
     plt.clf()
 
 
-# def get_mnist_graphs(res, gans_index, distance_metrics):
-#     for gan, value in gans.items():
-#         normal = pd.DataFrame(res[gan]['mnist'])
-#         for dist in distance_metrics:
-#             plt.plot(range(len(normal['mnist'])), normal['mnist'], label="MNIST")
-#             plt.xlabel("Epoch")
-#             plt.ylabel(dist)
-#             plt.title("{0}: {1}".format(gan.upper(), dist))
-#             plt.legend()
-#             plt.savefig('graphs/{0}_{1}.png'.format(gan, dist), dpi=100)
-#             plt.clf()
+def get_mnist_graphs(res, gans_index, distance_metrics):
+    for gan, value in gans.items():
+        normal = pd.DataFrame(res[gan]['mnist'])
+        for dist in distance_metrics:
+            plt.plot(range(len(normal['mnist'])), normal['mnist'], label="MNIST")
+            plt.xlabel("Epoch")
+            plt.ylabel(dist)
+            plt.title("{0}: {1}".format(gan.upper(), dist))
+            plt.legend()
+            plt.savefig('graphs/{0}_{1}.png'.format(gan, dist), dpi=100)
+            plt.clf()
 
 
 def nested_pickle_dict():

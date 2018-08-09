@@ -94,14 +94,12 @@ if __name__ == "__main__":
                 # get_mixture_graphs(results, models, distributions, distance_metrics, epochs)
 
             elif data_type == "circles":
-                # TODO: compatibility with images
                 results = get_circle_results(models, dimensions,
                                             epochs, samples, hyperparam)
 
                 # TODO: Graphing circles
             elif data_type == "mnist":
-                # pass
-                results = get_mnist_results(models, 784, epochs, hyperparam)
+                results = get_mnist_results(models, dimensions, epochs, hyperparam)
 
             with open(out_path, 'w') as outfile:
                 json.dump(results, outfile)
