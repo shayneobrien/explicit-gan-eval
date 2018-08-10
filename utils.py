@@ -69,7 +69,7 @@ def get_mnist_results(models, mnist_dim,
 
         # Model, trainer, metrics
         model = module.Model(image_size=mnist_dim, hidden_dim=dim,
-                             z_dim=int(round(dim/4)), atype=activation_type)
+                             z_dim=int(round(max(dim/4, 1))), atype=activation_type)
         trainer = module.Trainer(model, train_iter, val_iter, test_iter)
         metrics = trainer.train(num_epochs=epochs, lr=lr)
 
@@ -106,7 +106,7 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions, act
     # Init model
     model = module.Model(image_size=dimensions,
                          hidden_dim=dim,
-                         z_dim=int(round(dimensions/4, 0)),
+                         z_dim=int(round(max(dim/4, 1))),
                          atype=activation_type)
 
     # Init trainer

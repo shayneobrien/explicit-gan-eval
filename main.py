@@ -24,7 +24,7 @@ if __name__ == "__main__":
         (4) number of epochs: 10, 100, 1000, etc. \n
         (5) number of samples: 1000, 10,000, 100,000, etc. \n
         (6) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
-        e.g. python main.py multivariate 3 3 3 3 \n
+        e.g. python main.py multivariate 3 3 3 3
              python main.py mixture 3 3 5 10 10
              python main.py mnist 3 3 3 3
         """)
