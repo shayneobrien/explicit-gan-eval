@@ -164,7 +164,9 @@ class Trainer:
 
         output = self.model(images)
 
-        recon_loss = -torch.sum(torch.log(torch.abs(images - output) + 1e-8))
+        # Binary cross entropy
+        recon_loss = -torch.sum(images*torch.log(output + 1e-8)
+                                 + (1-images) * torch.log(1 - output + 1e-8))
 
         return output, recon_loss
 
