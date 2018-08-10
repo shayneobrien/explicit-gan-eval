@@ -62,24 +62,24 @@ if __name__ == "__main__":
 
     # Specify models to test
     models = {
-        # "wgan": w_gan,
-        # "wgpgan": w_gp_gan,
-        # "nsgan": ns_gan,
-        # "lsgan": ls_gan,
-        # "mmgan": mm_gan,
-        # "dragan": dra_gan,
-        # "began": be_gan,
-        # "ragan": ra_gan,
-        # "infogan": info_gan,
-        # "fishergan": fisher_gan,
+        "wgan": w_gan,
+        "wgpgan": w_gp_gan,
+        "nsgan": ns_gan,
+        "lsgan": ls_gan,
+        "mmgan": mm_gan,
+        "dragan": dra_gan,
+        "began": be_gan,
+        "ragan": ra_gan,
+        "infogan": info_gan,
+        "fishergan": fisher_gan,
         "fgan_forward_kl": forkl_gan,
         "fgan_reverse_kl": revkl_gan,
         "fgan_jensen_shannon": js_gan,
         "fgan_total_var": tv_gan,
         "fgan_hellinger": hellinger_gan,
         "fgan_pearson": pearson_gan,
-        # "vae": vae,
-        # "autoencoder": ae,
+        "vae": vae,
+        "autoencoder": ae,
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
