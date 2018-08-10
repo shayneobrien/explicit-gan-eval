@@ -21,7 +21,6 @@ from copy import deepcopy
 from collections import defaultdict
 from tqdm import tqdm
 from itertools import product
-from .mnist_data import load_mnist
 from .gan_utils import to_var, autoencoder_metrics
 
 

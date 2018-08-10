@@ -32,7 +32,7 @@ import numpy as np
 from collections import defaultdict
 from itertools import product
 from tqdm import tqdm
-from .mnist_data import load_mnist
+
 from .gan_utils import *
 
 
