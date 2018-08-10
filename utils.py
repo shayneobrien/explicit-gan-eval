@@ -96,6 +96,7 @@ def get_circle_results(models, dimensions,
 
 def model_results(module, epochs, hyperparameters, gen, samples, dimensions, activation_type):
     """ Train a model, get metrics dictionary out """
+
     # Unpack hyperparameters
     lr, dim, bsize = hyperparameters
 

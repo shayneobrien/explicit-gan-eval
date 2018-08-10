@@ -5,9 +5,10 @@ from torch.utils.data import TensorDataset
 
 import data
 from models import w_gan, w_gp_gan, ns_gan, mm_gan, \
-                   f_gan, fisher_gan, ra_gan, info_gan, \
-                   ls_gan, dra_gan, be_gan, vae, ae \
-
+                   ls_gan, fisher_gan, ra_gan, info_gan, \
+                   dra_gan, be_gan, vae, ae
+from models.f_gan import forkl_gan, revkl_gan, tv_gan, \
+                         js_gan, hellinger_gan, pearson_gan
 from utils import *
 
 plt.switch_backend('agg')
@@ -46,9 +47,9 @@ if __name__ == "__main__":
 
 
     # Set hyperparameters
-    learning_rates = [1e-3, ]#5e-4, 1e-4, 5e-5] # np.linspace()
-    hidden_dims = [16, ]#32, 64, 128, 256] # 2, 4, 8, 16, 32, 64, 128, 256
-    BATCH_SIZE = [100, ]# 150, 200, 250] # 16, 32, 64, 128, 256, 512, 1024, 2048, 4096
+    learning_rates = [1e-2, ] #5e-3, 1e-3, #5e-4, 1e-4, 5e-5]
+    hidden_dims = [2, ]# 4, 8, 16, 32, 64, 128, 256, 512
+    BATCH_SIZE = [16, ]# 32, 64, 128, 256, 512, 1024, 2048, 4096
     distributions = [
                      'normal',
                      'beta',
@@ -60,21 +61,25 @@ if __name__ == "__main__":
 
 
     # Specify models to test
-    # TODO: GENERATOR activation functions: sigmoid for MNIST/circles, ReLU for others)
     models = {
-        "wgan": w_gan,
-        "wgpgan": w_gp_gan,
-        "nsgan": ns_gan,
-        "lsgan": ls_gan,
-        "mmgan": mm_gan,
-        "dragan": dra_gan,
-        "began": be_gan,
-        "ragan": ra_gan,
-        "infogan": info_gan,
-        "fishergan": fisher_gan, #TODO: assumed Gaussian moments may be problematic, fix softmax thing from loss (?)
-        "fgan": f_gan, #TODO: cycle through divergences, fix NaN issue, double check activation fnc..
-        "vae": vae,
-        "autoencoder": ae,
+        # "wgan": w_gan,
+        # "wgpgan": w_gp_gan,
+        # "nsgan": ns_gan,
+        # "lsgan": ls_gan,
+        # "mmgan": mm_gan,
+        # "dragan": dra_gan,
+        # "began": be_gan,
+        # "ragan": ra_gan,
+        # "infogan": info_gan,
+        # "fishergan": fisher_gan,
+        "fgan_forward_kl": forkl_gan,
+        "fgan_reverse_kl": revkl_gan,
+        "fgan_jensen_shannon": js_gan,
+        "fgan_total_var": tv_gan,
+        "fgan_hellinger": hellinger_gan,
+        "fgan_pearson": pearson_gan,
+        # "vae": vae,
+        # "autoencoder": ae,
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]

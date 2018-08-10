@@ -37,7 +37,7 @@ import numpy as np
 from collections import defaultdict
 from itertools import product
 from tqdm import tqdm
-from .gan_utils import *
+from models.gan_utils import *
 
 
 class Generator(nn.Module):
@@ -90,7 +90,7 @@ class Divergence:
     """
     def __init__(self, method):
         self.method = method.lower().strip()
-        assert self.method in ['total_vartiation',
+        assert self.method in ['total_variation',
                                'forward_kl',
                                'reverse_kl',
                                'pearson',
@@ -101,7 +101,7 @@ class Divergence:
     def D_loss(self, DX_score, DG_score):
         """ Compute batch loss for discriminator using f-divergence metric """
 
-        if self.method == 'total_vartiation':
+        if self.method == 'total_variation':
             return -(torch.mean(0.5*torch.tanh(DX_score)) - torch.mean(0.5*torch.tanh(DG_score)))
 
         elif self.method == 'forward_kl':
@@ -123,7 +123,7 @@ class Divergence:
     def G_loss(self, DG_score):
         """ Compute batch loss for generator using f-divergence metric """
 
-        if self.method == 'total_vartiation':
+        if self.method == 'total_variation':
             return -torch.mean(0.5*torch.tanh(DG_score))
 
         elif self.method == 'forward_kl':
@@ -145,7 +145,8 @@ class Divergence:
 class Trainer:
     """ Object to hold data iterators, train a GAN variant
     """
-    def __init__(self, model, train_iter, val_iter, test_iter, viz=False):
+    def __init__(self, model, train_iter, val_iter, test_iter,
+                    method, viz=False):
         self.model = to_cuda(model)
         self.name = model.__class__.__name__
 
@@ -156,10 +157,11 @@ class Trainer:
         self.Glosses = []
         self.Dlosses = []
 
+        self.method = method
         self.viz = viz
         self.metrics = defaultdict(list)
 
-    def train(self, num_epochs, method='forward_kl', lr=1e-4, D_steps=1):
+    def train(self, num_epochs, lr=1e-4, D_steps=1):
         """ Train an NSGAN using f-divergence
             Logs progress using G loss, D loss, G(x), D(G(x)),
             visualizations of Generator output.
@@ -171,7 +173,7 @@ class Trainer:
             D_steps: int, training step ratio for how often to train D compared to G (default 1)
         """
         # Initialize loss
-        self.loss_fnc = Divergence(method)
+        self.loss_fnc = Divergence(self.method)
 
         # Initialize optimizers
         G_optimizer = optim.Adam(params=[p for p in self.model.G.parameters() if p.requires_grad], lr=lr)
