@@ -16,8 +16,10 @@ They test (forward) Kullback-Leibler, reverse Kullback-Leibler, Pearson
 chi-squared, Neyman chi-squared, squared Hellinger, Jensen-Shannon,
 and Jeffrey divergences.
 
-We exclude Jeffrey due to poor performance and nontrivial implementation.
-(see scipy.special.lambertw otherwise)
+We exclude Neyman and Jeffrey due to poor performance and nontrivial
+implementations to yield 'convergence' (see scipy.special.lambertw
+for how to implement Jeffrey, and Table 6 of Appendix C of the paper
+for how to implement Neyman)
 
 https://arxiv.org/pdf/1606.00709.pdf
 """
@@ -91,9 +93,8 @@ class Divergence:
         assert self.method in ['total_vartiation',
                                'forward_kl',
                                'reverse_kl',
-                               'hellinger',
                                'pearson',
-#                                'neyman', #TODO: fix neyman
+                               'hellinger',
                                'jensen_shannon'], \
             'Invalid divergence.'
 
@@ -109,19 +110,15 @@ class Divergence:
         elif self.method == 'reverse_kl':
             return -(torch.mean(-torch.exp(DX_score)) - torch.mean(-1-DG_score))
 
-        elif self.method == 'hellinger':
-            return -(torch.mean(1-torch.exp(DX_score)) /
-                    - torch.mean((1-torch.exp(DG_score))/(torch.exp(DG_score))))
-
         elif self.method == 'pearson':
             return -(torch.mean(DX_score) - torch.mean(0.25*DG_score**2 + DG_score))
 
-        # elif self.method == 'neyman':
-        #     return -(torch.mean(1-torch.exp(DX_score)) - torch.mean(2 - 2*(1-DG_score)**0.50))
+        elif self.method == 'hellinger':
+            return -(torch.mean(1-torch.exp(DX_score)) - torch.mean((1-torch.exp(DG_score))/(torch.exp(DG_score))))
 
         elif self.method == 'jensen_shannon':
-            return -(torch.mean(torch.log(torch.tensor(2.))-torch.log(1+torch.exp(-DX_score+1e-8))) /
-                    - torch.mean(-torch.log(torch.tensor(2.)-torch.exp(DG_score)+1e-8)))
+            return -(torch.mean(torch.tensor(2.)-(1+torch.exp(-DX_score))) \
+                        - torch.mean(-(torch.tensor(2.)-torch.exp(DG_score))))
 
     def G_loss(self, DG_score):
         """ Compute batch loss for generator using f-divergence metric """
@@ -135,17 +132,14 @@ class Divergence:
         elif self.method == 'reverse_kl':
             return -torch.mean(-1-DG_score)
 
-        elif self.method == 'hellinger':
-            return -torch.mean((1-torch.exp(DG_score))/(torch.exp(DG_score)))
-
         elif self.method == 'pearson':
             return -torch.mean(0.25*DG_score**2 + DG_score)
 
-        # elif self.method == 'neyman':
-        #     return -torch.mean(2 - 2*(1-DG_score)**0.50)
+        elif self.method == 'hellinger':
+            return -torch.mean((1-torch.exp(DG_score))/(torch.exp(DG_score)))
 
         elif self.method == 'jensen_shannon':
-            return -torch.mean(-torch.log(torch.tensor(2.)-torch.exp(DG_score)+1e-8))
+            return -torch.mean(-(torch.tensor(2.)-torch.exp(DG_score)))
 
 
 class Trainer:
