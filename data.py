@@ -297,7 +297,7 @@ class CirclesDatasetGenerator:
                 cv.circle(this_image, location, circle_size, color, -1)
             images.append(this_image)
 
-        return np.array(images)
+        return np.array(images).transpose((0,3,1,2))
 
     def generate_samples_to_directory(self, n_samples, output_directory):
 
