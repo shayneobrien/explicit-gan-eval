@@ -1,4 +1,4 @@
-import os, sys, json, itertools, datetime, shutil
+import sys, json, itertools, datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 from torch.utils.data import TensorDataset
@@ -19,14 +19,15 @@ if __name__ == "__main__":
     print("""
         Choose \n
         (1) dataset: multivariate, mixture, circles, or mnist \n
-        (2) trials (for confidence intervals) 1 \n
+        (2) trials (for confidence intervals) 1, 10, 100, etc. \n
         (3) number of dimensions: 1, 10, 100, 1000, etc. \n
         (4) number of epochs: 10, 100, 1000, etc. \n
         (5) number of samples: 1000, 10,000, 100,000, etc. \n
         (6) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
-        e.g. python main.py multivariate 3 3 3 3
+        e.g. python main.py multivariate 1 1 1 1
              python main.py mixture 3 3 5 10 10
              python main.py mnist 3 3 3 3
+             python main.py circles 2 2 2 2
         """)
     # TODO: argparse once we're ready to send to GPUs
     data_type = sys.argv[1]
@@ -37,21 +38,10 @@ if __name__ == "__main__":
     if data_type == "mixture":
         n_mixtures = int(sys.argv[6])
 
-
-    # Make output directories if they don't exist yet, clear them out if they
-    # already do
-    for dir in ['hypertuning', 'graphs', 'best', "confidence_intervals"]:
-        for subdir in ['multivariate', 'mixture', 'circles', 'mnist']:
-            dirname = dir + '/' + subdir + '/'
-            if os.path.exists(dirname):
-                shutil.rmtree(dirname)
-            os.makedirs(dirname)
-
-
     # Set hyperparameters
-    learning_rates = [1e-2, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5]
-    hidden_dims = [2, 4, 8, 16, 32, 64, 128, 256, 512]
-    BATCH_SIZE = [16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
+    learning_rates = [1e-2]#, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5]
+    hidden_dims = [2]#, 4, 8, 16, 32, 64, 128, 256, 512]
+    BATCH_SIZE = [16]#, 32, 64, 128, 256, 512, 1024, 2048, 4096]
     distributions = [
                      'normal',
                      'beta',
@@ -60,7 +50,8 @@ if __name__ == "__main__":
                      'gumbel',
                      'laplace',
                      ]
-
+    modes = [2]#, 4, 8, 16]
+    n_circles = [1]#, 2, 4, 8, 16]
 
     # Specify models to test
     models = {
@@ -99,22 +90,25 @@ if __name__ == "__main__":
                 results = get_mixture_results(models, distributions, dimensions,
                                             epochs, samples, n_mixtures, hyperparam)
 
-            elif data_type == "circles":
-                results = get_circle_results(models, dimensions,
-                                            epochs, samples, hyperparam)
-
             elif data_type == "mnist":
-                results = get_mnist_results(models, 784,
+                results = get_mnist_results(models, 784*1, # black and white, so 1 channel
                                           epochs, hyperparam)
+
+            elif data_type == "circles":
+                results = get_circle_results(models, 784*3, # RGB, so 3 channels
+                                            epochs, samples, modes, n_circles, hyperparam)
 
             with open(out_path, 'w') as outfile:
                 json.dump(results, outfile)
 
         find_best = eval('get_best_performance_' + data_type)
         results = find_best(data_type)
-        with open("best/{}/results_{}_{}.json".format(data_type, t, datetime.datetime.now().strftime("%Y-%m-%d")), 'w') as outfile:
-                json.dump(results, outfile)
 
+        # Output format is best/data_type/results_trial_time
+        with open("best/{}/results_{}_{}.json".format(data_type, t, datetime.datetime.now().strftime("%Y-%m-%d")), 'w') as outfile:
+            json.dump(results, outfile)
+
+    # Compute the confidence interval across the best results from each trial
     get_ci = eval('get_confidence_intervals_' + data_type)
     ci = get_ci(data_type)
     with open("confidence_intervals/{}/data.json".format(data_type), 'w') as outfile:

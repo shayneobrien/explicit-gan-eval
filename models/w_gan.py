@@ -175,9 +175,8 @@ class Trainer:
             self.num_epochs = epoch
 
             # Visualize generator progress
-            # self.generate_images(epoch)
-
             if self.viz:
+                self.generate_images(epoch)
                 plt.show()
 
         return self.metrics
@@ -250,7 +249,7 @@ class Trainer:
         images = self.model.G(noise)
 
         # Reshape to proper image size
-        images = images.view(images.shape[0], 28, 28)
+        images = images.view(images.shape[0], 28, 28, -1).squeeze()
 
         # Plot
         plt.close()

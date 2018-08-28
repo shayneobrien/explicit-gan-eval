@@ -118,7 +118,7 @@ def get_pdf(data, iqr, r, samples):
         bin_width = 2*iqr/np.cbrt(samples)
         bins = int(round(r/bin_width, 0))
     else:
-        # MNIST (since it's really only supposed to be either 0 or 1 as output
+        # MNIST (since it's really only supposed to be either 0 or 1 as output)
         bins = 2
 
     # Bin data
@@ -142,8 +142,8 @@ def gan_metrics(trainer):
         trainer.metrics[key].append(value)
     metrics = trainer.metrics
 
-    metrics['GLoss'] = trainer.Glosses
-    metrics['DLoss'] = trainer.Dlosses
+    metrics["GLoss"] = trainer.Glosses
+    metrics["DLoss"] = trainer.Dlosses
     metrics["LR"] = trainer.lr
     metrics["HDIM"] = trainer.model.hidden_dim
     metrics["BSIZE"] = trainer.train_iter.batch_size
@@ -159,7 +159,8 @@ def vae_metrics(trainer, output, batch):
 
     A = output.data.numpy()
     B = images.data.numpy()
-    # MNIST
+
+    # MNIST, circles
     if A.shape != B.shape:
         B = np.reshape(B, A.shape)
 
@@ -167,8 +168,8 @@ def vae_metrics(trainer, output, batch):
     for key, value in metrics.items():
         trainer.metrics[key].append(value)
     metrics = trainer.metrics
-    metrics['RLoss'] = trainer.Rlosses
-    metrics['KL-Divergence'] = trainer.KLdivs
+    metrics["RLoss"] = trainer.Rlosses
+    metrics["KL-Divergence"] = trainer.KLdivs
     metrics["LR"] = trainer.lr
     metrics["HDIM"] = trainer.model.hidden_dim
     metrics["BSIZE"] = trainer.train_iter.batch_size
@@ -183,16 +184,15 @@ def autoencoder_metrics(trainer, output, batch):
     A = output.data.numpy()
     B = images.data.numpy()
 
-    # MNIST
+    # MNIST, circles
     if A.shape != B.shape:
         B = np.reshape(B, A.shape)
 
     metrics = compute_divergences(A, B)
-    metrics = {}
     for key, value in metrics.items():
         trainer.metrics[key].append(value)
     metrics = trainer.metrics
-    metrics['Loss'] = trainer.losses
+    metrics["Loss"] = trainer.losses
     metrics["LR"] = trainer.lr
     metrics["HDIM"] = trainer.model.hidden_dim
     metrics["BSIZE"] = trainer.train_iter.batch_size

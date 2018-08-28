@@ -11,6 +11,9 @@ from models.gan_utils_mnist import preprocess_mnist
 
 plt.switch_backend('agg')
 
+"""
+Results
+"""
 
 def get_multivariate_results(models, distributions, dimensions,
                              epochs, samples, hyperparameters):
@@ -18,7 +21,7 @@ def get_multivariate_results(models, distributions, dimensions,
     results, activation_type = nested_pickle_dict(), 'relu'
     for model_name, module in models.items():
         for dist in distributions:
-            print('\n', model_name, dist)
+            print('\n', model_name, dist, 'MULTIVARIATE')
             gen = data.Distribution(dist_type=dist, dim=dimensions)
             metrics = model_results(module, epochs, hyperparameters,
                                     gen, samples, dimensions, activation_type)
@@ -34,6 +37,7 @@ def get_mixture_results(models, distributions, dimensions,
     for model_name, module in models.items():
         for dist_i in distributions[0:1]: # Just normal and other mixture models at the moment
             for dist_j in distributions:
+                print('\n', model_name, dist_i, dist_j, "MIXTURE")
                 gen = data.MixtureDistribution(dist_type=dist_i, mix_type=dist_j,
                                                 n_mixtures=n_mixtures, dim=dimensions)
 
@@ -45,7 +49,7 @@ def get_mixture_results(models, distributions, dimensions,
 
 
 def get_mnist_results(models, mnist_dim,
-                        epochs, hyperparameters):
+                      epochs, hyperparameters):
     """ Autoencoded MNIST results """
 
     # Unpack hyperparameters, initialize results dict
@@ -80,16 +84,24 @@ def get_mnist_results(models, mnist_dim,
 
 
 def get_circle_results(models, dimensions,
-                       epochs, samples, hyperparameters, activation_type):
-    """ Circles dataset results """
+                       epochs, samples, modes, n_circles, hyperparameters):
+    """ Circles with random colors, sizes, locations results """
+
+    # Unpack hyperparameters, initialize results dict
+    lr, dim, bsize = hyperparameters
     results, activation_type = nested_pickle_dict(), 'sigmoid'
+
     for model_name, module in models.items():
-        gen = data.CirclesDatasetGenerator(size=dimensions, n_circles=samples,
-                                            random_colors=True, random_sizes=True,
-                                            modes=20)
-        metrics = model_results(module, epochs, hyperparameters,
-                                gen, samples, dimensions, activation_type)
-        results[model_name].update(metrics)
+        for n_circle in n_circles:
+            for mode in modes:
+                print('\n', model_name, n_circle, 'circles', mode, 'modes', 'CIRCLES')
+                gen = data.CirclesDatasetGenerator(size=28, n_circles=n_circle, modes=mode,
+                                                random_colors=False, random_sizes=False)
+
+                metrics = model_results(module, epochs, hyperparameters,
+                                        gen, samples, dimensions, activation_type)
+
+                results[model_name][n_circle][mode].update(metrics)
 
     return results
 
@@ -122,31 +134,9 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions, act
     return metrics
 
 
-# def get_circle_results(gans, dimensions, epochs, samples):
-#     res = {}
-#     for key, gan in gans.items():
-#         res[key] = {}
-#         print(key)
-#         res[key]["circle"] = {}
-#         generator = data.CirclesDatasetGenerator(size=dimensions, n_circles=samples, random_colors=True, random_sizes=True, modes=20)
-#         train_iter, val_iter, test_iter = preprocess(generator, samples)
-#         if key == "vae":
-#             continue
-#             # model = vae.VAE(image_size=dimensions, hidden_dim=400, z_dim=20)
-#             # trainer = vae.Trainer(model, train_iter, val_iter, test_iter)
-#             # model, kl, ks, js, wd, ed = trainer.train(model, num_epochs=epochs)
-#         else:
-#             model = gan.GAN(image_size=dimensions, hidden_dim=256, z_dim=int(round(dimensions/4, 0)))
-#             trainer = gan.Trainer(model, train_iter, val_iter, test_iter)
-#             model, kl, ks, js, wd, ed = trainer.train(model=model, num_epochs=epochs)
-#         res[key]["circle"]["KL-Divergence"] = kl
-#         res[key]["circle"]["Jensen-Shannon"] = js
-#         res[key]["circle"]["Wasserstein-Distance"] = wd
-#         res[key]["circle"]["Energy-Distance"] = ed
-#     return res
-#
-#
-
+"""
+Best results
+"""
 
 def get_best_performance_multivariate(data_type):
     mypath = "hypertuning/{}".format(data_type)
@@ -170,10 +160,6 @@ def get_best_performance_multivariate(data_type):
                             optimal[gan][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
 
     return optimal
-
-
-def get_best_performance_mnist(data_type):
-    return get_best_performance_multivariate(data_type)
 
 
 def get_best_performance_mixture(data_type):
@@ -201,6 +187,18 @@ def get_best_performance_mixture(data_type):
     return optimal
 
 
+def get_best_performance_mnist(data_type):
+    return get_best_performance_multivariate(data_type)
+
+
+def get_best_performance_circles(data_type):
+    return get_best_performance_mixture(data_type)
+
+
+"""
+Confidence intervals
+"""
+
 def get_confidence_intervals_multivariate(data_type):
     mypath = "best/{}".format(data_type)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
@@ -209,6 +207,7 @@ def get_confidence_intervals_multivariate(data_type):
         with open("{}/{}".format(mypath, file)) as f:
             data = json.load(f)
         results.append(data)
+    
     optimal = {}
     for result in results:
         for gan, distributions in result.items():
@@ -231,9 +230,6 @@ def get_confidence_intervals_multivariate(data_type):
                     optimal[gan][distribution][metric]['95'] = list(np.percentile(data, 95, axis=0))
 
     return optimal
-
-def get_confidence_intervals_mnist(data_type):
-    return get_confidence_intervals_multivariate(data_type)
 
 
 def get_confidence_intervals_mixture(data_type):
@@ -272,6 +268,19 @@ def get_confidence_intervals_mixture(data_type):
     return optimal
 
 
+def get_confidence_intervals_mnist(data_type):
+    return get_confidence_intervals_multivariate(data_type)
+
+
+def get_confidence_intervals_circles(data_type):
+    return get_confidence_intervals_mixture(data_type)
+
+
+"""
+Best results graphs
+"""
+#TODO: Fix all of these
+
 def get_best_graph(results,
                    models,
                    distributions,
@@ -292,7 +301,6 @@ def get_best_graph(results,
             plt.savefig('graphs/multivariate/{0}_{1}.png'.format(metric, model_name), dpi=100)
             plt.clf()
 
-# TODO fix these graphing functions
 def get_multivariate_graphs(results, models, distributions,
                             distance_metrics, num_epochs):
     # TODO: fix save error, legend, make pretty
@@ -342,6 +350,13 @@ def get_mnist_graphs(results, models, distance_metrics, num_epochs):
         plt.savefig('graphs/mnist/{0}_{1}.png'.format(model_name, dist), dpi=100)
         plt.clf()
 
+def get_circles_graph(results, models, ):
+    pass
+
+
+"""
+Misc. utility function
+"""
 
 def nested_pickle_dict():
     """ Picklable defaultdict nested dictionaries """

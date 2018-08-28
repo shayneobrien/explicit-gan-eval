@@ -179,7 +179,7 @@ class Trainer:
         # Reshape images, VAE output
         images = to_cuda(images.view(images.shape[0], -1))
         reconst_images = self.model(images)
-        reconst_images = reconst_images.view(reconst_images.shape[0], 28, 28)
+        reconst_images = reconst_images.view(reconst_images.shape[0], 28, 28, -1).squeeze()
 
         # Plot
         plt.close()

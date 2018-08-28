@@ -81,7 +81,7 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
                               test_iter=test_iter,
                               viz=False)
 
-        trainer.train(num_epochs=1,
+        trainer.train(num_epochs=1, # TODO: change
                       lr=1e-3,
                       weight_decay=1e-5)
 

@@ -10,6 +10,7 @@ import cv2 as cv
 import numpy as np
 from sklearn.datasets import make_spd_matrix
 
+
 def load_dist(self, in_file):
     with open(in_file, 'wb') as of:
         return pickle.load(of)
@@ -211,31 +212,10 @@ class MixtureDistribution:
 
         return log_likelihood
 
-# TODO: MAKE THIS WORK
-# def generate_heatmap_images(samples, size=28):
-#     # typically you would want heatmap samples to be multiples of 4
-#
-#     images = []
-#     for sample in samples:
-#             this_image = Image.new('RGB', (size, size), (255, 255, 255))
-#             for k in range(int(len(samples)/4)):
-#
-#                 heatmapper = Heatmapper(point_diameter=int(sample[4*k]), point_strength=sample[4*k+1], opacity=1.0, colours='default')
-#                 points = [(int(size*sample[4*k+2]), int(size*sample[4*k+3]))]
-#
-#                 ti = heatmapper.heatmap_on_img(points, this_image)
-#                 this_image = ti
-#
-#             plt.imshow(this_image)
-#             plt.show()
-#
-#             images.append(np.array(this_image))
-#
-#     return images
 
 class CirclesDatasetGenerator:
 
-    def __init__(self, size=28, n_circles=1, modes=1, random_colors=True, random_sizes=True):
+    def __init__(self, size=28, n_circles=1, modes=1, random_colors=False, random_sizes=False):
 
         self.size = size
         self.circles = n_circles
@@ -270,6 +250,8 @@ class CirclesDatasetGenerator:
             for k in range(self.circles):
                 sample = samples[i]
 
+                # TODO: rearrange these properly
+
                 if self.has_random_colors and self.has_random_sizes:
                     color = (
                     int(self.size * sample[6 * k + 3]), int(self.size * sample[6 * k + 4]), int(self.size * sample[6 * k + 5]))
@@ -297,7 +279,7 @@ class CirclesDatasetGenerator:
                 cv.circle(this_image, location, circle_size, color, -1)
             images.append(this_image)
 
-        return np.array(images).transpose((0,3,1,2))
+        return np.array(images)/255.
 
     def generate_samples_to_directory(self, n_samples, output_directory):
 
