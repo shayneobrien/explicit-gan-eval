@@ -22,10 +22,10 @@ if __name__ == '__main__':
             os.makedirs(dirname)
 
 
-    for trials in ['1']:#['100']:
-        for dimensions in ['2']:#['16', '32', '64', '128', '256', '512', '1024', '2048']:
-            for epochs in ['1']:#['25']:
-                for samples in ['2']:#['1000', '10000', '100000', '1000000']:
+    for trials in ['100']:
+        for dimensions in ['16', '32', '64', '128', '256', '512', '1024', '2048']:
+            for epochs in ['25']:
+                for samples in ['1000', '10000', '100000', '1000000']:
 
                     call(["python3", "main.py", "multivariate",
                           trials, dimensions, epochs, samples])
