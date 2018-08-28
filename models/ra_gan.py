@@ -249,13 +249,13 @@ class Trainer:
 
         # Plot
         plt.close()
-        size_figure_grid = int(num_outputs**0.5)
+        size_figure_grid, k = int(num_outputs**0.5), 0
         fig, ax = plt.subplots(size_figure_grid, size_figure_grid, figsize=(5, 5))
         for i, j in product(range(size_figure_grid), range(size_figure_grid)):
             ax[i,j].get_xaxis().set_visible(False)
             ax[i,j].get_yaxis().set_visible(False)
-            ax[i,j].cla()
-            ax[i,j].imshow(images[i+j].data.numpy(), cmap='gray')
+            ax[i,j].imshow(images[k].data.numpy(), cmap='gray')
+            k += 1
 
         # Save images if desired
         if save:
@@ -264,7 +264,7 @@ class Trainer:
                 os.makedirs(outname)
             torchvision.utils.save_image(images.unsqueeze(1).data,
                                          outname + 'reconst_%d.png'
-                                         %(epoch), nrow = 5)
+                                         %(epoch), nrow=5)
 
     def viz_loss(self):
         """ Visualize loss for the generator, discriminator """
