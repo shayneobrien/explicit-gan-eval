@@ -96,8 +96,8 @@ def gan_metrics(trainer):
     trainer.model.eval()
 
     noise = trainer.compute_noise(1000, trainer.model.z_dim)
-    A = trainer.process_batch(trainer.train_iter).data.numpy()
-    B = trainer.model.G(noise).data.numpy()
+    A = trainer.process_batch(trainer.train_iter).cpu().data.numpy()
+    B = trainer.model.G(noise).cpu().data.numpy()
 
     metrics = compute_divergences(A, B)
     for key, value in metrics.items():
@@ -123,8 +123,8 @@ def vae_metrics(trainer, output, batch):
 
     images, _ = batch
 
-    A = output.data.numpy()
-    B = images.data.numpy()
+    A = output.cpu().data.numpy()
+    B = images.cpu().data.numpy()
 
     # MNIST, circles
     if A.shape != B.shape:
@@ -153,8 +153,8 @@ def autoencoder_metrics(trainer, output, batch):
 
     images, _ = batch
 
-    A = output.data.numpy()
-    B = images.data.numpy()
+    A = output.cpu().data.numpy()
+    B = images.cpu().data.numpy()
 
     # MNIST, circles
     if A.shape != B.shape:

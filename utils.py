@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from functools import partial
 from collections import defaultdict
 from models.gan_utils import preprocess
-from models.gan_utils_mnist import preprocess_mnist
+from models.mnist_utils import preprocess_mnist
 
 plt.switch_backend('agg')
 
@@ -207,7 +207,7 @@ def get_confidence_intervals_multivariate(data_type):
         with open("{}/{}".format(mypath, file)) as f:
             data = json.load(f)
         results.append(data)
-    
+
     optimal = {}
     for result in results:
         for gan, distributions in result.items():
