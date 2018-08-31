@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     # Set hyperparameters
     learning_rates = [1e-2, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5]
-    hidden_dims = [2, 4, 8, 16, 32, 64, 128, 256, 512]
+    hidden_dims = [2, 4, 8, 16, 32]#, 64, 128, 256, 512]
     BATCH_SIZE = [16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
     distributions = [
                      'normal',
