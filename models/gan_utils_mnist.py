@@ -28,11 +28,11 @@ def get_the_data_mnist(BATCH_SIZE):
                                transform=transforms.ToTensor())
 
     """ Use greyscale values as sampling probabilities to get back to {0,1} """
-    train_img = torch.stack([torch.bernoulli(d[0]) for d in train_dataset])
-    train_label = torch.LongTensor([d[1] for d in train_dataset])
+    train_img = to_cuda(torch.stack([torch.bernoulli(d[0]) for d in train_dataset]))
+    train_label = to_cuda(torch.LongTensor([d[1] for d in train_dataset]))
 
-    test_img = torch.stack([torch.bernoulli(d[0]) for d in test_dataset])
-    test_label = torch.LongTensor([d[1] for d in test_dataset])
+    test_img = to_cuda(torch.stack([torch.bernoulli(d[0]) for d in test_dataset]))
+    test_label = to_cuda(torch.LongTensor([d[1] for d in test_dataset]))
 
     """ MNIST has no official train dataset so use last 10000 as validation """
     val_img = train_img[-10000:].clone()

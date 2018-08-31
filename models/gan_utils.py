@@ -31,45 +31,6 @@ def get_the_data(generator, samples, BATCH_SIZE=100):
     return data_iter
 
 
-def get_the_data_mnist(BATCH_SIZE):
-    """ Load data for binared MNIST """
-    torch.manual_seed(3435)
-
-    """ Download our data """
-    train_dataset = datasets.MNIST(root='./data/',
-                                train=True,
-                                transform=transforms.ToTensor(),
-                                download=True)
-
-    test_dataset = datasets.MNIST(root='./data/',
-                               train=False,
-                               transform=transforms.ToTensor())
-
-    """ Use greyscale values as sampling probabilities to get back to {0,1} """
-    train_img = torch.stack([torch.bernoulli(d[0]) for d in train_dataset])
-    train_label = torch.LongTensor([d[1] for d in train_dataset])
-
-    test_img = torch.stack([torch.bernoulli(d[0]) for d in test_dataset])
-    test_label = torch.LongTensor([d[1] for d in test_dataset])
-
-    """ MNIST has no official train dataset so use last 10000 as validation """
-    val_img = train_img[-10000:].clone()
-    val_label = train_label[-10000:].clone()
-
-    train_img = train_img[:-10000]
-    train_label = train_label[:-10000]
-
-    """ Create data loaders """
-    train = torch.utils.data.TensorDataset(train_img, train_label)
-    val = torch.utils.data.TensorDataset(val_img, val_label)
-    test = torch.utils.data.TensorDataset(test_img, test_label)
-    # BATCH_SIZE = 100
-    train_iter = torch.utils.data.DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
-    val_iter = torch.utils.data.DataLoader(val, batch_size=BATCH_SIZE, shuffle=True)
-    test_iter = torch.utils.data.DataLoader(test, batch_size=BATCH_SIZE, shuffle=True)
-    return train_iter, val_iter, test_iter
-
-
 def preprocess(generator, samples, BATCH_SIZE=100):
     """ Create data iterators """
     train_iter = get_the_data(generator, samples, BATCH_SIZE)
@@ -131,6 +92,7 @@ def get_pdf(data, iqr, r, samples):
 
 def gan_metrics(trainer):
     """ Generate samples, compute divergences, get losses for GANs """
+
     trainer.model.eval()
 
     noise = trainer.compute_noise(1000, trainer.model.z_dim)
@@ -148,6 +110,7 @@ def gan_metrics(trainer):
     metrics["HDIM"] = trainer.model.hidden_dim
     metrics["BSIZE"] = trainer.train_iter.batch_size
 
+    trainer.model = to_cuda(trainer.model)
     trainer.model.train()
 
     return metrics
@@ -155,6 +118,9 @@ def gan_metrics(trainer):
 
 def vae_metrics(trainer, output, batch):
     """ Generate samples, compute divergences, get losses for VAEs """
+
+    trainer.model.eval()
+
     images, _ = batch
 
     A = output.data.numpy()
@@ -174,11 +140,17 @@ def vae_metrics(trainer, output, batch):
     metrics["HDIM"] = trainer.model.hidden_dim
     metrics["BSIZE"] = trainer.train_iter.batch_size
 
+    trainer.model = to_cuda(trainer.model)
+    trainer.model.train()
+
     return metrics
 
 
 def autoencoder_metrics(trainer, output, batch):
     """ Generate samples, compute divergences, get losses for autoencoders """
+
+    trainer.model.eval()
+
     images, _ = batch
 
     A = output.data.numpy()
@@ -196,5 +168,8 @@ def autoencoder_metrics(trainer, output, batch):
     metrics["LR"] = trainer.lr
     metrics["HDIM"] = trainer.model.hidden_dim
     metrics["BSIZE"] = trainer.train_iter.batch_size
+
+    trainer.model = to_cuda(trainer.model)
+    trainer.model.train()
 
     return metrics

@@ -308,7 +308,7 @@ class Viz:
         """ Viz method 4: explore the latent space representations """
 
         # Evenly sample acorss latent space, visualize the outputs
-        mu = torch.stack([torch.FloatTensor([m1, m2])
+        mu = torch.stack([to_cuda(torch.FloatTensor([m1, m2]))
                           for m1 in np.linspace(-2, 2, 10)
                           for m2 in np.linspace(-2, 2, 10)])
         samples = self.model.decoder(to_cuda(mu))

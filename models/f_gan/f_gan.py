@@ -117,8 +117,8 @@ class Divergence:
             return -(torch.mean(1-torch.exp(DX_score)) - torch.mean((1-torch.exp(DG_score))/(torch.exp(DG_score))))
 
         elif self.method == 'jensen_shannon':
-            return -(torch.mean(torch.tensor(2.)-(1+torch.exp(-DX_score))) \
-                        - torch.mean(-(torch.tensor(2.)-torch.exp(DG_score))))
+            return -(torch.mean(to_cuda(torch.tensor(2.))-(1+torch.exp(-DX_score))) \
+                        - torch.mean(-(to_cuda(torch.tensor(2.))-torch.exp(DG_score))))
 
     def G_loss(self, DG_score):
         """ Compute batch loss for generator using f-divergence metric """
@@ -139,7 +139,7 @@ class Divergence:
             return -torch.mean((1-torch.exp(DG_score))/(torch.exp(DG_score)))
 
         elif self.method == 'jensen_shannon':
-            return -torch.mean(-(torch.tensor(2.)-torch.exp(DG_score)))
+            return -torch.mean(-(to_cuda(torch.tensor(2.))-torch.exp(DG_score)))
 
 
 class Trainer:
