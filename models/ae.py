@@ -21,7 +21,7 @@ from copy import deepcopy
 from collections import defaultdict
 from tqdm import tqdm
 from itertools import product
-from .model_utils import to_var, autoencoder_metrics
+from .model_utils import *
 
 
 def to_cuda(x):
@@ -92,6 +92,9 @@ class Trainer:
         self.metrics = defaultdict(list)
         self.losses = []
 
+        self.As = []
+        self.Bs = []
+
     def train(self, num_epochs, lr=1e-3, weight_decay=1e-5):
         """ Train a Standard Autoencoder
             Logs progress using total loss, validation loss
@@ -111,22 +114,19 @@ class Trainer:
                                      weight_decay=weight_decay)
         self.__dict__.update(locals())
 
-        # Compute number of steps per epoch
-        epoch_steps = int(len(self.train_iter))
-
         # Begin training
         for epoch in tqdm(range(1, num_epochs+1)):
 
             self.model.train()
             epoch_loss = []
 
-            for _ in range(epoch_steps):
+            for batch in self.train_iter:
 
                 # Zero out gradients
                 optimizer.zero_grad()
 
                 # Compute reconstruction loss for a batch
-                output, _, batch_loss = self.compute_batch(batch)
+                _, _, batch_loss, _ = self.process_batch(batch)
 
                 # Update parameters
                 batch_loss.backward()
@@ -164,10 +164,10 @@ class Trainer:
 
         return autoencoder_metrics(self)
 
-    def process_batch(self, iterator):
+    def process_batch(self, batch):
         """ Compute loss for a batch of examples """
 
-        images, _ = next(iter(iterator))
+        images, _ = batch
         images = to_cuda(images.view(images.shape[0], -1))
 
         output = self.model(images)
@@ -176,11 +176,11 @@ class Trainer:
         recon_loss = -torch.sum(images*torch.log(output + 1e-8)
                                  + (1-images) * torch.log(1 - output + 1e-8))
 
-        return output, images, recon_loss
+        return output, images, recon_loss, 0
 
     def evaluate(self, iterator):
         """ Evaluate on a given dataset """
-        return np.mean([self.compute_batch(batch)[1].item() for batch in iterator])
+        return np.mean([self.process_batch(batch)[2].item() for batch in iterator])
 
     def reconstruct_images(self, images, epoch, save=True):
         """Reconstruct a fixed input at each epoch for progress visualization """

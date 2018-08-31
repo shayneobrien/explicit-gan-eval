@@ -155,15 +155,13 @@ def sample_gan(trainer):
     trainer.model.eval()
 
     # Sample noise
-    noise = trainer.compute_noise(trainer.train_iter.batch_size, trainer.model.z_dim)
+    noise = trainer.compute_noise(trainer.test_iter.batch_size, trainer.model.z_dim)
 
     # Change image shape, if applicable
-    A = trainer.process_batch(trainer.train_iter).cpu().data.numpy()
+    A = trainer.process_batch(trainer.test_iter).cpu().data.numpy()
 
     # Generate from noise
     B = trainer.model.G(noise).cpu().data.numpy()
-
-    print(A.shape, B.shape)
 
     return A, B
 
@@ -174,7 +172,7 @@ def sample_autoencoder(trainer):
     trainer.model.eval()
 
     # Extract images
-    A, B, _, _ = trainer.process_batch(trainer.train_iter)
+    A, B, _, _ = trainer.process_batch(next(iter(trainer.test_iter)))
 
     # Sent to numpy
     A = A.cpu().data.numpy()

@@ -133,22 +133,19 @@ class Trainer:
         optimizer = torch.optim.Adam(params=[p for p in self.model.parameters() if p.requires_grad], lr=lr, weight_decay=weight_decay)
         self.__dict__.update(locals())
 
-        # Compute number of steps per epoch
-        epoch_steps = int(len(self.train_iter))
-
         # Begin training
         for epoch in tqdm(range(1, num_epochs+1)):
 
             self.model.train()
             epoch_loss, epoch_recon, epoch_kl = [], [], []
 
-            for _ in range(epoch_steps):
+            for batch in self.train_iter:
 
                 # Zero out gradients
                 optimizer.zero_grad()
 
                 # Compute reconstruction loss, Kullback-Leibler divergence for a batch
-                output, _, recon_loss, kl_diverge = self.process_batch(self.train_iter)
+                _, _, recon_loss, kl_diverge = self.process_batch(batch)
                 batch_loss = recon_loss + kl_diverge # ELBO
 
                 # Update parameters
@@ -190,10 +187,10 @@ class Trainer:
 
         return vae_metrics(self)
 
-    def process_batch(self, iterator):
+    def process_batch(self, batch):
         """ Compute loss for a batch of examples """
 
-        images, _ = next(iter(iterator))
+        images, _ = batch
         images = to_cuda(images.view(images.shape[0], -1))
 
         output, mu, log_var = self.model(images)
@@ -210,7 +207,7 @@ class Trainer:
         """ Evaluate on a given dataset """
         loss = []
         for batch in iterator:
-            output, recon_loss, kl_diverge = self.compute_batch(batch)
+            output, _, recon_loss, kl_diverge = self.process_batch(batch)
             batch_loss = recon_loss + kl_diverge
             loss.append(batch_loss.item())
 

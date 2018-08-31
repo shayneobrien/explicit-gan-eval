@@ -24,10 +24,10 @@ if __name__ == "__main__":
         (4) number of epochs: 10, 100, 1000, etc. \n
         (5) number of samples: 1000, 10,000, 100,000, etc. \n
         (6) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
-        e.g. python main.py multivariate 1 1 1 1
+        e.g. python main.py multivariate 3 3 3 3
              python main.py mixture 3 3 5 10 10
              python main.py mnist 3 3 3 3
-             python main.py circles 2 2 2 2
+             python main.py circles 3 2 1 2
         """)
 
     data_type = sys.argv[1]
@@ -50,29 +50,29 @@ if __name__ == "__main__":
                      'gumbel',
                      'laplace',
                      ]
-    modes = [2, 4, 8, 16]
-    n_circles = [1, 2, 4, 8, 16]
+    modes = [2]#, 4, 8, 16]
+    n_circles = [1]#, 2, 4, 8, 16]
 
     # Specify models to test
     models = {
-        # "wgan": w_gan,
-        # "wgpgan": w_gp_gan,
-        # "nsgan": ns_gan,
-        # "lsgan": ls_gan,
+        "wgan": w_gan,
+        "wgpgan": w_gp_gan,
+        "nsgan": ns_gan,
+        "lsgan": ls_gan,
         "mmgan": mm_gan,
-        # "dragan": dra_gan,
-        # "began": be_gan,
-        # "ragan": ra_gan,
-        # "infogan": info_gan,
-        # "fishergan": fisher_gan,
-        # "fgan_forward_kl": forkl_gan,
-        # "fgan_reverse_kl": revkl_gan,
-        # "fgan_jensen_shannon": js_gan,
-        # "fgan_total_var": tv_gan,
-        # "fgan_hellinger": hellinger_gan,
-        # "fgan_pearson": pearson_gan,
-        # "vae": vae,
-        # "autoencoder": ae,
+        "dragan": dra_gan,
+        "began": be_gan,
+        "ragan": ra_gan,
+        "infogan": info_gan,
+        "fishergan": fisher_gan,
+        "fgan_forward_kl": forkl_gan,
+        "fgan_reverse_kl": revkl_gan,
+        "fgan_jensen_shannon": js_gan,
+        "fgan_total_var": tv_gan,
+        "fgan_hellinger": hellinger_gan,
+        "fgan_pearson": pearson_gan,
+        "vae": vae,
+        "autoencoder": ae,
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
