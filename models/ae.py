@@ -205,7 +205,7 @@ class Trainer:
 
     def save_model(self, savepath):
         """ Save model state dictionary """
-        torch.save(self.model.state_dict(), savepath)
+        torch.save(self.best_model.state_dict(), savepath)
 
     def load_model(self, loadpath):
         """ Load state dictionary into model. If model not specified, instantiate it """
