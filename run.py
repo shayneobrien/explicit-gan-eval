@@ -31,7 +31,7 @@ if __name__ == '__main__':
             for samples in ['1000', '10000', '100000', '1000000']:
 
                 call(["python3", "main.py", "circles",
-                      trials, 0, epochs, samples])
+                      trials, 0, epochs, samples]) 
 
                 for dimensions in ['16', '32', '64', '128', '256', '512', '1024', '2048']:
 

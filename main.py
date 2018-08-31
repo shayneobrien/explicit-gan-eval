@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
         # Output format is best/data_type/results_trial_time
         with open("best/{}/results_{}_{}.json".format(data_type, t, datetime.datetime.now().strftime("%Y-%m-%d")), 'w') as outfile:
-            json.dump(results, outfile)
+            json.dump(results, outfile) 
 
     # Compute the confidence interval across the best results from each trial
     get_ci = eval('get_confidence_intervals_' + data_type)
