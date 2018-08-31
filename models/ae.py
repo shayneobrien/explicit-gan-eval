@@ -122,7 +122,7 @@ class Trainer:
                 # Zero out gradients
                 optimizer.zero_grad()
 
-                # Compute reconstruction loss, Kullback-Leibler divergence for a batch
+                # Compute reconstruction loss for a batch
                 output, batch_loss = self.compute_batch(batch)
 
                 # Update parameters
@@ -140,7 +140,7 @@ class Trainer:
 
             # Early stopping
             if val_loss < best_val_loss:
-                self.best_model = deepcopy(self.model)
+                self.best_model = self.model
                 best_val_loss = val_loss
 
             # Get metrics

@@ -163,7 +163,7 @@ class Trainer:
 
             # Early stopping
             if val_loss < best_val_loss:
-                self.best_model = deepcopy(self.model)
+                self.best_model = self.model
                 best_val_loss = val_loss
 
             # Get metrics
