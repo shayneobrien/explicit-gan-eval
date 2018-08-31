@@ -21,7 +21,7 @@ from copy import deepcopy
 from collections import defaultdict
 from tqdm import tqdm
 from itertools import product
-from .gan_utils import to_var, autoencoder_metrics
+from .model_utils import to_var, autoencoder_metrics
 
 
 def to_cuda(x):
@@ -111,19 +111,22 @@ class Trainer:
                                      weight_decay=weight_decay)
         self.__dict__.update(locals())
 
+        # Compute number of steps per epoch
+        epoch_steps = int(len(self.train_iter))
+
         # Begin training
         for epoch in tqdm(range(1, num_epochs+1)):
 
             self.model.train()
             epoch_loss = []
 
-            for batch in self.train_iter:
+            for _ in range(epoch_steps):
 
                 # Zero out gradients
                 optimizer.zero_grad()
 
                 # Compute reconstruction loss for a batch
-                output, batch_loss = self.compute_batch(batch)
+                output, _, batch_loss = self.compute_batch(batch)
 
                 # Update parameters
                 batch_loss.backward()
@@ -143,8 +146,12 @@ class Trainer:
                 self.best_model = self.model
                 best_val_loss = val_loss
 
-            # Get metrics
-            self.metrics = autoencoder_metrics(self, output, batch)
+            # Sample for metric divergence computation, save outputs
+            A, B = sample_autoencoder(self)
+            self.As.append(A), self.Bs.append(B)
+
+            # Re-cuda model
+            self.model = to_cuda(self.model)
 
             # Progress logging
             print ("Epoch[%d/%d], Train Loss: %.4f, Val Loss: %.4f"
@@ -155,11 +162,12 @@ class Trainer:
                 self.reconstruct_images(self.debugging_image, epoch)
                 plt.show()
 
-        return self.metrics
+        return autoencoder_metrics(self)
 
-    def compute_batch(self, batch):
+    def process_batch(self, iterator):
         """ Compute loss for a batch of examples """
-        images, _ = batch
+
+        images, _ = next(iter(iterator))
         images = to_cuda(images.view(images.shape[0], -1))
 
         output = self.model(images)
@@ -168,7 +176,7 @@ class Trainer:
         recon_loss = -torch.sum(images*torch.log(output + 1e-8)
                                  + (1-images) * torch.log(1 - output + 1e-8))
 
-        return output, recon_loss
+        return output, images, recon_loss
 
     def evaluate(self, iterator):
         """ Evaluate on a given dataset """

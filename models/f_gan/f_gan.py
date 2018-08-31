@@ -37,7 +37,7 @@ import numpy as np
 from collections import defaultdict
 from itertools import product
 from tqdm import tqdm
-from models.gan_utils import *
+from models.model_utils import *
 
 
 class Generator(nn.Module):

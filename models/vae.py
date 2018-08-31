@@ -38,7 +38,7 @@ from collections import defaultdict
 from itertools import product
 from tqdm import tqdm
 
-from .gan_utils import *
+from .model_utils import *
 
 
 class Encoder(nn.Module):
@@ -133,19 +133,22 @@ class Trainer:
         optimizer = torch.optim.Adam(params=[p for p in self.model.parameters() if p.requires_grad], lr=lr, weight_decay=weight_decay)
         self.__dict__.update(locals())
 
+        # Compute number of steps per epoch
+        epoch_steps = int(len(self.train_iter))
+
         # Begin training
         for epoch in tqdm(range(1, num_epochs+1)):
 
             self.model.train()
             epoch_loss, epoch_recon, epoch_kl = [], [], []
 
-            for batch in self.train_iter:
+            for _ in range(epoch_steps):
 
                 # Zero out gradients
                 optimizer.zero_grad()
 
                 # Compute reconstruction loss, Kullback-Leibler divergence for a batch
-                output, recon_loss, kl_diverge = self.compute_batch(batch)
+                output, _, recon_loss, kl_diverge = self.process_batch(self.train_iter)
                 batch_loss = recon_loss + kl_diverge # ELBO
 
                 # Update parameters
@@ -170,7 +173,7 @@ class Trainer:
                 best_val_loss = val_loss
 
             # Sample for metric divergence computation, save outputs
-            A, B = sample_autoencoder(output, batch)
+            A, B = sample_autoencoder(self)
             self.As.append(A), self.Bs.append(B)
 
             # Re-cuda model
@@ -187,9 +190,10 @@ class Trainer:
 
         return vae_metrics(self)
 
-    def compute_batch(self, batch):
+    def process_batch(self, iterator):
         """ Compute loss for a batch of examples """
-        images, _ = batch
+
+        images, _ = next(iter(iterator))
         images = to_cuda(images.view(images.shape[0], -1))
 
         output, mu, log_var = self.model(images)
@@ -200,7 +204,7 @@ class Trainer:
 
         kl_diverge = self.kl_divergence(mu, log_var)
 
-        return output, recon_loss, kl_diverge
+        return output, images, recon_loss, kl_diverge
 
     def evaluate(self, iterator):
         """ Evaluate on a given dataset """

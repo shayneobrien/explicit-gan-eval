@@ -154,10 +154,8 @@ def sample_gan(trainer):
     # Set to eval mode (disable regularization)
     trainer.model.eval()
 
-    # TODO: figure out iterating over train iter or not..
-
     # Sample noise
-    noise = trainer.compute_noise(1000, trainer.model.z_dim)
+    noise = trainer.compute_noise(trainer.train_iter.batch_size, trainer.model.z_dim)
 
     # Change image shape, if applicable
     A = trainer.process_batch(trainer.train_iter).cpu().data.numpy()
@@ -165,20 +163,22 @@ def sample_gan(trainer):
     # Generate from noise
     B = trainer.model.G(noise).cpu().data.numpy()
 
+    print(A.shape, B.shape)
+
     return A, B
 
-def sample_autoencoder(output, batch):
+def sample_autoencoder(trainer):
     """ Sample GAN for metric divergence computation """
 
     # Set to eval mode (disable regularization)
     trainer.model.eval()
 
     # Extract images
-    images, _ = batch
+    A, B, _, _ = trainer.process_batch(trainer.train_iter)
 
     # Sent to numpy
-    A = output.cpu().data.numpy()
-    B = images.cpu().data.numpy()
+    A = A.cpu().data.numpy()
+    B = B.cpu().data.numpy()
 
     # MNIST, circles make sure shapes are the same
     if A.shape != B.shape:

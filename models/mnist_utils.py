@@ -10,7 +10,7 @@ import numpy as np
 from klepto.archives import file_archive
 
 import models.ae as ae
-from models.gan_utils import to_cuda
+from models.model_utils import to_cuda
 
 
 def get_the_data_mnist(BATCH_SIZE):

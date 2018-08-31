@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from functools import partial
 from collections import defaultdict
-from models.gan_utils import preprocess
+from models.model_utils import preprocess
 from models.mnist_utils import preprocess_mnist
 
 plt.switch_backend('agg')
