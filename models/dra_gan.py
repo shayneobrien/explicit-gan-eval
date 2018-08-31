@@ -95,6 +95,9 @@ class Trainer:
         self.viz = viz
         self.metrics = defaultdict(list)
 
+        self.As = []
+        self.Bs = []
+
     def train(self, num_epochs, lr=1e-4, D_steps=5):
         """ Train a Deep Regret Analytic GAN
             Logs progress using G loss, D loss, G(x), D(G(x)), visualizations of Generator output.
@@ -158,8 +161,12 @@ class Trainer:
             self.Glosses.extend(G_losses)
             self.Dlosses.extend(D_losses)
 
-            # Get metrics
-            self.metrics = gan_metrics(self)
+            # Sample for metric divergence computation, save outputs
+            A, B = sample_gan(self)
+            self.As.append(A), self.Bs.append(B)
+
+            # Re-cuda model
+            self.model = to_cuda(self.model)
 
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
@@ -171,7 +178,7 @@ class Trainer:
                 self.generate_images(epoch)
                 plt.show()
 
-        return self.metrics
+        return gan_metrics(self)
 
     def train_D(self, images, LAMBDA=10, K=1, C=1):
         """ Run 1 step of training for discriminator

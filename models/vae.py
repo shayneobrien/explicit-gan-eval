@@ -113,6 +113,9 @@ class Trainer:
         self.Rlosses = []
         self.KLdivs = []
 
+        self.As = []
+        self.Bs = []
+
     def train(self, num_epochs, lr=1e-3, weight_decay=1e-5):
         """ Train a Variational Autoencoder
             Logs progress using total loss, reconstruction loss, kl_divergence, and validation loss
@@ -166,8 +169,12 @@ class Trainer:
                 self.best_model = self.model
                 best_val_loss = val_loss
 
-            # Get metrics
-            self.metrics = vae_metrics(self, output, batch)
+            # Sample for metric divergence computation, save outputs
+            A, B = sample_autoencoder(output, batch)
+            self.As.append(A), self.Bs.append(B)
+
+            # Re-cuda model
+            self.model = to_cuda(self.model)
 
             # Progress logging
             print ("Epoch[%d/%d], Total Loss: %.4f, Reconst Loss: %.4f, KL Div: %.7f, Val Loss: %.4f"
@@ -178,7 +185,7 @@ class Trainer:
                 self.reconstruct_images(self.debugging_image, epoch)
                 plt.show()
 
-        return self.metrics
+        return vae_metrics(self)
 
     def compute_batch(self, batch):
         """ Compute loss for a batch of examples """

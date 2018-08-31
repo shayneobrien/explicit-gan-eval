@@ -20,3 +20,6 @@ class Trainer(f_gan.Trainer):
         self.method = method
         self.viz = viz
         self.metrics = defaultdict(list)
+
+        self.As = []
+        self.Bs = []

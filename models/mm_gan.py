@@ -98,6 +98,8 @@ class Trainer:
         self.viz = viz
         self.metrics = defaultdict(list)
 
+        self.As = []
+        self.Bs = []
 
     def train(self, num_epochs, lr=2e-4, D_steps=1, G_init=5):
         """ Train a vanilla GAN using the minimax gradients loss for the generator.
@@ -183,8 +185,12 @@ class Trainer:
             self.Glosses.extend(G_losses)
             self.Dlosses.extend(D_losses)
 
-            # Get metrics
-            self.metrics = gan_metrics(self)
+            # Sample for metric divergence computation, save outputs
+            A, B = sample_gan(self)
+            self.As.append(A), self.Bs.append(B)
+
+            # Re-cuda model
+            self.model = to_cuda(self.model)
 
             # Progress logging
             print ("Epoch[%d/%d], G Loss: %.4f, D Loss: %.4f"
@@ -196,7 +202,7 @@ class Trainer:
                 self.generate_images(epoch)
                 plt.show()
 
-        return self.metrics
+        return gan_metrics(self)
 
     def train_D(self, images):
         """ Run 1 step of training for discriminator

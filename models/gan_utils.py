@@ -93,46 +93,33 @@ def get_pdf(data, iqr, r, samples):
 def gan_metrics(trainer):
     """ Generate samples, compute divergences, get losses for GANs """
 
-    trainer.model.eval()
+    # Compute divergences for each epoch
+    for A, B in zip(*[trainer.As, trainer.Bs]):
+        metrics = compute_divergences(A, B)
+        for key, value in metrics.items():
+            trainer.metrics[key].append(value)
 
-    noise = trainer.compute_noise(1000, trainer.model.z_dim)
-    A = trainer.process_batch(trainer.train_iter).cpu().data.numpy()
-    B = trainer.model.G(noise).cpu().data.numpy()
-
-    metrics = compute_divergences(A, B)
-    for key, value in metrics.items():
-        trainer.metrics[key].append(value)
+    # Put all metrics into a single dictionary
     metrics = trainer.metrics
-
     metrics["GLoss"] = trainer.Glosses
     metrics["DLoss"] = trainer.Dlosses
     metrics["LR"] = trainer.lr
     metrics["HDIM"] = trainer.model.hidden_dim
     metrics["BSIZE"] = trainer.train_iter.batch_size
 
-    trainer.model = to_cuda(trainer.model)
-    trainer.model.train()
-
     return metrics
 
 
-def vae_metrics(trainer, output, batch):
+def vae_metrics(trainer):
     """ Generate samples, compute divergences, get losses for VAEs """
 
-    trainer.model.eval()
+    # Compute divergences for each epoch
+    for A, B in zip(*[trainer.As, trainer.Bs]):
+        metrics = compute_divergences(A, B)
+        for key, value in metrics.items():
+            trainer.metrics[key].append(value)
 
-    images, _ = batch
-
-    A = output.cpu().data.numpy()
-    B = images.cpu().data.numpy()
-
-    # MNIST, circles
-    if A.shape != B.shape:
-        B = np.reshape(B, A.shape)
-
-    metrics = compute_divergences(A, B)
-    for key, value in metrics.items():
-        trainer.metrics[key].append(value)
+    # Put all metrics into a single dictionary
     metrics = trainer.metrics
     metrics["RLoss"] = trainer.Rlosses
     metrics["KL-Divergence"] = trainer.KLdivs
@@ -140,36 +127,61 @@ def vae_metrics(trainer, output, batch):
     metrics["HDIM"] = trainer.model.hidden_dim
     metrics["BSIZE"] = trainer.train_iter.batch_size
 
-    trainer.model = to_cuda(trainer.model)
-    trainer.model.train()
-
     return metrics
 
 
-def autoencoder_metrics(trainer, output, batch):
+def autoencoder_metrics(trainer):
     """ Generate samples, compute divergences, get losses for autoencoders """
 
-    trainer.model.eval()
+    # Compute divergences for each epoch
+    for A, B in zip(*[trainer.As, trainer.Bs]):
+        metrics = compute_divergences(A, B)
+        for key, value in metrics.items():
+            trainer.metrics[key].append(value)
 
-    images, _ = batch
-
-    A = output.cpu().data.numpy()
-    B = images.cpu().data.numpy()
-
-    # MNIST, circles
-    if A.shape != B.shape:
-        B = np.reshape(B, A.shape)
-
-    metrics = compute_divergences(A, B)
-    for key, value in metrics.items():
-        trainer.metrics[key].append(value)
     metrics = trainer.metrics
     metrics["Loss"] = trainer.losses
     metrics["LR"] = trainer.lr
     metrics["HDIM"] = trainer.model.hidden_dim
     metrics["BSIZE"] = trainer.train_iter.batch_size
 
-    trainer.model = to_cuda(trainer.model)
-    trainer.model.train()
-
     return metrics
+
+
+def sample_gan(trainer):
+    """ Sample GAN for metric divergence computation """
+
+    # Set to eval mode (disable regularization)
+    trainer.model.eval()
+
+    # TODO: figure out iterating over train iter or not..
+
+    # Sample noise
+    noise = trainer.compute_noise(1000, trainer.model.z_dim)
+
+    # Change image shape, if applicable
+    A = trainer.process_batch(trainer.train_iter).cpu().data.numpy()
+
+    # Generate from noise
+    B = trainer.model.G(noise).cpu().data.numpy()
+
+    return A, B
+
+def sample_autoencoder(output, batch):
+    """ Sample GAN for metric divergence computation """
+
+    # Set to eval mode (disable regularization)
+    trainer.model.eval()
+
+    # Extract images
+    images, _ = batch
+
+    # Sent to numpy
+    A = output.cpu().data.numpy()
+    B = images.cpu().data.numpy()
+
+    # MNIST, circles make sure shapes are the same
+    if A.shape != B.shape:
+        B = np.reshape(B, A.shape)
+
+    return A, B

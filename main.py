@@ -39,9 +39,9 @@ if __name__ == "__main__":
         n_mixtures = int(sys.argv[6])
 
     # Set hyperparameters
-    learning_rates = [1e-2, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5]
-    hidden_dims = [2, 4, 8, 16, 32]#, 64, 128, 256, 512]
-    BATCH_SIZE = [16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
+    learning_rates = [1e-2]#, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5]
+    hidden_dims = [2]#, 4, 8, 16, 32]#, 64, 128, 256, 512]
+    BATCH_SIZE = [16]#, 32, 64, 128, 256, 512, 1024, 2048, 4096]
     distributions = [
                      'normal',
                      'beta',
@@ -55,24 +55,24 @@ if __name__ == "__main__":
 
     # Specify models to test
     models = {
-        "wgan": w_gan,
-        "wgpgan": w_gp_gan,
-        "nsgan": ns_gan,
-        "lsgan": ls_gan,
+        # "wgan": w_gan,
+        # "wgpgan": w_gp_gan,
+        # "nsgan": ns_gan,
+        # "lsgan": ls_gan,
         "mmgan": mm_gan,
-        "dragan": dra_gan,
-        "began": be_gan,
-        "ragan": ra_gan,
-        "infogan": info_gan,
-        "fishergan": fisher_gan,
-        "fgan_forward_kl": forkl_gan,
-        "fgan_reverse_kl": revkl_gan,
-        "fgan_jensen_shannon": js_gan,
-        "fgan_total_var": tv_gan,
-        "fgan_hellinger": hellinger_gan,
-        "fgan_pearson": pearson_gan,
-        "vae": vae,
-        "autoencoder": ae,
+        # "dragan": dra_gan,
+        # "began": be_gan,
+        # "ragan": ra_gan,
+        # "infogan": info_gan,
+        # "fishergan": fisher_gan,
+        # "fgan_forward_kl": forkl_gan,
+        # "fgan_reverse_kl": revkl_gan,
+        # "fgan_jensen_shannon": js_gan,
+        # "fgan_total_var": tv_gan,
+        # "fgan_hellinger": hellinger_gan,
+        # "fgan_pearson": pearson_gan,
+        # "vae": vae,
+        # "autoencoder": ae,
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
         # Output format is best/data_type/results_trial_time
         with open("best/{}/results_{}_{}.json".format(data_type, t, datetime.datetime.now().strftime("%Y-%m-%d")), 'w') as outfile:
-            json.dump(results, outfile) 
+            json.dump(results, outfile)
 
     # Compute the confidence interval across the best results from each trial
     get_ci = eval('get_confidence_intervals_' + data_type)

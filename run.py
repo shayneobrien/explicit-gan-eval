@@ -25,20 +25,20 @@ if __name__ == '__main__':
     for trials in ['100']:
         for epochs in ['25']:
 
-            call(["python3", "main.py", "mnist",
-                  trials, '0', epochs, '0'])
+            # call(["python3", "main.py", "mnist",
+            #       trials, '0', epochs, '0'])
 
             for samples in ['1000', '10000', '100000', '1000000']:
-
+            
                 call(["python3", "main.py", "circles",
                       trials, '0', epochs, samples])
 
-                for dimensions in ['16', '32', '64', '128', '256', '512', '1024', '2048']:
-
-                    call(["python3", "main.py", "multivariate",
-                          trials, dimensions, epochs, samples])
-
-                    for mixtures in ['1000', '10000', '100000', '1000000']:
-
-                        call(["python3", "main.py", "mixture",
-                              trials, dimensions, epochs, samples, mixtures])
+                # for dimensions in ['16', '32', '64', '128', '256', '512', '1024', '2048']:
+                #
+                #     call(["python3", "main.py", "multivariate",
+                #           trials, dimensions, epochs, samples])
+                #
+                #     for mixtures in ['1000', '10000', '100000', '1000000']:
+                #
+                #         call(["python3", "main.py", "mixture",
+                #               trials, dimensions, epochs, samples, mixtures])
