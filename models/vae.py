@@ -196,6 +196,7 @@ class Trainer:
         output, mu, log_var = self.model(images)
 
         # Binary cross entropy
+        # TODO: is this kosher for non-MNIST / datasets bounded in [0,1]?
         recon_loss = -torch.sum(images*torch.log(output + 1e-8)
                                  + (1-images) * torch.log(1 - output + 1e-8))
 
