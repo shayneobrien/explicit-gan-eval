@@ -22,7 +22,7 @@ if __name__ == '__main__':
             os.makedirs(dirname)
 
 
-    for trials in ['100']:
+    for trials in ['20']:
         for epochs in ['25']:
 
             call(["python3", "main.py", "mnist",

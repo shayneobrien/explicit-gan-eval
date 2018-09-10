@@ -250,7 +250,8 @@ class CirclesDatasetGenerator:
             for k in range(self.circles):
                 sample = samples[i]
 
-                # TODO: rearrange these properly
+                # TODO: rearrange these properly (what's in the repo right now
+                # is what we want, i.e. the last else: statement)
 
                 if self.has_random_colors and self.has_random_sizes:
                     color = (

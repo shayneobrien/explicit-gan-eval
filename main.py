@@ -41,7 +41,13 @@ if __name__ == "__main__":
     # Set hyperparameters
     learning_rates = [1e-2, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5]
     hidden_dims = [2, 4, 8, 16, 32]#, 64, 128, 256, 512]
-    BATCH_SIZE = [16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
+    batch_size = [128, 256, 512, 1024]
+
+    # Base learning rates for the smallest batch size (128). We will modify
+    # these by a factor of 0.5 for each step up in batch size, as per
+    # https://openreview.net/forum?id=B1Yy1BxCZ
+    learning_rates = [2e-1, 2e-2, 2e-3]
+
     distributions = [
                      'normal',
                      'beta',
@@ -78,9 +84,12 @@ if __name__ == "__main__":
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
     for t in range(trials):
         print('Trial {0}'.format(t))
-        for hyperparam in list(itertools.product(*[learning_rates, hidden_dims, BATCH_SIZE])):
-            print(hyperparam)
+        for (lr, hdim, bsize) in itertools.product(*[learning_rates, hidden_dims, batch_size]):
+
+            hyperparam = (lr * min(batch_size)/bsize, h_dim, bsize)
             out_path = 'hypertuning/' + data_type + '/results_{0}.json'.format("_".join([str(i) for i in hyperparam]))
+
+            print(hyperparam)
 
             if data_type == "multivariate":
                 results = get_multivariate_results(models, distributions, dimensions,
