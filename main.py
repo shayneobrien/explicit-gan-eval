@@ -39,7 +39,6 @@ if __name__ == "__main__":
         n_mixtures = int(sys.argv[6])
 
     # Set hyperparameters
-    learning_rates = [1e-2, 5e-3, 1e-3, 5e-4, 1e-4, 5e-5]
     hidden_dims = [2, 4, 8, 16, 32]#, 64, 128, 256, 512]
     batch_size = [128, 256, 512, 1024]
 
