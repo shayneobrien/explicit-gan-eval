@@ -39,13 +39,13 @@ if __name__ == "__main__":
         n_mixtures = int(sys.argv[6])
 
     # Set hyperparameters
-    hidden_dims = [2, 4, 8, 16, 32]#, 64, 128, 256, 512]
-    batch_size = [128, 256, 512, 1024]
+    hidden_dims = [2]#, 4, 8, 16, 32]#, 64, 128, 256, 512]
+    batch_size = [128, 256]#, 512, 1024]
 
     # Base learning rates for the smallest batch size (128). We will modify
     # these by a factor of 0.5 for each step up in batch size, as per
     # https://openreview.net/forum?id=B1Yy1BxCZ
-    learning_rates = [2e-1, 2e-2, 2e-3]
+    learning_rates = [2e-1, 2e-2]#, 2e-3]
 
     distributions = [
                      'normal',
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         print('Trial {0}'.format(t))
         for (lr, hdim, bsize) in itertools.product(*[learning_rates, hidden_dims, batch_size]):
 
-            hyperparam = (lr * min(batch_size)/bsize, h_dim, bsize)
+            hyperparam = (lr * min(batch_size)/bsize, hdim, bsize)
             out_path = 'hypertuning/' + data_type + '/results_{0}.json'.format("_".join([str(i) for i in hyperparam]))
 
             print(hyperparam)
