@@ -312,77 +312,74 @@ Best results graphs
 """
 #TODO: Fix all of these
 
-def get_best_graph(results,
-                   models,
-                   distributions,
-                   distance_metrics,
-                   num_epochs):
-    # TODO: fix save error, legend, make pretty
-    for metric in distance_metrics:
-        for model_name, module in models.items():
-            for dist in distributions:
-                data = results[model_name][dist][metric]['value']
-                print(model_name, dist, metric, data)
-                plt.plot(np.linspace(1, num_epochs, len(data)), data, label=dist)
-
-            plt.xlabel("Epoch")
-            plt.ylabel(metric)
-            plt.title("{0}: {1}".format(model_name.upper(), metric))
-            plt.legend(loc="best")
-            plt.savefig('graphs/multivariate/{0}_{1}.png'.format(metric, model_name), dpi=100)
-            plt.clf()
-
-def get_multivariate_graphs(results, models, distributions,
-                            distance_metrics, num_epochs):
-    # TODO: fix save error, legend, make pretty
-    for model_name, module in models.items():
-        for dist in distributions:
-            for metric in distance_metrics:
-                data = results[model_name][dist][metric]
-                print(model_name, dist, metric, data)
-                plt.plot(np.linspace(1, num_epochs, len(data)), data)
-
-            plt.xlabel("Epoch")
-            plt.ylabel(metric)
-            plt.title("{0}: {1}".format(model_name.upper(), metric))
-            plt.legend()
-            plt.savefig('graphs/multivariate/{0}_{1}.png'.format(model_name, metric), dpi=100)
-            plt.clf()
-
-
-def get_mixture_graphs(results, models, distributions,
-                        distance_metrics, num_epochs):
-    # TODO: fix save error, legend, make pretty
-    for model_name, module in models.items():
-        for dist_i in distributions[0:1]: # Just normal and other mixture models at the moment
-            for dist_j in distributions:
-                for metric in distance_metrics:
-                    data = results[model_name][dist_i][dist_j][metric]
-                    plt.plot(np.linspace(1, num_epochs, len(data)), data)
-
-    plt.xlabel("Epoch")
-    plt.ylabel(metric)
-    plt.title("{0}: {1}-{2}".format(model_name.upper(), dist_i, dist_j))
-    plt.legend()
-    plt.savefig('graphs/mixture/{0}_{1}-{2}.png'.format(model_name, dist_i, dist_j), dpi=100)
-    plt.clf()
-
-
-def get_mnist_graphs(results, models, distance_metrics, num_epochs):
-    for model_name, module in models.items():
-        normal = pd.DataFrame(results[model_name]['mnist'])
-        for dist in distance_metrics:
-            plt.plot(range(len(normal['mnist'])), normal['mnist'], label="MNIST")
-
-        plt.xlabel("Epoch")
-        plt.ylabel(dist)
-        plt.title("{0}: {1}".format(model_name.upper(), dist))
-        plt.legend()
-        plt.savefig('graphs/mnist/{0}_{1}.png'.format(model_name, dist), dpi=100)
-        plt.clf()
-
-def get_circles_graph(results, models, ):
-    pass
+# def get_best_graph(results,
+#                    models,
+#                    distributions,
+#                    distance_metrics,
+#                    num_epochs):
+#     for metric in distance_metrics:
+#         for model_name, module in models.items():
+#             for dist in distributions:
+#                 data = results[model_name][dist][metric]['value']
+#                 print(model_name, dist, metric, data)
+#                 plt.plot(np.linspace(1, num_epochs, len(data)), data, label=dist)
+#
+#             plt.xlabel("Epoch")
+#             plt.ylabel(metric)
+#             plt.title("{0}: {1}".format(model_name.upper(), metric))
+#             plt.legend(loc="best")
+#             plt.savefig('graphs/multivariate/{0}_{1}.png'.format(metric, model_name), dpi=100)
+#             plt.clf()
+#
+# def get_multivariate_graphs(results, models, distributions,
+#                             distance_metrics, num_epochs):
+#     for model_name, module in models.items():
+#         for dist in distributions:
+#             for metric in distance_metrics:
+#                 data = results[model_name][dist][metric]
+#                 print(model_name, dist, metric, data)
+#                 plt.plot(np.linspace(1, num_epochs, len(data)), data)
+#
+#             plt.xlabel("Epoch")
+#             plt.ylabel(metric)
+#             plt.title("{0}: {1}".format(model_name.upper(), metric))
+#             plt.legend()
+#             plt.savefig('graphs/multivariate/{0}_{1}.png'.format(model_name, metric), dpi=100)
+#             plt.clf()
+#
+#
+# def get_mixture_graphs(results, models, distributions,
+#                         distance_metrics, num_epochs):
+#     for model_name, module in models.items():
+#         for dist_i in distributions[0:1]: # Just normal and other mixture models at the moment
+#             for dist_j in distributions:
+#                 for metric in distance_metrics:
+#                     data = results[model_name][dist_i][dist_j][metric]
+#                     plt.plot(np.linspace(1, num_epochs, len(data)), data)
+#
+#     plt.xlabel("Epoch")
+#     plt.ylabel(metric)
+#     plt.title("{0}: {1}-{2}".format(model_name.upper(), dist_i, dist_j))
+#     plt.legend()
+#     plt.savefig('graphs/mixture/{0}_{1}-{2}.png'.format(model_name, dist_i, dist_j), dpi=100)
+#     plt.clf()
+#
+#
+# def get_mnist_graphs(results, models, distance_metrics, num_epochs):
+#     for model_name, module in models.items():
+#         normal = pd.DataFrame(results[model_name]['mnist'])
+#         for dist in distance_metrics:
+#             plt.plot(range(len(normal['mnist'])), normal['mnist'], label="MNIST")
+#
+#         plt.xlabel("Epoch")
+#         plt.ylabel(dist)
+#         plt.title("{0}: {1}".format(model_name.upper(), dist))
+#         plt.legend()
+#         plt.savefig('graphs/mnist/{0}_{1}.png'.format(model_name, dist), dpi=100)
+#         plt.clf()
+#
+# def get_circles_graph(results, models, ):
+#     pass
 
 
 """
