@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from torch.utils.data import TensorDataset
 
-import data
+import data, shutil
 from models import w_gan, w_gp_gan, ns_gan, mm_gan, \
                    ls_gan, fisher_gan, ra_gan, info_gan, \
                    dra_gan, be_gan, vae, ae
@@ -14,7 +14,6 @@ from utils import *
 plt.switch_backend('agg')
 # plt.style.use('fivethirtyeight') # Let's style things later
 
-
 if __name__ == "__main__":
     print("""
         Choose \n
@@ -24,12 +23,13 @@ if __name__ == "__main__":
         (4) number of epochs: 10, 100, 1000, etc. \n
         (5) number of samples: 1000, 10,000, 100,000, etc. \n
         (6) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
-        e.g. python main.py multivariate 3 3 3 3
+        e.g. python main.py multivariate 2 3 2 2
              python main.py mixture 3 3 5 10 10
              python main.py mnist 3 3 3 3
              python main.py circles 3 2 1 2
         """)
 
+    # Collect system args
     data_type = sys.argv[1]
     trials = int(sys.argv[2])
     dimensions = int(sys.argv[3])
@@ -38,7 +38,15 @@ if __name__ == "__main__":
     if data_type == "mixture":
         n_mixtures = int(sys.argv[6])
 
+    # Make output directories if they don't exist yet
+    for dir in ['hypertuning', 'graphs', 'best', "confidence_intervals"]:
+        for subdir in ['multivariate', 'mixture', 'circles', 'mnist']:
+            dirname = dir + '/' + subdir + '/'
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+
     # Set hyperparameters
+    # TODO: uncomment, inception score, FID, test l2 loss on generative models repo
     hidden_dims = [2, 4, 8, 16, 32]#, 64, 128, 256, 512]
     batch_size = [128, 256, 512, 1024]
 
@@ -55,6 +63,7 @@ if __name__ == "__main__":
                      'gumbel',
                      'laplace',
                      ]
+
     modes = [2, 4, 8, 16]
     n_circles = [1, 2, 4, 8, 16]
 
@@ -62,34 +71,44 @@ if __name__ == "__main__":
     models = {
         "wgan": w_gan,
         "wgpgan": w_gp_gan,
-        "nsgan": ns_gan,
-        "lsgan": ls_gan,
-        "mmgan": mm_gan,
-        "dragan": dra_gan,
-        "began": be_gan,
-        "ragan": ra_gan,
-        "infogan": info_gan,
-        "fishergan": fisher_gan,
-        "fgan_forward_kl": forkl_gan,
-        "fgan_reverse_kl": revkl_gan,
-        "fgan_jensen_shannon": js_gan,
-        "fgan_total_var": tv_gan,
-        "fgan_hellinger": hellinger_gan,
-        "fgan_pearson": pearson_gan,
-        "vae": vae,
-        "autoencoder": ae,
+        # "nsgan": ns_gan,
+        # "lsgan": ls_gan,
+        # "mmgan": mm_gan,
+        # "dragan": dra_gan,
+        # "began": be_gan,
+        # "ragan": ra_gan,
+        # "infogan": info_gan,
+        # "fishergan": fisher_gan,
+        # "fgan_forward_kl": forkl_gan,
+        # "fgan_reverse_kl": revkl_gan,
+        # "fgan_jensen_shannon": js_gan,
+        # "fgan_total_var": tv_gan,
+        # "fgan_hellinger": hellinger_gan,
+        # "fgan_pearson": pearson_gan,
+        # "vae": vae,
+        # "autoencoder": ae,
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
-    for t in range(trials):
-        print('Trial {0}'.format(t))
+
+    start_time = datetime.datetime.now().strftime("%Y-%m-%d-%s")
+    out_dir = 'hypertuning/' + data_type + '/' + start_time
+
+    for t in range(1, trials+1):
+        print('========= TRIAL {0} ========='.format(t))
+
+        trial_path = out_dir + '/trial_{0}'.format(t)
+        print(trial_path)
+        if not os.path.exists(trial_path):
+            os.makedirs(trial_path)
+
         for (lr, hdim, bsize) in itertools.product(*[learning_rates, hidden_dims, batch_size]):
 
             hyperparam = (lr * min(batch_size)/bsize, hdim, bsize)
-            out_path = 'hypertuning/' + data_type + '/results_{0}.json'.format("_".join([str(i) for i in hyperparam]))
-            print(out_path)
+            out_path = trial_path + '/results_{1}.json'.format(t, "_".join([str(i) for i in hyperparam]))
 
-            print(t, hyperparam)
+            print('TRIAL: {0} | LR: {1} | HDIM: {2} | BSIZE: {3}' \
+                .format(t, hyperparam[0], hdim, bsize))
 
             if data_type == "multivariate":
                 results = get_multivariate_results(models, distributions, dimensions,
@@ -110,11 +129,16 @@ if __name__ == "__main__":
             with open(out_path, 'w') as outfile:
                 json.dump(results, outfile)
 
+        # For each trial, get the best performing model with respect to hyperparameter setting.
         find_best = eval('get_best_performance_' + data_type)
         results = find_best(data_type)
 
         # Output format is best/data_type/results_trial_time
-        with open("best/{}/results_{}_{}.json".format(data_type, t, datetime.datetime.now().strftime("%Y-%m-%d")), 'w') as outfile:
+        best_path = 'best/' + data_type + '/' + start_time
+        if not os.path.exists(best_path):
+            os.makedirs(best_path)
+
+        with open(best_path + '/trial_{1}.json'.format(data_type, t), 'w') as outfile:
             json.dump(results, outfile)
 
     # Compute the confidence interval across the best results from each trial

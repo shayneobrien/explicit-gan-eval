@@ -12,17 +12,8 @@ if __name__ == '__main__':
     # (5) number of samples: 1000, 10,000, 100,000, etc. \n
     """
 
-    # Make output directories if they don't exist yet, clear them out if they
-    # already do
-    for dir in ['hypertuning', 'graphs', 'best', "confidence_intervals"]:
-        for subdir in ['multivariate', 'mixture', 'circles', 'mnist']:
-            dirname = dir + '/' + subdir + '/'
-            if os.path.exists(dirname):
-                shutil.rmtree(dirname)
-            os.makedirs(dirname)
-
-
-    for trials in ['20']:
+    # Running across 20 GPUs
+    for trials in ['1']:
         for epochs in ['25']:
 
             call(["python3", "main.py", "mnist",
