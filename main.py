@@ -25,7 +25,7 @@ if __name__ == "__main__":
         (6) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
         e.g. python main.py multivariate 2 3 2 2
              python main.py mixture 2 3 2 10 10
-             python main.py mnist 3 3 3 3
+             python main.py mnist 2 2 2 2
              python main.py circles 3 2 1 2
         """)
 
@@ -47,13 +47,13 @@ if __name__ == "__main__":
 
     # Set hyperparameters
     # TODO: uncomment, inception score, FID, test l2 loss on generative models repo, next(test_iter)
-    hidden_dims = [2, 4, 8, 16, 32]#, 64, 128, 256, 512]
-    batch_size = [128, 256, 512, 1024]
+    hidden_dims = [2]#, 4, 8, 16, 32]#, 64, 128, 256, 512]
+    batch_size = [128]#, 256, 512, 1024]
 
     # Base learning rates for the smallest batch size (128). We will modify
     # these by a factor of 0.5 for each step up in batch size, as per
     # https://openreview.net/forum?id=B1Yy1BxCZ
-    learning_rates = [2e-1, 2e-2, 2e-3]
+    learning_rates = [2e-1]#, 2e-2, 2e-3]
 
     distributions = [
                      'normal',
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     # Specify models to test
     models = {
         "wgan": w_gan,
-        "wgpgan": w_gp_gan,
+        # "wgpgan": w_gp_gan,
         # "nsgan": ns_gan,
         # "lsgan": ls_gan,
         # "mmgan": mm_gan,
@@ -95,12 +95,12 @@ if __name__ == "__main__":
     out_dir = 'hypertuning/' + data_type + '/' + start_time
 
     for trial in range(1, trials+1):
-        print('========= TRIAL {0} ========='.format(trial))
 
         trial_path = out_dir + '/trial_{0}'.format(trial)
-        print(trial_path)
         if not os.path.exists(trial_path):
             os.makedirs(trial_path)
+
+        print('========= TRIAL {0} =========\n{1}'.format(trial, trial_path))
 
         for (lr, hdim, bsize) in itertools.product(*[learning_rates, hidden_dims, batch_size]):
 

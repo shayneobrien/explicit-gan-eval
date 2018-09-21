@@ -297,14 +297,14 @@ def get_confidence_intervals_mixture(data_type, start_time):
     return optimal
 
 
-def get_confidence_intervals_mnist(data_type):
+def get_confidence_intervals_mnist(data_type, start_time):
     """ Compute 95% confidence intervals for MNIST """
-    return get_confidence_intervals_multivariate(data_type)
+    return get_confidence_intervals_multivariate(data_type, start_time)
 
 
-def get_confidence_intervals_circles(data_type):
+def get_confidence_intervals_circles(data_type, start_time):
     """ Compute 95% confidence intervals for circles """
-    return get_confidence_intervals_mixture(data_type)
+    return get_confidence_intervals_mixture(data_type, start_time)
 
 
 """
