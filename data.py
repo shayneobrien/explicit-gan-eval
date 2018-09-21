@@ -18,7 +18,7 @@ def load_dist(self, in_file):
 
 class Distribution:
 
-    def __init__(self, dist_type='normal', dim=1):
+    def __init__(self, out_file, dist_type='normal', dim=1):
 
         self.dist_type = dist_type
         self.dim = dim
@@ -61,7 +61,8 @@ class Distribution:
 
             self.params['loc'] = np.squeeze(loc)
             self.params['scale'] = np.squeeze(scale)
-
+      
+         self.save_generator(out_file)
 
     def generate_samples(self, n_samples=10000):
 
