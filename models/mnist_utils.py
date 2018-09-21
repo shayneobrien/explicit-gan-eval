@@ -81,9 +81,9 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
                               test_iter=test_iter,
                               viz=False)
 
-        trainer.train(num_epochs=25,
-                      lr=1e-3,
-                      weight_decay=1e-5)
+        _ = trainer.train(num_epochs=25,
+                          lr=1e-3,
+                          weight_decay=1e-5)
 
         # Cache autoencoder
         trainer.save_model(save_path + '/cached_autoencoder.pth')

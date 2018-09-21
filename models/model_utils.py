@@ -66,7 +66,7 @@ def compute_divergences(A, B):
     divergences = {"KL-Divergence": kl,
                     "Jensen-Shannon": js,
                     "Wasserstein-Distance": wd,
-                    "Energy-Distance": ed,}
+                    "Energy-Distance": ed}
 
     return divergences
 
