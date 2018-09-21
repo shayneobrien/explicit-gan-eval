@@ -61,7 +61,8 @@ class Distribution:
 
             self.params['loc'] = np.squeeze(loc)
             self.params['scale'] = np.squeeze(scale)
-
+      
+         
 
     def generate_samples(self, n_samples=10000):
 
@@ -215,7 +216,7 @@ class MixtureDistribution:
 
 class CirclesDatasetGenerator:
 
-    def __init__(self, size=28, n_circles=1, modes=1, random_colors=False, random_sizes=False):
+    def __init__(self, out_file, size=28, n_circles=1, modes=1, random_colors=False, random_sizes=False):
 
         self.size = size
         self.circles = n_circles
@@ -236,7 +237,8 @@ class CirclesDatasetGenerator:
                         range(n_circles)]
 
         self.random_size = [np.random.randint(0, round(size * 0.25)) for i in range(n_circles)]
-
+        self.save_generator(out_file)
+         
     def generate_samples(self, n_samples):
 
         images = []
