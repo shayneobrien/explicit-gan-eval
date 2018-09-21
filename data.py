@@ -18,7 +18,7 @@ def load_dist(self, in_file):
 
 class Distribution:
 
-    def __init__(self, out_file, dist_type='normal', dim=1):
+    def __init__(self, dist_type='normal', dim=1):
 
         self.dist_type = dist_type
         self.dim = dim
@@ -216,7 +216,7 @@ class MixtureDistribution:
 
 class CirclesDatasetGenerator:
 
-    def __init__(self, size=28, n_circles=1, modes=1, random_colors=False, random_sizes=False):
+    def __init__(self, out_file, size=28, n_circles=1, modes=1, random_colors=False, random_sizes=False):
 
         self.size = size
         self.circles = n_circles
