@@ -143,8 +143,14 @@ if __name__ == "__main__":
 
     # Compute the confidence interval across the best results from each trial
     get_ci = eval('get_confidence_intervals_' + data_type)
-    ci = get_ci(data_type)
-    with open("confidence_intervals/{}/data.json".format(data_type), 'w') as outfile:
+    ci = get_ci(data_type, start_time)
+
+    # Confidence interval filepath
+    ci_path = "confidence_intervals/{0}/{1}".format(data_type, start_time)
+    if not os.path.exists(ci_path):
+        os.makedirs(ci_path)
+
+    with open(ci_path + '/data.json', 'w') as outfile:
         json.dump(ci, outfile)
 
     # TODO: Getting all the graphs working
