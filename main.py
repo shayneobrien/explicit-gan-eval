@@ -46,7 +46,7 @@ if __name__ == "__main__":
                 os.makedirs(dirname)
 
     # Set hyperparameters
-    # TODO: uncomment, inception score, FID, test l2 loss on generative models repo
+    # TODO: uncomment, inception score, FID, test l2 loss on generative models repo, next(test_iter)
     hidden_dims = [2, 4, 8, 16, 32]#, 64, 128, 256, 512]
     batch_size = [128, 256, 512, 1024]
 
