@@ -61,8 +61,8 @@ class Distribution:
 
             self.params['loc'] = np.squeeze(loc)
             self.params['scale'] = np.squeeze(scale)
-      
-         
+
+
 
     def generate_samples(self, n_samples=10000):
 
@@ -238,7 +238,7 @@ class CirclesDatasetGenerator:
 
         self.random_size = [np.random.randint(0, round(size * 0.25)) for i in range(n_circles)]
         self.save_generator(out_file)
-         
+
     def generate_samples(self, n_samples):
 
         images = []
@@ -252,8 +252,7 @@ class CirclesDatasetGenerator:
             for k in range(self.circles):
                 sample = samples[i]
 
-                # TODO: rearrange these properly (what's in the repo right now
-                # is what we want, i.e. the last else: statement)
+                # TODO: ~Abhi~
 
                 if self.has_random_colors and self.has_random_sizes:
                     color = (

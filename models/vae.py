@@ -190,19 +190,17 @@ class Trainer:
     def process_batch(self, batch):
         """ Compute loss for a batch of examples """
 
+        # Reshape
         images, _ = batch
         images = to_cuda(images.view(images.shape[0], -1))
 
-        output, mu, log_var = self.model(images)
+        # Get output images, mean, std of encoded space
+        outputs, mu, log_var = self.model(images)
 
-        # Binary cross entropy
-        # TODO: is this kosher for non-MNIST / datasets bounded in [0,1]?
-        recon_loss = -torch.sum(images*torch.log(output + 1e-8)
-                                 + (1-images) * torch.log(1 - output + 1e-8))
+        # L2 (mean squared error) loss
+        recon_loss = torch.sum((images - outputs) ** 2)
 
-        kl_diverge = self.kl_divergence(mu, log_var)
-
-        return output, images, recon_loss, kl_diverge
+        return outputs, images, recon_loss, kl_diverge
 
     def evaluate(self, iterator):
         """ Evaluate on a given dataset """

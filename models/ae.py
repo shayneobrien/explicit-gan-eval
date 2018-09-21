@@ -170,14 +170,13 @@ class Trainer:
         images, _ = batch
         images = to_cuda(images.view(images.shape[0], -1))
 
-        output = self.model(images)
+        # Autoencode
+        outputs = self.model(images)
 
-        # Binary cross entropy
-        # TODO: is this kosher for non-MNIST / datasets bounded in [0,1]?
-        recon_loss = -torch.sum(images*torch.log(output + 1e-8)
-                                 + (1-images) * torch.log(1 - output + 1e-8))
+        # L2 (mean squared error) loss
+        recon_loss = torch.sum((images - outputs) ** 2)
 
-        return output, images, recon_loss, 0
+        return outputs, images, recon_loss, 0
 
     def evaluate(self, iterator):
         """ Evaluate on a given dataset """
