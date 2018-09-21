@@ -290,9 +290,9 @@ def get_confidence_intervals_mixture(data_type, start_time):
             for dist_i, dists_j in distributions.items():
                 for dist_j, metrics in dists_j.items():
                     for divergence, output in metrics.items():
-                        data = np.array(optimal[model][mixture][distribution][metric]['values'])
-                        optimal[model][mixture][distribution][metric]['5'] = list(np.percentile(data, 5, axis=0))
-                        optimal[model][mixture][distribution][metric]['95'] = list(np.percentile(data, 95, axis=0))
+                        data = np.array(optimal[model][dist_i][dist_j][divergence]['values'])
+                        optimal[model][dist_i][dist_j][divergence]['5'] = list(np.percentile(data, 5, axis=0))
+                        optimal[model][dist_i][dist_j][divergence]['95'] = list(np.percentile(data, 95, axis=0))
 
     return optimal
 
