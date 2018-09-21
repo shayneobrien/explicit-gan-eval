@@ -233,13 +233,16 @@ def get_confidence_intervals_multivariate(data_type):
 
 
 def get_confidence_intervals_mixture(data_type):
+    """ Compute 95% confidence intervals for mixtures """
     mypath = "best/{}".format(data_type)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
     results = []
+
     for file in files:
         with open("{}/{}".format(mypath, file)) as f:
             data = json.load(f)
         results.append(data)
+
     optimal = nested_pickle_dict()
     for result in results:
         for gan, mixtures in result.items():

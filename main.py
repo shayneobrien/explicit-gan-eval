@@ -87,8 +87,9 @@ if __name__ == "__main__":
 
             hyperparam = (lr * min(batch_size)/bsize, hdim, bsize)
             out_path = 'hypertuning/' + data_type + '/results_{0}.json'.format("_".join([str(i) for i in hyperparam]))
+            print(out_path)
 
-            print(hyperparam)
+            print(t, hyperparam)
 
             if data_type == "multivariate":
                 results = get_multivariate_results(models, distributions, dimensions,
