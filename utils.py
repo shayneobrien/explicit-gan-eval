@@ -141,7 +141,7 @@ Best results
 def get_best_performance_multivariate(data_type, start_time, trial):
     """ For a trial, get the best performance for multivariate data """
     # Get path, files in path
-    mypath = "/Users/sob/github/gans6883/hypertuning/{0}/{1}/trial_{2}".format(data_type, start_time, trial)
+    mypath = "hypertuning/{0}/{1}/trial_{2}".format(data_type, start_time, trial)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
     results = []
 
@@ -177,7 +177,7 @@ def get_best_performance_multivariate(data_type, start_time, trial):
 def get_best_performance_mixture(data_type, start_time, trial):
     """ For a trial, get the best performance for a mixture model """
     # Get path, files in path
-    mypath = "/Users/sob/github/gans6883/hypertuning/{0}/{1}/trial_{2}".format(data_type, start_time, trial)
+    mypath = "hypertuning/{0}/{1}/trial_{2}".format(data_type, start_time, trial)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
     results = []
 
@@ -223,7 +223,7 @@ def get_best_performance_circles(data_type, start_time, trial):
 Confidence intervals
 """
 
-def get_confidence_intervals_multivariate(data_type):
+def get_confidence_intervals_multivariate(data_type, start_time, trial):
     """ Compute 95% confidence intervals for multivariate """
     mypath = "best/{}".format(data_type)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
@@ -257,7 +257,7 @@ def get_confidence_intervals_multivariate(data_type):
     return optimal
 
 
-def get_confidence_intervals_mixture(data_type):
+def get_confidence_intervals_mixture(data_type, start_time, trial):
     """ Compute 95% confidence intervals for mixtures """
     mypath = "best/{}".format(data_type)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
