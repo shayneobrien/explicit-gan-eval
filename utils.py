@@ -223,42 +223,45 @@ def get_best_performance_circles(data_type, start_time, trial):
 Confidence intervals
 """
 
-# def get_confidence_intervals_multivariate(data_type, start_time, trial):
-#     """ Compute 95% confidence intervals for multivariate """
-#     mypath = "best/{}".format(data_type)
-#     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
-#     results = []
-#     for file in files:
-#         with open("{}/{}".format(mypath, file)) as f:
-#             data = json.load(f)
-#         results.append(data)
-#
-#     optimal = {}
-#     for result in results:
-#         for gan, distributions in result.items():
-#             if gan not in optimal:
-#                 optimal[gan] = {}
-#             for distribution, metrics in distributions.items():
-#                 if distribution not in optimal[gan]:
-#                     optimal[gan][distribution] = {}
-#                 for metric, values in metrics.items():
-#                     if metric not in optimal[gan][distribution]:
-#                         optimal[gan][distribution][metric] = {"original": []}
-#                     optimal[gan][distribution][metric]["original"].append(values['value'])
-#
-#     for result in results:
-#         for gan, distributions in result.items():
-#             for distribution, metrics in distributions.items():
-#                 for metric, values in metrics.items():
-#                     data = np.array(optimal[gan][distribution][metric]["original"])
-#                     optimal[gan][distribution][metric]['5'] = list(np.percentile(data, 5, axis=0))
-#                     optimal[gan][distribution][metric]['95'] = list(np.percentile(data, 95, axis=0))
-#
-#     return optimal
+def get_confidence_intervals_multivariate(data_type, start_time):
+    """ Compute 95% confidence intervals for multivariate """
+
+    # Get file path and files therein
+    mypath = "best/{0}/{1}/".format(data_type, start_time)
+    files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+    results = []
+
+    # Load files
+    for file in files:
+        with open("{}/{}".format(mypath, file)) as f:
+            data = json.load(f)
+        results.append(data)
+
+    # Get values for best runs
+    optimal = nested_pickle_dict()
+    for result in results:
+        for model, distributions in result.items():
+            for dist, metrics in distributions.items():
+                for divergence, output in metrics.items():
+                    if divergence not in optimal[model][dist]:
+                        optimal[model][dist][divergence] = {'values': []}
+                    optimal[model][dist][divergence]['values'].append(output['value'])
+
+    # Compute 5th and 95th percentiles for each epoch
+    for result in results:
+        for model, distributions in result.items():
+            for dist, metrics in distributions.items():
+                for divergence, output in metrics.items():
+                    data = np.array(optimal[model][dist][divergence]['values'])
+                    optimal[model][dist][divergence]['5'] = list(np.percentile(data, 5, axis=0))
+                    optimal[model][dist][divergence]['95'] = list(np.percentile(data, 95, axis=0))
+
+    return optimal
 
 
 def get_confidence_intervals_mixture(data_type, start_time):
     """ Compute 95% confidence intervals for mixtures """
+
     # Get file path and files therein
     mypath = "best/{0}/{1}/".format(data_type, start_time)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
