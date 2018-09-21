@@ -24,7 +24,7 @@ if __name__ == "__main__":
         (5) number of samples: 1000, 10,000, 100,000, etc. \n
         (6) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
         e.g. python main.py multivariate 2 3 2 2
-             python main.py mixture 3 3 5 10 10
+             python main.py mixture 2 3 2 10 10
              python main.py mnist 3 3 3 3
              python main.py circles 3 2 1 2
         """)
@@ -94,10 +94,10 @@ if __name__ == "__main__":
     start_time = datetime.datetime.now().strftime("%Y-%m-%d-%s")
     out_dir = 'hypertuning/' + data_type + '/' + start_time
 
-    for t in range(1, trials+1):
-        print('========= TRIAL {0} ========='.format(t))
+    for trial in range(1, trials+1):
+        print('========= TRIAL {0} ========='.format(trial))
 
-        trial_path = out_dir + '/trial_{0}'.format(t)
+        trial_path = out_dir + '/trial_{0}'.format(trial)
         print(trial_path)
         if not os.path.exists(trial_path):
             os.makedirs(trial_path)
@@ -105,10 +105,10 @@ if __name__ == "__main__":
         for (lr, hdim, bsize) in itertools.product(*[learning_rates, hidden_dims, batch_size]):
 
             hyperparam = (lr * min(batch_size)/bsize, hdim, bsize)
-            out_path = trial_path + '/results_{1}.json'.format(t, "_".join([str(i) for i in hyperparam]))
+            out_path = trial_path + '/results_{1}.json'.format(trial, "_".join([str(i) for i in hyperparam]))
 
             print('TRIAL: {0} | LR: {1} | HDIM: {2} | BSIZE: {3}' \
-                .format(t, hyperparam[0], hdim, bsize))
+                .format(trial, hyperparam[0], hdim, bsize))
 
             if data_type == "multivariate":
                 results = get_multivariate_results(models, distributions, dimensions,
@@ -131,14 +131,14 @@ if __name__ == "__main__":
 
         # For each trial, get the best performing model with respect to hyperparameter setting.
         find_best = eval('get_best_performance_' + data_type)
-        results = find_best(data_type)
+        results = find_best(data_type, start_time, trial)
 
         # Output format is best/data_type/results_trial_time
         best_path = 'best/' + data_type + '/' + start_time
         if not os.path.exists(best_path):
             os.makedirs(best_path)
 
-        with open(best_path + '/trial_{1}.json'.format(data_type, t), 'w') as outfile:
+        with open(best_path + '/trial_{1}.json'.format(data_type, trial), 'w') as outfile:
             json.dump(results, outfile)
 
     # Compute the confidence interval across the best results from each trial

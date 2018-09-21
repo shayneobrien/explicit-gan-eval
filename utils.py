@@ -138,61 +138,85 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions, act
 Best results
 """
 
-def get_best_performance_multivariate(data_type):
-    mypath = "hypertuning/{}".format(data_type)
+def get_best_performance_multivariate(data_type, start_time, trial):
+    """ For a trial, get the best performance for multivariate data """
+    # Get path, files in path
+    mypath = "/Users/sob/github/gans6883/hypertuning/{0}/{1}/trial_{2}".format(data_type, start_time, trial)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
     results = []
+
+    # Read in the files
     for file in files:
         with open("{}/{}".format(mypath, file)) as f:
             data = json.load(f)
         results.append(data)
+
+    # Initialize best dictionary
     optimal = nested_pickle_dict()
+
+    # Go through all models, distributionss, metrics, and record the best
     for result in results:
-        for gan, distributions in result.items():
+        for model, distributions in result.items():
             for distribution, metrics in distributions.items():
                 for metric, values in metrics.items():
                     if metric not in ["LR", "HDIM", "BSIZE"]:
-                        if metric not in optimal[gan][distribution]:
-                            optimal[gan][distribution][metric]["value"] = values
-                            optimal[gan][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
-                        elif optimal[gan][distribution][metric]["value"][-1] > values[-1]:
-                            optimal[gan][distribution][metric]["value"] = values
-                            optimal[gan][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
+
+                        # If metric is seen for the first time, it is the best
+                        if metric not in optimal[model][distribution]:
+                            optimal[model][distribution][metric]["value"] = values
+                            optimal[model][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
+
+                        # Otherwise, compare it the presently considered value
+                        elif optimal[model][distribution][metric]["value"][-1] > values[-1]:
+                            optimal[model][distribution][metric]["value"] = values
+                            optimal[model][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
 
     return optimal
 
 
-def get_best_performance_mixture(data_type):
-    mypath = "hypertuning/{}".format(data_type)
+def get_best_performance_mixture(data_type, start_time, trial):
+    """ For a trial, get the best performance for a mixture model """
+    # Get path, files in path
+    mypath = "/Users/sob/github/gans6883/hypertuning/{0}/{1}/trial_{2}".format(data_type, start_time, trial)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
     results = []
+
+    # Read in the files
     for file in files:
         with open("{}/{}".format(mypath, file)) as f:
             data = json.load(f)
         results.append(data)
+
+    # Initialize best dictionary
     optimal = nested_pickle_dict()
     for result in results:
-        for gan, mixtures in result.items():
+        for model, mixtures in result.items():
             for mixture, distributions in mixtures.items():
                 for distribution, metrics in distributions.items():
                     for metric, values in metrics.items():
                         if metric not in ["LR", "HDIM", "BSIZE"]:
-                            if metric not in optimal[gan][mixture][distribution]:
-                                optimal[gan][mixture][distribution][metric]["value"] = values
-                                optimal[gan][mixture][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
-                            elif optimal[gan][mixture][distribution][metric]["value"][-1] > values[-1]:
-                                optimal[gan][mixture][distribution][metric]["value"] = values
-                                optimal[gan][mixture][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
+
+                            # If metric is seen for the first time, it is the best
+                            if metric not in optimal[model][mixture][distribution]:
+                                optimal[model][mixture][distribution][metric]["value"] = values
+                                optimal[model][mixture][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
+
+                            # Otherwise, compare it the presently considered value
+                            elif optimal[model][mixture][distribution][metric]["value"][-1] > values[-1]:
+                                optimal[model][mixture][distribution][metric]["value"] = values
+                                optimal[model][mixture][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
 
     return optimal
 
 
-def get_best_performance_mnist(data_type):
-    return get_best_performance_multivariate(data_type)
+def get_best_performance_mnist(data_type, start_time, trial):
+    """ For a trial, get the best performance for MNIST """
+    return get_best_performance_multivariate(data_type, start_time, trial)
 
 
-def get_best_performance_circles(data_type):
-    return get_best_performance_mixture(data_type)
+def get_best_performance_circles(data_type, start_time, trial):
+    """ For a trial, get the best performance for circles """
+    return get_best_performance_mixture(data_type, start_time, trial)
 
 
 """
@@ -200,6 +224,7 @@ Confidence intervals
 """
 
 def get_confidence_intervals_multivariate(data_type):
+    """ Compute 95% confidence intervals for multivariate """
     mypath = "best/{}".format(data_type)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
     results = []
@@ -272,10 +297,12 @@ def get_confidence_intervals_mixture(data_type):
 
 
 def get_confidence_intervals_mnist(data_type):
+    """ Compute 95% confidence intervals for MNIST """
     return get_confidence_intervals_multivariate(data_type)
 
 
 def get_confidence_intervals_circles(data_type):
+    """ Compute 95% confidence intervals for circles """
     return get_confidence_intervals_mixture(data_type)
 
 
