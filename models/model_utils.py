@@ -166,20 +166,39 @@ def sample_gan(trainer):
     return A, B
 
 def sample_autoencoder(trainer):
-    """ Sample GAN for metric divergence computation """
+    """ Sample autoencoder for metric divergence computation """
 
     # Set to eval mode (disable regularization)
     trainer.model.eval()
 
-    # Extract images
-    A, B, _, _ = trainer.process_batch(next(iter(trainer.test_iter)))
+    # If it's not standard autoencoder, sample latent space.
+    if 'reparameterize' in dir(trainer.model):
 
-    # Sent to numpy
+        # Get size
+        size = trainer.model.decoder.linear.in_features ** 0.5
+
+        # Sample z
+        z = to_cuda(torch.randn(trainer.train_iter.batch_size,
+                                trainer.model.decoder.linear.in_features))
+
+        # Pass into decoder
+        B = trainer.model.decoder(z)
+
+        # Extract images
+        A, _, _, _ = trainer.process_batch(next(iter(trainer.test_iter)))
+
+    # Otherwise, autoencode.
+    else:
+
+        A, B, _, _ = trainer.process_batch(next(iter(trainer.test_iter)))
+
+    # Send to numpy
     A = A.cpu().data.numpy()
     B = B.cpu().data.numpy()
 
     # MNIST, circles make sure shapes are the same
-    if A.shape != B.shape:
+    if len(A.shape) != len(B.shape):
+        print(A.shape, B.shape)
         B = np.reshape(B, A.shape)
 
     return A, B

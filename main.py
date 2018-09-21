@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     # Specify models to test
     models = {
-        "wgan": w_gan,
+        # "wgan": w_gan,
         # "wgpgan": w_gp_gan,
         # "nsgan": ns_gan,
         # "lsgan": ls_gan,
@@ -85,8 +85,8 @@ if __name__ == "__main__":
         # "fgan_total_var": tv_gan,
         # "fgan_hellinger": hellinger_gan,
         # "fgan_pearson": pearson_gan,
-        # "vae": vae,
-        # "autoencoder": ae,
+        "vae": vae,
+        "autoencoder": ae,
     }
 
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
@@ -100,7 +100,7 @@ if __name__ == "__main__":
         if not os.path.exists(trial_path):
             os.makedirs(trial_path)
 
-        print('========= TRIAL {0} =========\n{1}'.format(trial, trial_path))
+        print('========= TRIAL {0} ========= \n{1}'.format(trial, trial_path))
 
         for (lr, hdim, bsize) in itertools.product(*[learning_rates, hidden_dims, batch_size]):
 
