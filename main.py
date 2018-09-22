@@ -1,15 +1,13 @@
 import sys, json, itertools, datetime
-import pandas as pd
 import matplotlib.pyplot as plt
-from torch.utils.data import TensorDataset
 
-import data, shutil
+import data
+from utils import *
 from models import w_gan, w_gp_gan, ns_gan, mm_gan, \
                    ls_gan, fisher_gan, ra_gan, info_gan, \
                    dra_gan, be_gan, vae, ae
 from models.f_gan import forkl_gan, revkl_gan, tv_gan, \
                          js_gan, hellinger_gan, pearson_gan
-from utils import *
 
 plt.switch_backend('agg')
 
@@ -23,7 +21,7 @@ plt.switch_backend('agg')
     (6) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
     e.g. python main.py multivariate 2 3 2 2
          python main.py mixture 2 3 2 10 10
-         python main.py mnist 2 2 2 2
+         python main.py mnist 2 0 2 0
          python main.py circles 3 2 1 2
 """
 
@@ -52,15 +50,11 @@ if __name__ == "__main__":
     # these by a factor of 0.5 for each step up in batch size, as per
     # https://openreview.net/forum?id=B1Yy1BxCZ
     hidden_dims = [
-                    2,
-                    4,
-                    8,
-                    16,
                     32,
                     64,
                     128,
                     256,
-                    512
+                    512,
                     ]
 
     batch_size = [
@@ -73,7 +67,7 @@ if __name__ == "__main__":
     learning_rates = [
                       2e-1,
                       2e-2,
-                      2e-3
+                      2e-3,
                       ]
 
     # Multivariate distributions
@@ -91,7 +85,7 @@ if __name__ == "__main__":
              2,
              4,
              8,
-             16
+             16,
              ]
 
     n_circles = [
@@ -99,7 +93,7 @@ if __name__ == "__main__":
                  2,
                  4,
                  8,
-                 16
+                 16,
                  ]
 
     # Specify models to test
@@ -193,6 +187,3 @@ if __name__ == "__main__":
 
     with open(ci_path + '/data.json', 'w') as outfile:
         json.dump(ci, outfile)
-
-    # TODO: Getting all the graphs working
-    # get_best_graph(results, models, distributions, distance_metrics, epochs)

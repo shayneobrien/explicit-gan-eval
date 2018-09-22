@@ -1,4 +1,4 @@
-import os, shutil
+import os
 from subprocess import call
 
 if __name__ == '__main__':
@@ -16,8 +16,8 @@ if __name__ == '__main__':
     for trials in ['1']:
         for epochs in ['25']:
 
-            # call(["python3", "main.py", "mnist",
-            #       trials, '0', epochs, '0'])
+            call(["python3", "main.py", "mnist",
+                  trials, '0', epochs, '0'])
 
             for samples in ['1000', '10000', '100000', '1000000']:
 
