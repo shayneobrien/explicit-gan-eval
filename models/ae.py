@@ -24,13 +24,6 @@ from itertools import product
 from .model_utils import *
 
 
-def to_cuda(x):
-    """ Cuda-erize a tensor """
-    if torch.cuda.is_available():
-        x = x.cuda()
-    return x
-
-
 class Encoder(nn.Module):
     """ Feedforward network encoder. Input is an image, output is encoded
     vector representation of that image.
