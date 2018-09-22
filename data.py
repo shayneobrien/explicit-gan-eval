@@ -216,7 +216,19 @@ class MixtureDistribution:
 
 class CirclesDatasetGenerator:
 
-    def __init__(self, out_file, size=28, n_circles=1, modes=1, random_colors=False, random_sizes=False):
+    def __init__(self, size=28, n_circles=1, modes=1,
+                random_colors=False, random_sizes=False):
+
+        locals = {'size': size, 'n_circles': n_circles,
+                  'modes': modes, 'random_colors': random_colors,
+                  'random_sizes': random_sizes}
+        out_dir = 'data/circles/' + '_'.join([str(key) + '_' + str(val)
+                                              for key, val in locals.items()])
+
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
+        out_file = out_dir + '/data.pkl'
 
         self.size = size
         self.circles = n_circles
@@ -234,9 +246,10 @@ class CirclesDatasetGenerator:
         self.generator = MixtureDistribution('normal', 'uniform', modes, n_vars)
 
         self.random_color = [(np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)) for i in
-                        range(n_circles)]
+                                range(n_circles)]
 
         self.random_size = [np.random.randint(0, round(size * 0.25)) for i in range(n_circles)]
+
         self.save_generator(out_file)
 
     def generate_samples(self, n_samples):

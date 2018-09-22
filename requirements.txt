@@ -10,3 +10,4 @@ sklearn
 scipy
 opencv-python
 klepto
+numpy==1.14.5

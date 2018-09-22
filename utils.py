@@ -138,10 +138,10 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions, act
 Best results
 """
 
-def get_best_performance_multivariate(data_type, start_time, trial):
+def get_best_performance_multivariate(data_type, start_time, data_info, trial):
     """ For a trial, get the best performance for multivariate data """
     # Get path, files in path
-    mypath = "hypertuning/{0}/{1}/trial_{2}".format(data_type, start_time, trial)
+    mypath = "hypertuning/{0}/{1}/{2}/trial_{3}".format(data_type, start_time, data_info, trial)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
     results = []
 
@@ -174,10 +174,10 @@ def get_best_performance_multivariate(data_type, start_time, trial):
     return optimal
 
 
-def get_best_performance_mixture(data_type, start_time, trial):
+def get_best_performance_mixture(data_type, start_time, data_info, trial):
     """ For a trial, get the best performance for a mixture model """
     # Get path, files in path
-    mypath = "hypertuning/{0}/{1}/trial_{2}".format(data_type, start_time, trial)
+    mypath = "hypertuning/{0}/{1}/{2}/trial_{3}".format(data_type, start_time, data_info, trial)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
     results = []
 
@@ -209,25 +209,25 @@ def get_best_performance_mixture(data_type, start_time, trial):
     return optimal
 
 
-def get_best_performance_mnist(data_type, start_time, trial):
+def get_best_performance_mnist(*args, **kwargs):
     """ For a trial, get the best performance for MNIST """
-    return get_best_performance_multivariate(data_type, start_time, trial)
+    return get_best_performance_multivariate(*args, **kwargs)
 
 
-def get_best_performance_circles(data_type, start_time, trial):
+def get_best_performance_circles(*args, **kwargs):
     """ For a trial, get the best performance for circles """
-    return get_best_performance_mixture(data_type, start_time, trial)
+    return get_best_performance_mixture(*args, **kwargs)
 
 
 """
 Confidence intervals
 """
 
-def get_confidence_intervals_multivariate(data_type, start_time):
+def get_confidence_intervals_multivariate(data_type, start_time, data_info):
     """ Compute 95% confidence intervals for multivariate """
 
     # Get file path and files therein
-    mypath = "best/{0}/{1}/".format(data_type, start_time)
+    mypath = "best/{0}/{1}/{2}/".format(data_type, start_time, data_info)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
     results = []
 
@@ -259,11 +259,11 @@ def get_confidence_intervals_multivariate(data_type, start_time):
     return optimal
 
 
-def get_confidence_intervals_mixture(data_type, start_time):
+def get_confidence_intervals_mixture(data_type, start_time, data_info):
     """ Compute 95% confidence intervals for mixtures """
 
     # Get file path and files therein
-    mypath = "best/{0}/{1}/".format(data_type, start_time)
+    mypath = "best/{0}/{1}/{2}/".format(data_type, start_time, data_info)
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
     results = []
 
@@ -297,14 +297,14 @@ def get_confidence_intervals_mixture(data_type, start_time):
     return optimal
 
 
-def get_confidence_intervals_mnist(data_type, start_time):
+def get_confidence_intervals_mnist(*args, **kwargs):
     """ Compute 95% confidence intervals for MNIST """
-    return get_confidence_intervals_multivariate(data_type, start_time)
+    return get_confidence_intervals_multivariate(*args, **kwargs)
 
 
-def get_confidence_intervals_circles(data_type, start_time):
+def get_confidence_intervals_circles(*args, **kwargs):
     """ Compute 95% confidence intervals for circles """
-    return get_confidence_intervals_mixture(data_type, start_time)
+    return get_confidence_intervals_mixture(*args, **kwargs)
 
 
 """

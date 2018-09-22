@@ -200,6 +200,9 @@ class Trainer:
         # L2 (mean squared error) loss
         recon_loss = torch.sum((images - outputs) ** 2)
 
+        # Kullback-Leibler divergence between encoded space, Gaussian
+        kl_diverge = self.kl_divergence(mu, log_var)
+        
         return outputs, images, recon_loss, kl_diverge
 
     def evaluate(self, iterator):
