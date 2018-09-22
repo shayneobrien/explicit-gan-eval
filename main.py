@@ -48,28 +48,59 @@ if __name__ == "__main__":
                 os.makedirs(dirname)
 
     # Set hyperparameters
-    # TODO: uncomment, inception score, FID
-    hidden_dims = [2]#, 4, 8, 16, 32]#, 64, 128, 256, 512]
-    batch_size = [128]#, 256, 512, 1024]
-
     # Base learning rates for the smallest batch size (128). We will modify
     # these by a factor of 0.5 for each step up in batch size, as per
     # https://openreview.net/forum?id=B1Yy1BxCZ
-    learning_rates = [2e-1]#, 2e-2, 2e-3]
+    hidden_dims = [
+                    2,
+                    4,
+                    8,
+                    16,
+                    32,
+                    64,
+                    128,
+                    256,
+                    512
+                    ]
+
+    batch_size = [
+                  128,
+                  256,
+                  512,
+                  1024,
+                  ]
+
+    learning_rates = [
+                      2e-1,
+                      2e-2,
+                      2e-3
+                      ]
 
     # Multivariate distributions
     distributions = [
                      'normal',
-                     # 'beta',
-                     # 'exponential',
-                     # 'gamma',
-                     # 'gumbel',
-                     # 'laplace',
+                     'beta',
+                     'exponential',
+                     'gamma',
+                     'gumbel',
+                     'laplace',
                      ]
 
     # Circles dataset
-    modes = [2]#, 4, 8, 16]
-    n_circles = [1]#, 2, 4, 8, 16]
+    modes = [
+             2,
+             4,
+             8,
+             16
+             ]
+
+    n_circles = [
+                 1,
+                 2,
+                 4,
+                 8,
+                 16
+                 ]
 
     # Specify models to test
     models = {
@@ -94,7 +125,12 @@ if __name__ == "__main__":
     }
 
     # Distance metrics we will consider
-    distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
+    distance_metrics = [
+                        "KL-Divergence",
+                        "Jensen-Shannon",
+                        "Wasserstein-Distance",
+                        "Energy-Distance",
+                        ]
 
     start_time = datetime.datetime.now().strftime("%Y-%m-%d-%s")
     out_dir = data_type + '/' + start_time + '/' + data_info

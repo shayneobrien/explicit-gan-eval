@@ -4,7 +4,7 @@ import torchvision.datasets as datasets
 from torch.utils.data import TensorDataset
 import torchvision.transforms as transforms
 
-import os
+import os, random
 import pandas as pd
 import numpy as np
 from klepto.archives import file_archive
@@ -132,6 +132,9 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
 
                 output = trainer.model(images)
                 results.append((output.detach(), labels.detach()))
+
+            # In place shuffle
+            random.shuffle(results)
 
             # Make a dataset out of the autoencoded images, copy attributes
             autoencoded_data = list_obj(results)
