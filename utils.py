@@ -21,13 +21,14 @@ def get_multivariate_results(models, distributions, dimensions,
     results, activation_type = nested_pickle_dict(), 'relu'
     for model_name, module in models.items():
         for dist in distributions:
-            if model_name == 'vae':
-                continue
-            print('\n', model_name, dist, 'MULTIVARIATE')
-            gen = data.Distribution(dist_type=dist, dim=dimensions)
-            metrics = model_results(module, epochs, hyperparameters,
-                                    gen, samples, dimensions, activation_type)
-            results[model_name][dist].update(metrics)
+            if (model_name == 'vae' and dist == 'normal'): # KL-div p and q makes NaN
+                pass
+            else:
+                print('\n', model_name, dist, 'MULTIVARIATE')
+                gen = data.Distribution(dist_type=dist, dim=dimensions)
+                metrics = model_results(module, epochs, hyperparameters,
+                                        gen, samples, dimensions, activation_type)
+                results[model_name][dist].update(metrics)
 
     return results
 
