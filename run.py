@@ -9,7 +9,7 @@ if __name__ == '__main__':
     # (2) trials (for confidence intervals) 1 \n
     # (3) number of dimensions: 1, 10, 100, 1000, etc. \n
     # (4) number of epochs: 10, 100, 1000, etc. \n
-    # (5) number of samples: 1000, 10,000, 100,000, etc. \n
+    # (5) number of samples: 1000, 10000, 100000, etc. \n
     """
 
     # Running across 20 GPUs

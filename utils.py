@@ -21,6 +21,8 @@ def get_multivariate_results(models, distributions, dimensions,
     results, activation_type = nested_pickle_dict(), 'relu'
     for model_name, module in models.items():
         for dist in distributions:
+            if model_name == 'vae':
+                continue
             print('\n', model_name, dist, 'MULTIVARIATE')
             gen = data.Distribution(dist_type=dist, dim=dimensions)
             metrics = model_results(module, epochs, hyperparameters,

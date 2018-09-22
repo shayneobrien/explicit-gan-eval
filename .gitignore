@@ -1,7 +1,6 @@
 .ipynb_checkpoints/
 __pycache__/
 data/
-dataset_1/
 env/
 viz/
 .DS_store

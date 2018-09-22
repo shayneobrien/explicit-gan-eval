@@ -55,8 +55,8 @@ def compute_divergences(A, B):
     r = np.max(A) - np.min(A)
 
     # Get PDFs of predicted distribution A, true distribution B
-    A = get_pdf(A, iqr, r, samples)
     B = get_pdf(B, iqr, r, samples)
+    A = get_pdf(A, iqr, r, samples)
 
     # Mean
     m = (np.array(A)+np.array(B))/2
@@ -84,6 +84,7 @@ def get_pdf(data, iqr, r, samples):
         bins = int(round(r/bin_width, 0))
     else:
         # MNIST (since it's really only supposed to be either 0 or 1 as output)
+        # TODO: bin number
         bins = 2
 
     # Bin data
