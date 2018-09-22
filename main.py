@@ -37,6 +37,8 @@ if __name__ == "__main__":
     samples = int(sys.argv[5])
     if data_type == "mixture":
         n_mixtures = int(sys.argv[6])
+    else:
+        n_mixtures = ''
 
     # Make output directories if they don't exist yet
     for dir in ['hypertuning', 'graphs', 'best', "confidence_intervals"]:
@@ -46,7 +48,7 @@ if __name__ == "__main__":
                 os.makedirs(dirname)
 
     # Set hyperparameters
-    # TODO: uncomment, inception score, FID, test l2 loss on generative models repo
+    # TODO: uncomment, inception score, FID
     hidden_dims = [2]#, 4, 8, 16, 32]#, 64, 128, 256, 512]
     batch_size = [128]#, 256, 512, 1024]
 
@@ -74,7 +76,7 @@ if __name__ == "__main__":
         # "nsgan": ns_gan,
         # "lsgan": ls_gan,
         # "mmgan": mm_gan,
-        # "dragan": dra_gan,
+        # "dragan": dra_gan,U
         # "began": be_gan,
         # "ragan": ra_gan,
         # "infogan": info_gan,
@@ -93,7 +95,7 @@ if __name__ == "__main__":
     distance_metrics = ["KL-Divergence", "Jensen-Shannon", "Wasserstein-Distance", "Energy-Distance"]
 
     start_time = datetime.datetime.now().strftime("%Y-%m-%d-%s")
-    out_dir = 'hypertuning/' + data_type + '/' + start_time
+    out_dir = 'hypertuning/' + data_type + '/' + start_time + '/' +
 
     for trial in range(1, trials+1):
 

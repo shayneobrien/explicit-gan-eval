@@ -1,12 +1,16 @@
 import torch
+from torch import nn
+from torch.nn import functional as F
 from torch.autograd import Variable
+from torch.utils.data import TensorDataset, DataLoader
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
+from torchvision.models.inception import inception_v3
+
 import pandas as pd
 import numpy as np
-
-from torch.utils.data import TensorDataset
 from scipy.stats import entropy, ks_2samp, moment, wasserstein_distance, energy_distance
+
 
 # Gradient, CUDA
 def to_var(x):
@@ -27,7 +31,7 @@ def get_the_data(generator, samples, BATCH_SIZE=100):
     data = torch.from_numpy(generator.generate_samples(samples)).float()
     labels = torch.from_numpy(np.zeros((samples, 1)))
     data = TensorDataset(data, labels)
-    data_iter = torch.utils.data.DataLoader(data, batch_size=BATCH_SIZE, shuffle=True)
+    data_iter = DataLoader(data, batch_size=BATCH_SIZE, shuffle=True)
     return data_iter
 
 
@@ -202,3 +206,62 @@ def sample_autoencoder(trainer):
         B = np.reshape(B, A.shape)
 
     return A, B
+
+
+def inception_score(images, batch_size=32, resize=False, splits=1):
+    """ Credit to: https://github.com/sbarratt/inception-score-pytorch
+    (with slight edits for PyTorch 0.4.0+)
+
+    Computes the inception score of the generated images imgs
+
+    imgs -- Torch dataset of (3xHxW) numpy images normalized in the range [-1, 1]
+    cuda -- whether or not to run on GPU
+    batch_size -- batch size for feeding into Inception v3
+    splits -- number of splits
+    """
+    N = len(imgs)
+
+    assert batch_size > 0
+    assert N >= batch_size
+
+    # Set up dataloader
+    dataloader = DataLoader(imgs, batch_size=batch_size)
+
+    # Load inception model
+    # TODO: this can be done faster, takes about 2s
+    inception_model = to_cuda(inception_v3(pretrained=True, transform_input=False))
+    inception_model.eval()
+
+    def get_pred(x):
+        if resize:
+            x = F.interpolate(x, size=(299, 299), mode='bilinear', align_corners=False)
+        x = inception_model(x)
+        return F.softmax(x, dim=1).data.cpu().numpy()
+
+    # Get predictions
+    preds = np.zeros((N, 1000))
+
+    for i, batch in enumerate(dataloader, 0):
+        batch = to_cuda(batch)
+        batchv = Variable(batch)
+        batch_size_i = batch.size()[0]
+
+        preds[i*batch_size:i*batch_size + batch_size_i] = get_pred(batchv)
+
+    # Now compute the mean kl-div
+    split_scores = []
+
+    for k in range(splits):
+        part = preds[k * (N // splits): (k+1) * (N // splits), :]
+        py = np.mean(part, axis=0)
+        scores = []
+        for i in range(part.shape[0]):
+            pyx = part[i, :]
+            scores.append(entropy(pyx, py))
+        split_scores.append(np.exp(np.mean(scores)))
+
+    return np.mean(split_scores), np.std(split_scores)
+
+def frechet_inception_distance():
+    """ https://github.com/mseitzer/pytorch-fid/blob/master/fid_score.py """
+    pass
