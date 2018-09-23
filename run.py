@@ -24,7 +24,7 @@ if __name__ == '__main__':
                 call(["python3", "main.py", "circles",
                       trials, '0', epochs, samples])
 
-                for dimensions in ['16', '32', '64', '128', '256', '512', '1024', '2048']:
+                for dimensions in ['16', '32', '64', '128', '256', '512', '1024']:
 
                     call(["python3", "main.py", "multivariate",
                           trials, dimensions, epochs, samples])
