@@ -28,8 +28,8 @@ def to_cuda(x):
 def get_the_data(generator, samples, BATCH_SIZE=100):
     """ Sample data from respective distribution under consideration,
     make a data loader out of it """
-    data = torch.from_numpy(generator.generate_samples(samples)).float()
-    labels = torch.from_numpy(np.zeros((samples, 1)))
+    data = to_cuda(torch.from_numpy(generator.generate_samples(samples)).float())
+    labels = to_cuda(torch.from_numpy(np.zeros((samples, 1))))
     data = TensorDataset(data, labels)
     data_iter = DataLoader(data, batch_size=BATCH_SIZE, shuffle=True)
     return data_iter

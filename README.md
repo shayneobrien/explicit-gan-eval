@@ -9,10 +9,10 @@ pip install -r requirements.txt
 
 # Run single test
 ```
-CUDA_VISIBLE_DEVICES=1 python main.py multivariate 2 2 2 2
+CUDA_VISIBLE_DEVICES=0 python3 main.py multivariate 2 2 2 2
 ```
 
 # Run all tests
 ```
-CUDA_VISIBLE_DEVICES=1 python run.py
+CUDA_VISIBLE_DEVICES=0 python3 run.py
 ```
