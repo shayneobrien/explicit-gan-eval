@@ -114,8 +114,8 @@ if __name__ == "__main__":
         "fgan_total_var": tv_gan,
         "fgan_hellinger": hellinger_gan,
         "fgan_pearson": pearson_gan,
-        "vae": vae,
-        "autoencoder": ae,
+#        "vae": vae,
+#        "autoencoder": ae,
     }
 
     # Distance metrics we will consider
@@ -177,13 +177,13 @@ if __name__ == "__main__":
             json.dump(results, outfile)
 
     # Compute the confidence interval across the best results from each trial
-    get_ci = eval('get_confidence_intervals_' + data_type)
-    ci = get_ci(data_type, start_time, data_info)
+#    get_ci = eval('get_confidence_intervals_' + data_type)
+#    ci = get_ci(data_type, start_time, data_info)
 
     # Confidence interval filepath
-    ci_path = "confidence_intervals/{0}".format(out_dir)
-    if not os.path.exists(ci_path):
-        os.makedirs(ci_path)
+#    ci_path = "confidence_intervals/{0}".format(out_dir)
+#    if not os.path.exists(ci_path):
+#        os.makedirs(ci_path)
 
-    with open(ci_path + '/data.json', 'w') as outfile:
-        json.dump(ci, outfile)
+#    with open(ci_path + '/data.json', 'w') as outfile:
+#        json.dump(ci, outfile)

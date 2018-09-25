@@ -1,5 +1,4 @@
 ipython
-jupyter
 torchvision
 matplotlib
 tqdm
@@ -10,4 +9,3 @@ sklearn
 scipy
 opencv-python
 klepto
-numpy==1.14.5
