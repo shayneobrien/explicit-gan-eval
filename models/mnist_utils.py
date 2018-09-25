@@ -19,13 +19,13 @@ def get_the_data_mnist(BATCH_SIZE):
 
     """ Download our data """
     train_dataset = datasets.MNIST(root='./data/',
-                                train=True,
-                                transform=transforms.ToTensor(),
-                                download=True)
+                                    train=True,
+                                    transform=transforms.ToTensor(),
+                                    download=True)
 
     test_dataset = datasets.MNIST(root='./data/',
-                               train=False,
-                               transform=transforms.ToTensor())
+                                   train=False,
+                                   transform=transforms.ToTensor())
 
     """ Use greyscale values as sampling probabilities to get back to {0,1} """
     train_img = to_cuda(torch.stack([torch.bernoulli(d[0]) for d in train_dataset]))
@@ -34,7 +34,8 @@ def get_the_data_mnist(BATCH_SIZE):
     test_img = to_cuda(torch.stack([torch.bernoulli(d[0]) for d in test_dataset]))
     test_label = to_cuda(torch.LongTensor([d[1] for d in test_dataset]))
 
-    """ MNIST has no official train dataset so use last 10000 as validation """
+    """ MNIST has no official validation dataset so use last 10000 as validation """
+    # TODO: yikes...? but this is consistent with literature
     val_img = train_img[-10000:].clone()
     val_label = train_label[-10000:].clone()
 

@@ -63,7 +63,6 @@ class Distribution:
             self.params['scale'] = np.squeeze(scale)
 
 
-
     def generate_samples(self, n_samples=10000):
 
         if self.dist_type == 'normal':
@@ -115,6 +114,7 @@ class Distribution:
 
         with open(out_file, 'wb') as of:
             pickle.dump(self, of, pickle.HIGHEST_PROTOCOL)
+
 
     def get_log_likelihood(self, samples):
 

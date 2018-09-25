@@ -116,7 +116,7 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions, act
     lr, dim, bsize = hyperparameters
 
     # Create data iterators
-    train_iter, val_iter, test_iter = preprocess(gen, samples, bsize)
+    train_iter, test_iter = preprocess(gen, samples, bsize, epochs)
 
     # Init model
     model = module.Model(image_size=dimensions,
@@ -125,10 +125,10 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions, act
                          atype=activation_type)
 
     # Init trainer
-    trainer = module.Trainer(model,
-                             train_iter,
-                             val_iter,
-                             test_iter)
+    trainer = module.Trainer(model=model,
+                             train_iter=train_iter,
+                             val_iter=None,
+                             test_iter=test_iter)
 
     # Train and get output metrics
     metrics = trainer.train(num_epochs=epochs,

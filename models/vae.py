@@ -161,13 +161,13 @@ class Trainer:
             self.Rlosses.extend(epoch_recon)
             self.KLdivs.extend(epoch_kl)
 
-            # Test the model on the validation set
-            val_loss = self.evaluate(self.val_iter)
+            # # Test the model on the validation set
+            # val_loss = self.evaluate(self.val_iter)
 
-            # Early stopping
-            if val_loss < best_val_loss:
-                self.best_model = self.model
-                best_val_loss = val_loss
+            # # Early stopping
+            # if val_loss < best_val_loss:
+            #     self.best_model = self.model
+            #     best_val_loss = val_loss
 
             # Sample for metric divergence computation, save outputs
             A, B = sample_autoencoder(self)
@@ -177,8 +177,9 @@ class Trainer:
             self.model = to_cuda(self.model)
 
             # Progress logging
-            print ("Epoch[%d/%d], Total Loss: %.4f, Reconst Loss: %.4f, KL Div: %.7f, Val Loss: %.4f"
-                   %(epoch, num_epochs, np.mean(epoch_loss), np.mean(epoch_recon), np.mean(epoch_kl), val_loss))
+            print ("Epoch[%d/%d], Total Loss: %.4f, Reconst Loss: %.4f, KL Div: %.7f"
+                   %(epoch, num_epochs, np.mean(epoch_loss),
+                    np.mean(epoch_recon), np.mean(epoch_kl)))
 
             # Debugging and visualization purposes
             if self.viz:
@@ -202,7 +203,7 @@ class Trainer:
 
         # Kullback-Leibler divergence between encoded space, Gaussian
         kl_diverge = self.kl_divergence(mu, log_var)
-        
+
         return outputs, images, recon_loss, kl_diverge
 
     def evaluate(self, iterator):

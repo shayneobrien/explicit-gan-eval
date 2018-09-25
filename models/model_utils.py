@@ -25,22 +25,22 @@ def to_cuda(x):
     return x
 
 # Loading data
-def get_the_data(generator, samples, BATCH_SIZE=100):
+def get_the_data(generator, samples, batch_size):
     """ Sample data from respective distribution under consideration,
     make a data loader out of it """
     data = to_cuda(torch.from_numpy(generator.generate_samples(samples)).float())
     labels = to_cuda(torch.from_numpy(np.zeros((samples, 1))))
     data = TensorDataset(data, labels)
-    data_iter = DataLoader(data, batch_size=BATCH_SIZE, shuffle=True)
+    data_iter = DataLoader(data, batch_size=batch_size, shuffle=True)
     return data_iter
 
 
-def preprocess(generator, samples, BATCH_SIZE=100):
-    """ Create data iterators """
-    train_iter = get_the_data(generator, samples, BATCH_SIZE)
-    val_iter = get_the_data(generator, samples, BATCH_SIZE)
-    test_iter = get_the_data(generator, samples, BATCH_SIZE)
-    return train_iter, val_iter, test_iter
+def preprocess(generator, samples, batch_size, epochs):
+    """ Create data iterators, minimizing the amount of data that needs to be
+    generated """
+    train_iter = get_the_data(generator, samples, batch_size)
+    test_iter = get_the_data(generator, int(batch_size*epochs), batch_size)
+    return train_iter, test_iter
 
 
 # Computing metrics for different archtypes
@@ -178,9 +178,6 @@ def sample_autoencoder(trainer):
 
     # If it's not standard autoencoder, sample latent space.
     if 'reparameterize' in dir(trainer.model):
-
-        # Get size
-        size = trainer.model.decoder.linear.in_features ** 0.5
 
         # Sample z
         z = to_cuda(torch.randn(trainer.train_iter.batch_size,

@@ -7,9 +7,19 @@ python3 -m venv env
 pip install -r requirements.txt  
 ```
 
-# Progress
+# Multivariate
 
-Multivariate
+| 1k Samples | 10k Samples | 100k Samples
+:---: | :---: | :---: | :---: |
+16 Dim | 20/20 | 12/20 |
+32 Dim | 20/20 | 20/20 |  
+64 Dim | 20/20 | 18/20 |  
+128 Dim | 10/20 | 6/20 |
+256 Dim | 9/20 |  |  
+512 Dim |  |  |  
+1024 Dim |  | 3/20 |
+
+# Mixture (1000 mixtures, only)
 
  | 1k Samples | 10k Samples | 100k Samples | 1M Samples
 :---: | :---: | :---: | :---: | :---: |
@@ -21,25 +31,13 @@ Multivariate
 512 Dim |  |  |  |
 1024 Dim |  |  |  |
 
-Mixture
-
-| 1k Samples | 10k Samples | 100k Samples
-:---: | :---: | :---: | :---: |
-16 Dim | 20/20 | 12/20 |  
-32 Dim | 20/20 | 20/20 |  
-64 Dim | 20/20 | 18/20 |  
-128 Dim | 10/20 | 6/20 |
-256 Dim | 9/20 |  |  
-512 Dim |  |  |  
-1024 Dim |  | 3/20 |
-
-Circles
+# Circles
 
 1k Samples | 10k Samples | 100k Samples
-:---: | :---: | :---: | :---: |
+:---: | :---: | :---: | :---:
 0/20 | 0/20 | 0/20
 
-**MNIST (DONE)**
+# MNIST (DONE)
 
 Trials|
 :---:|
