@@ -30,12 +30,17 @@ if __name__ == "__main__":
     # Collect system args
     data_type = sys.argv[1]
     trials = int(sys.argv[2])
-    dimensions = int(sys.argv[3]) # Data complexity
-    epochs = int(sys.argv[4])
-    samples = int(sys.argv[5])
+    dimensions = int(sys.argv[3])
+    hidden_dim = int(sys.argv[4])
+    epochs = int(sys.argv[5])
+    samples = int(sys.argv[6])
+    batch_size = int(sys.argv[7])
+    learning_rate = float(sys.argv[8])
+    start_time = sys.argv[9]
     data_info = '{0}_dims_{1}_samples'.format(dimensions, samples)
+
     if data_type == "mixture":
-        n_mixtures = int(sys.argv[6])
+        n_mixtures = 1000
         data_info += '_{0}_mixtures'.format(n_mixtures)
 
     # Make output directories if they don't exist yet
@@ -49,26 +54,6 @@ if __name__ == "__main__":
     # Base learning rates for the smallest batch size (128). We will modify
     # these by a factor of 0.5 for each step up in batch size, as per
     # https://openreview.net/forum?id=B1Yy1BxCZ
-    hidden_dims = [
-                    32,
-                    64,
-                    128,
-                    256,
-                    512,
-                    ]
-
-    batch_sizes = [
-                   128,
-                   256,
-                   512,
-                   1024,
-                   ]
-
-    learning_rates = [
-                      2e-1,
-                      2e-2,
-                      2e-3,
-                      ]
 
     # Multivariate distributions
     distributions = [
@@ -126,8 +111,8 @@ if __name__ == "__main__":
                         "Energy-Distance",
                         ]
 
-    start_time = datetime.datetime.now().strftime("%Y-%m-%d-%s")
-    out_dir = data_type + '/' + data_info + '/' + start_time
+    out_dir = data_type + '/' + data_info + '/' + start_time \
+                + '/' + '{0}_{1}_{2}'.format(hidden_dim, learning_rate, batch_size)
 
     for trial in range(1, trials+1):
 
@@ -137,44 +122,42 @@ if __name__ == "__main__":
 
         print('========= TRIAL {0} ========= \n{1}'.format(trial, trial_path))
 
-        for (lr, hdim, bsize) in itertools.product(*[learning_rates, hidden_dims, batch_sizes]):
+        hyperparam = (learning_rate * 128./batch_size, hidden_dim, batch_size)
+        out_path = trial_path + '/results_{1}.json'.format(trial, "_".join([str(i) for i in hyperparam]))
 
-            hyperparam = (lr * min(batch_sizes)/bsize, hdim, bsize)
-            out_path = trial_path + '/results_{1}.json'.format(trial, "_".join([str(i) for i in hyperparam]))
+        print('TRIAL: {0} | LR: {1} | HDIM: {2} | BSIZE: {3}' \
+            .format(trial, hyperparam[0], hidden_dim, batch_size))
 
-            print('TRIAL: {0} | LR: {1} | HDIM: {2} | BSIZE: {3}' \
-                .format(trial, hyperparam[0], hdim, bsize))
+        if data_type == "multivariate":
+            results = get_multivariate_results(models, distributions, dimensions,
+                                            epochs, samples, hyperparam)
 
-            if data_type == "multivariate":
-                results = get_multivariate_results(models, distributions, dimensions,
-                                                epochs, samples, hyperparam)
+        elif data_type == "mixture":
+            results = get_mixture_results(models, distributions, dimensions,
+                                        epochs, samples, 1000, hyperparam)
 
-            elif data_type == "mixture":
-                results = get_mixture_results(models, distributions, dimensions,
-                                            epochs, samples, n_mixtures, hyperparam)
+        elif data_type == "mnist":
+            results = get_mnist_results(models, 784*1, # black and white, so 1 channel
+                                      epochs, hyperparam)
 
-            elif data_type == "mnist":
-                results = get_mnist_results(models, 784*1, # black and white, so 1 channel
-                                          epochs, hyperparam)
+        elif data_type == "circles":
+            results = get_circle_results(models, 784*3, # RGB, so 3 channels
+                                        epochs, samples, modes, n_circles, hyperparam)
 
-            elif data_type == "circles":
-                results = get_circle_results(models, 784*3, # RGB, so 3 channels
-                                            epochs, samples, modes, n_circles, hyperparam)
-
-            with open(out_path, 'w') as outfile:
-                json.dump(results, outfile)
+        with open(out_path, 'w') as outfile:
+            json.dump(results, outfile)
 
         # For each trial, get the best performing model with respect to hyperparameter setting.
-        find_best = eval('get_best_performance_' + data_type)
-        results = find_best(data_type, start_time, data_info, trial)
+        # find_best = eval('get_best_performance_' + data_type)
+        # results = find_best(data_type, start_time, data_info, trial)
 
-        # Output format is best/data_type/results_trial_time
-        best_path =  'best/' + out_dir
-        if not os.path.exists(best_path):
-            os.makedirs(best_path)
-
-        with open(best_path + '/trial_{1}.json'.format(data_type, trial), 'w') as outfile:
-            json.dump(results, outfile)
+        # # Output format is best/data_type/results_trial_time
+        # best_path =  'best/' + out_dir
+        # if not os.path.exists(best_path):
+        #     os.makedirs(best_path)
+        #
+        # with open(best_path + '/trial_{1}.json'.format(data_type, trial), 'w') as outfile:
+        #     json.dump(results, outfile)
 
     # Compute the confidence interval across the best results from each trial
 #    get_ci = eval('get_confidence_intervals_' + data_type)

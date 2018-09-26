@@ -113,15 +113,15 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions, act
     """ Train a model, get metrics dictionary out """
 
     # Unpack hyperparameters
-    lr, dim, bsize = hyperparameters
+    lr, hdim, bsize = hyperparameters
 
     # Create data iterators
     train_iter, test_iter = preprocess(gen, samples, bsize, epochs)
 
     # Init model
     model = module.Model(image_size=dimensions,
-                         hidden_dim=dim,
-                         z_dim=int(round(max(dim/4, 1))),
+                         hidden_dim=hdim,
+                         z_dim=int(round(max(hdim/4, 1))),
                          atype=activation_type)
 
     # Init trainer
