@@ -38,9 +38,9 @@ for hdim in hidden_dims:
     for bsize in batch_sizes:
         for lr in learning_rates:
             device += (1/job_per_gpu)
-            call(['echo', 'tmux', 'new', '-d', '-s', '{0}-{1}-samples-{2}-dims-{3}-{4}-{5}-{6}'\
-                    .format(data_type, samples, dimensions, trials, lr, bsize, hdim)])
-            call(['echo', 'tmux', 'send', '-t',
+            tmux_name = '{0}-{1}-samples-{2}-dims-{3}-{4}-{5}-{6}'.format(data_type, samples, dimensions, trials, lr, bsize, hdim)
+            call(['tmux', 'new', '-d', '-s', tmux_name])
+            call(['tmux', 'send', '-t', tmux_name+'.0', 
                   "CUDA_VISIBLE_DEVICES={0}".format(int(floor(device))),
                   "python3", "mini_main.py",
                   data_type, trials, dimensions, hdim,
