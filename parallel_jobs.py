@@ -49,7 +49,7 @@ for hdim in hidden_dims:
             # Sent the job to that session
             call(['tmux', 'send', '-t', tmux_name+'.0',
                   "CUDA_VISIBLE_DEVICES={0}".format(int(floor(device))),
-                  "python3 ", "mini_main.py ",
+                  "python3 ", "parallel_main.py ",
                   data_type, ' ', trials, ' ', dimensions, ' ', hdim,
                   ' ', epochs, ' ', samples, ' ', bsize, ' ', lr, ' ', start_time,
                   'ENTER'])
