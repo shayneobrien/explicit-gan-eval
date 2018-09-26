@@ -44,10 +44,10 @@ for hdim in hidden_dims:
             tmux_name = 'GPU.{7}-{0}-{1}-samples-{2}-dims-{3}-{4}-{5}-{6}'.format(data_type, samples, dimensions,
                                                                           trials, lr, bsize, hdim, int(floor(device)))
             # Launch TMUX session
-            call(['echo', 'tmux', 'new', '-d', '-s', tmux_name])
+            call(['tmux', 'new', '-d', '-s', tmux_name])
 
             # Sent the job to that session
-            call(['echo', 'tmux', 'send', '-t', tmux_name+'.0',
+            call(['tmux', 'send', '-t', tmux_name+'.0',
                   "CUDA_VISIBLE_DEVICES={0}".format(int(floor(device))),
                   "python3 ", "mini_main.py ",
                   data_type, ' ', trials, ' ', dimensions, ' ', hdim,
@@ -56,5 +56,5 @@ for hdim in hidden_dims:
 
             # Send another command to kill the tmux session once it's done running
             # (easier to track progress using 'tmux ls')
-            call(['echo', 'tmux', 'send', '-t', tmux_name+'.0',
+            call(['tmux', 'send', '-t', tmux_name+'.0',
                   'kill-session ', '-t ', tmux_name, 'ENTER'])
