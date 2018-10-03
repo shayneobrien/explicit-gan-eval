@@ -177,6 +177,7 @@ if __name__ == "__main__":
             json.dump(results, outfile)
 
     # Compute the confidence interval across the best results from each trial
+    # TODO: Fix
 #    get_ci = eval('get_confidence_intervals_' + data_type)
 #    ci = get_ci(data_type, start_time, data_info)
 

@@ -12,24 +12,24 @@ pip install -r requirements.txt
 | 1k Samples | 10k Samples | 100k Samples
 :---: | :---: | :---: | :---: |
 16 Dim | 20/20 | 12/20 |
-32 Dim | 20/20 | 20/20 |  
-64 Dim | 20/20 | 18/20 |  
+32 Dim | 20/20 | 20/20 | 1/20
+64 Dim | 20/20 | 18/20 |
 128 Dim | 10/20 | 6/20 |
-256 Dim | 9/20 |  |  
-512 Dim |  |  |  
+256 Dim | 9/20 |  |
+512 Dim |  |  |
 1024 Dim |  | 3/20 |
 
 # Mixture (1000 mixtures, only)
 
- | 1k Samples | 10k Samples | 100k Samples | 1M Samples
+ | 1k Samples | 10k Samples | 100k Samples
 :---: | :---: | :---: | :---: | :---: |
-16 Dim | 20/20 | 9/20 |  |
-32 Dim |  |  |  |
-64 Dim |  |  |  |
-128 Dim |  |  |  |
-256 Dim |  |  |  |
-512 Dim |  |  |  |
-1024 Dim |  |  |  |
+16 Dim | 20/20 | 9/20 |
+32 Dim |  |  |
+64 Dim  |  |  |
+128 Dim |  |  |
+256 Dim |  |  |
+512 Dim |  |  |
+1024 Dim |  |  |
 
 # Circles
 

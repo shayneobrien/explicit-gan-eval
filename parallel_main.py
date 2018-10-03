@@ -146,27 +146,3 @@ if __name__ == "__main__":
 
         with open(out_path, 'w') as outfile:
             json.dump(results, outfile)
-
-        # For each trial, get the best performing model with respect to hyperparameter setting.
-        # find_best = eval('get_best_performance_' + data_type)
-        # results = find_best(data_type, start_time, data_info, trial)
-
-        # # Output format is best/data_type/results_trial_time
-        # best_path =  'best/' + out_dir
-        # if not os.path.exists(best_path):
-        #     os.makedirs(best_path)
-        #
-        # with open(best_path + '/trial_{1}.json'.format(data_type, trial), 'w') as outfile:
-        #     json.dump(results, outfile)
-
-    # Compute the confidence interval across the best results from each trial
-#    get_ci = eval('get_confidence_intervals_' + data_type)
-#    ci = get_ci(data_type, start_time, data_info)
-
-    # Confidence interval filepath
-#    ci_path = "confidence_intervals/{0}".format(out_dir)
-#    if not os.path.exists(ci_path):
-#        os.makedirs(ci_path)
-
-#    with open(ci_path + '/data.json', 'w') as outfile:
-#        json.dump(ci, outfile)
