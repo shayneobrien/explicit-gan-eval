@@ -79,6 +79,7 @@ def get_pdf(data, iqr, r, samples):
     """ Compute optimally binned probability distribution function  """
     x = []
 
+    # NOTE: this would be problematic for negative data (none of our datasets are)
     if iqr > 1e-5:
         bin_width = 2*iqr/np.cbrt(samples)
         bins = int(round(r/bin_width, 0))

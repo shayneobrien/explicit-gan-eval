@@ -117,8 +117,6 @@ if __name__ == "__main__":
     for trial in range(1, trials+1):
 
         trial_path = 'hypertuning/' + out_dir + '/trial_{0}'.format(trial)
-        if not os.path.exists(trial_path):
-            os.makedirs(trial_path)
 
         print('========= TRIAL {0} ========= \n{1}'.format(trial, trial_path))
 
@@ -143,6 +141,9 @@ if __name__ == "__main__":
         elif data_type == "circles":
             results = get_circle_results(models, 784*3, # RGB, so 3 channels
                                         epochs, samples, modes, n_circles, hyperparam)
+
+        if not os.path.exists(trial_path):
+            os.makedirs(trial_path)
 
         with open(out_path, 'w') as outfile:
             json.dump(results, outfile)

@@ -11,7 +11,7 @@ pip install -r requirements.txt
 
 | 1k Samples | 10k Samples | 100k Samples
 :---: | :---: | :---: | :---: |
-16 Dim | 20/20 | 12/20 | 1/20
+16 Dim | 20/20 | 12/20 | 3/20
 32 Dim | 20/20 | 20/20 | 15/20
 64 Dim | 20/20 | 18/20 |
 128 Dim | 20/20 | 10/20 |
