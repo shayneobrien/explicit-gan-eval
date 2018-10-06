@@ -35,22 +35,21 @@ def get_the_data_mnist(BATCH_SIZE):
     test_label = to_cuda(torch.LongTensor([d[1] for d in test_dataset]))
 
     """ MNIST has no official validation dataset so use last 10000 as validation """
-    # TODO: yikes...? but this is consistent with literature
-    val_img = train_img[-10000:].clone()
-    val_label = train_label[-10000:].clone()
-
-    train_img = train_img[:-10000]
-    train_label = train_label[:-10000]
+    # val_img = train_img[-10000:].clone()
+    # val_label = train_label[-10000:].clone()
+    #
+    # train_img = train_img[:-10000]
+    # train_label = train_label[:-10000]
 
     """ Create data loaders """
     train = torch.utils.data.TensorDataset(train_img, train_label)
-    val = torch.utils.data.TensorDataset(val_img, val_label)
+    # val = torch.utils.data.TensorDataset(val_img, val_label)
     test = torch.utils.data.TensorDataset(test_img, test_label)
 
     train_iter = torch.utils.data.DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
-    val_iter = torch.utils.data.DataLoader(val, batch_size=BATCH_SIZE, shuffle=True)
+    # val_iter = torch.utils.data.DataLoader(val, batch_size=BATCH_SIZE, shuffle=True)
     test_iter = torch.utils.data.DataLoader(test, batch_size=BATCH_SIZE, shuffle=True)
-    return train_iter, val_iter, test_iter
+    return train_iter, 0, test_iter
 
 
 def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=False):
@@ -77,10 +76,10 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
                          atype=activation_type)
 
         trainer = ae.Trainer(model=model,
-                              train_iter=train_iter,
-                              val_iter=val_iter,
-                              test_iter=test_iter,
-                              viz=False)
+                             train_iter=train_iter,
+                             val_iter=val_iter,
+                             test_iter=test_iter,
+                             viz=False)
 
         _ = trainer.train(num_epochs=25,
                           lr=1e-3,

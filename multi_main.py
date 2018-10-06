@@ -34,7 +34,7 @@ for trial in range(1, int(trials)+1):
           ' ', epochs, ' ', samples,
           'ENTER'])
 
-    call(['tmux', 'send', '-t', tmux_name+'.0',
+    call(['tmux', 'send', '-t', tmux_name+'.0', 'tmux ',
           'kill-session ', '-t ', tmux_name, 'ENTER'])
 
     time.sleep(1.02)
