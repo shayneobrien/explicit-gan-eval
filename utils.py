@@ -64,7 +64,7 @@ def get_mnist_results(models, mnist_dim,
     # batch size, so remove the file if it exists already (force)
     if os.path.exists('data/autoencoder/cached_preds.txt'):
         os.remove('data/autoencoder/cached_preds.txt')
-    train_iter, val_iter, test_iter = preprocess_mnist(BATCH_SIZE=bsize)
+    train_iter, test_iter = preprocess_mnist(BATCH_SIZE=bsize)
 
     # Normal passover routine
     for model_name, module in models.items():
@@ -77,7 +77,7 @@ def get_mnist_results(models, mnist_dim,
         # Model, trainer, metrics
         model = module.Model(image_size=mnist_dim, hidden_dim=dim,
                              z_dim=int(round(max(dim/4, 1))), atype=activation_type)
-        trainer = module.Trainer(model, train_iter, val_iter, test_iter)
+        trainer = module.Trainer(model, train_iter, None, test_iter)
         metrics = trainer.train(num_epochs=epochs, lr=lr)
 
         # Update metrics
@@ -320,6 +320,7 @@ Best results graphs
 #                    distributions,
 #                    distance_metrics,
 #                    num_epochs):
+
 #     for metric in distance_metrics:
 #         for model_name, module in models.items():
 #             for dist in distributions:

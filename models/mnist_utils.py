@@ -34,27 +34,19 @@ def get_the_data_mnist(BATCH_SIZE):
     test_img = to_cuda(torch.stack([torch.bernoulli(d[0]) for d in test_dataset]))
     test_label = to_cuda(torch.LongTensor([d[1] for d in test_dataset]))
 
-    """ MNIST has no official validation dataset so use last 10000 as validation """
-    # val_img = train_img[-10000:].clone()
-    # val_label = train_label[-10000:].clone()
-    #
-    # train_img = train_img[:-10000]
-    # train_label = train_label[:-10000]
-
     """ Create data loaders """
     train = torch.utils.data.TensorDataset(train_img, train_label)
     # val = torch.utils.data.TensorDataset(val_img, val_label)
     test = torch.utils.data.TensorDataset(test_img, test_label)
 
     train_iter = torch.utils.data.DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
-    # val_iter = torch.utils.data.DataLoader(val, batch_size=BATCH_SIZE, shuffle=True)
     test_iter = torch.utils.data.DataLoader(test, batch_size=BATCH_SIZE, shuffle=True)
-    return train_iter, 0, test_iter
+    return train_iter, test_iter
 
 
 def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=False):
     """ Here the intention is to run the autoencoder on the MNIST data
-    and output the autoencoded data as train_iter, val_iter, test_iter
+    and output the autoencoded data as train_iter, test_iter
     """
     activation_type = 'sigmoid'
 
@@ -66,7 +58,7 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
             pass
 
         # Load MNIST data
-        train_iter, val_iter, test_iter = get_the_data_mnist(BATCH_SIZE)
+        train_iter, test_iter = get_the_data_mnist(BATCH_SIZE)
 
         # Train autoencoder
         print('Training autoencoder...')
@@ -77,7 +69,7 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
 
         trainer = ae.Trainer(model=model,
                              train_iter=train_iter,
-                             val_iter=val_iter,
+                             val_iter=None,
                              test_iter=test_iter,
                              viz=False)
 
@@ -114,7 +106,7 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
 
         if 'train_iter' not in locals():
             # Load MNIST data
-            train_iter, val_iter, test_iter = get_the_data_mnist(BATCH_SIZE)
+            train_iter, test_iter = get_the_data_mnist(BATCH_SIZE)
 
         # Init cache
         cache = file_archive(save_path + '/cached_preds.txt')
@@ -122,7 +114,7 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
         # Set to evaluation mode
         trainer.model.eval()
         results = []
-        for count, dataset in enumerate([train_iter, val_iter, test_iter]):
+        for count, dataset in enumerate([train_iter, test_iter]):
 
             # Autoencode all images
             for batch in dataset:
@@ -154,7 +146,7 @@ def preprocess_mnist(BATCH_SIZE=100, save_path='data/autoencoder', overwrite=Fal
         cache = file_archive(save_path + '/cached_preds.txt')
         cache.load()
 
-    return cache["0"], cache["1"], cache["2"]
+    return cache["0"], cache["1"]
 
 
 class list_obj(list):
