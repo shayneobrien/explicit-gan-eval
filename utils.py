@@ -141,17 +141,20 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions, act
 Best results
 """
 
-def get_best_performance_multivariate(data_type, start_time, data_info, trial):
+def get_best_performance_multivariate(mypath='/Users/sob/Desktop/mnist_new/0_dims_0_samples/trial_1/'):
     """ For a trial, get the best performance for multivariate data """
     # Get path, files in path
-    mypath = "hypertuning/{0}/{1}/{2}/trial_{3}".format(data_type, start_time, data_info, trial)
-    files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+    files = os.listdir(mypath)
     results = []
 
     # Read in the files
     for file in files:
-        with open("{}/{}".format(mypath, file)) as f:
+        if file == '.DS_Store':
+            continue
+
+        with open(mypath + file, 'r') as f:
             data = json.load(f)
+
         results.append(data)
 
     # Initialize best dictionary
@@ -170,7 +173,7 @@ def get_best_performance_multivariate(data_type, start_time, data_info, trial):
                             optimal[model][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
 
                         # Otherwise, compare it the presently considered value
-                        elif optimal[model][distribution][metric]["value"][-1] > values[-1]:
+                        elif min(optimal[model][distribution][metric]["value"]) > min(values):
                             optimal[model][distribution][metric]["value"] = values
                             optimal[model][distribution][metric]["parameters"] = [metrics["LR"], metrics["HDIM"], metrics["BSIZE"]]
 
