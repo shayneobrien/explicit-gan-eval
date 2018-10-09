@@ -3,6 +3,7 @@ import torch
 import data
 import numpy as np
 import pandas as pd
+import scipy.stats
 import matplotlib.pyplot as plt
 from functools import partial
 from collections import defaultdict
@@ -229,16 +230,19 @@ def get_best_performance_circles(*args, **kwargs):
 Confidence intervals
 """
 
-def get_confidence_intervals_multivariate(data_type, start_time, data_info):
-    """ Compute 95% confidence intervals for multivariate """
+def get_confidence_intervals_multivariate(mypath):
 
-    # Get file path and files therein
-    mypath = "best/{0}/{1}/{2}/".format(data_type, start_time, data_info)
+    # Get file path and files therein, E.G.
+    # mypath = "/Users/sob/Desktop/mnist_new/best/"
     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
     results = []
 
     # Load files
     for file in files:
+
+        if file == '.DS_Store':
+            continue
+
         with open("{}/{}".format(mypath, file)) as f:
             data = json.load(f)
         results.append(data)
@@ -258,49 +262,52 @@ def get_confidence_intervals_multivariate(data_type, start_time, data_info):
         for model, distributions in result.items():
             for dist, metrics in distributions.items():
                 for divergence, output in metrics.items():
-                    data = np.array(optimal[model][dist][divergence]['values'])
-                    optimal[model][dist][divergence]['5'] = list(np.percentile(data, 5, axis=0))
-                    optimal[model][dist][divergence]['95'] = list(np.percentile(data, 95, axis=0))
+                    if divergence not in ['DLoss', 'GLoss']:
+                        data = np.column_stack(optimal[model][dist][divergence]['values'])
+                        mean, low, high = mean_confidence_interval(data)
+                        optimal[model][dist][divergence]['low'] = list(low)
+                        optimal[model][dist][divergence]['mean'] = list(mean)
+                        optimal[model][dist][divergence]['high'] = list(high)
 
     return optimal
 
 
-def get_confidence_intervals_mixture(data_type, start_time, data_info):
-    """ Compute 95% confidence intervals for mixtures """
-
-    # Get file path and files therein
-    mypath = "best/{0}/{1}/{2}/".format(data_type, start_time, data_info)
-    files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
-    results = []
-
-    # Load files
-    for file in files:
-        with open("{}/{}".format(mypath, file)) as f:
-            data = json.load(f)
-        results.append(data)
-
-    # Get values for best runs
-    optimal = nested_pickle_dict()
-    for result in results:
-        for model, distributions in result.items():
-            for dist_i, dists_j in distributions.items():
-                for dist_j, metrics in dists_j.items():
-                    for divergence, output in metrics.items():
-                        if divergence not in optimal[model][dist_i][dist_j]:
-                            optimal[model][dist_i][dist_j][divergence] = {'values': []}
-                        optimal[model][dist_i][dist_j][divergence]['values'].append(output['value'])
-
-    # Compute 5th and 95th percentiles for each epoch
-    for result in results:
-        for model, distributions in result.items():
-            for dist_i, dists_j in distributions.items():
-                for dist_j, metrics in dists_j.items():
-                    for divergence, output in metrics.items():
-                        data = np.array(optimal[model][dist_i][dist_j][divergence]['values'])
-                        optimal[model][dist_i][dist_j][divergence]['5'] = list(np.percentile(data, 5, axis=0))
-                        optimal[model][dist_i][dist_j][divergence]['95'] = list(np.percentile(data, 95, axis=0))
-
-    return optimal
+# def get_confidence_intervals_mixture(data_type, start_time, data_info):
+#     """ Compute 95% confidence intervals for mixtures """
+#
+#     # Get file path and files therein
+#     mypath = "best/{0}/{1}/{2}/".format(data_type, start_time, data_info)
+#     files = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+#     results = []
+#
+#     # Load files
+#     for file in files:
+#         with open("{}/{}".format(mypath, file)) as f:
+#             data = json.load(f)
+#         results.append(data)
+#
+#     # Get values for best runs
+#     optimal = nested_pickle_dict()
+#     for result in results:
+#         for model, distributions in result.items():
+#             for dist_i, dists_j in distributions.items():
+#                 for dist_j, metrics in dists_j.items():
+#                     for divergence, output in metrics.items():
+#                         if divergence not in optimal[model][dist_i][dist_j]:
+#                             optimal[model][dist_i][dist_j][divergence] = {'values': []}
+#                         optimal[model][dist_i][dist_j][divergence]['values'].append(output['value'])
+#
+#     # Compute 5th and 95th percentiles for each epoch
+#     for result in results:
+#         for model, distributions in result.items():
+#             for dist_i, dists_j in distributions.items():
+#                 for dist_j, metrics in dists_j.items():
+#                     for divergence, output in metrics.items():
+#                         data = np.array(optimal[model][dist_i][dist_j][divergence]['values'])
+#                         optimal[model][dist_i][dist_j][divergence]['5'] = list(np.percentile(data, 5, axis=0))
+#                         optimal[model][dist_i][dist_j][divergence]['95'] = list(np.percentile(data, 95, axis=0))
+#
+#     return optimal
 
 
 def get_confidence_intervals_mnist(*args, **kwargs):
@@ -311,6 +318,15 @@ def get_confidence_intervals_mnist(*args, **kwargs):
 def get_confidence_intervals_circles(*args, **kwargs):
     """ Compute 95% confidence intervals for circles """
     return get_confidence_intervals_mixture(*args, **kwargs)
+
+
+def mean_confidence_interval(data, confidence=0.95):
+    """ Get confidence intervals (returns mean, low, high) """
+    n = data.shape[1]
+    mu, std = np.mean(data, axis=0), scipy.stats.sem(data, axis=0)
+    h = std * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
+
+    return mu, mu-h, mu+h
 
 
 """
