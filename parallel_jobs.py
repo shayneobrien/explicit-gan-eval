@@ -24,7 +24,7 @@ learning_rates = [
                   ]
 
 data_type = 'multivariate'
-trials = '2'
+trials = '3'
 dimensions = '64'
 epochs = '25'
 samples = '100000'
