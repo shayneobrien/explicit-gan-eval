@@ -24,18 +24,18 @@ learning_rates = [
                   ]
 
 data_type = 'multivariate'
-trials = '5'
-dimensions = '32'
+trials = '2'
+dimensions = '64'
 epochs = '25'
 samples = '100000'
 
 device = 0
-jobs_per_gpu = 8
+jobs_per_gpu = 16
 
 # Hyperparam search
 for hdim in hidden_dims:
-    for bsize in batch_sizes:
-        for lr in learning_rates:
+    for lr in learning_rates:
+        for bsize in batch_sizes:
 
             # Only allow certain number of jobs per GPU
             device += (1/jobs_per_gpu)
@@ -55,11 +55,11 @@ for hdim in hidden_dims:
                 call(['tmux', 'send', '-t', tmux_name+'.0',
                       "CUDA_VISIBLE_DEVICES={0}".format(int(floor(device))),
                       "python3 ", "parallel_main.py ",
-                      data_type, ' ', '1', , dimensions, ' ', hdim,
+                      data_type, ' ', '1', ' ', dimensions, ' ', hdim,
                       ' ', epochs, ' ', samples, ' ', bsize, ' ', lr, ' ', start_time+str(trial),
                       'ENTER'])
 
             # Send another command to kill the tmux session once it's done running
             # (easier to track progress using 'tmux ls')
             call(['tmux', 'send', '-t', tmux_name+'.0',
-                  'kill-session ', '-t ', tmux_name, 'ENTER'])
+                  'tmux kill-session ', '-t ', tmux_name, 'ENTER'])
