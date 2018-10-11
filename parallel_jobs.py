@@ -42,7 +42,7 @@ for hdim in hidden_dims:
 
             # TMUX session name
             tmux_name = 'GPU{7}-{0}-{1}-samples-{2}-dims-{3}-{4}-{5}-{6}'.format(data_type, samples, dimensions,
-                                                                          trials, lr, bsize, hdim, int(floor(device)))
+                                                                          trials, lr, hdim, bsize, int(floor(device)))
             # Launch TMUX session
             call(['tmux', 'new', '-d', '-s', tmux_name])
 
@@ -53,7 +53,7 @@ for hdim in hidden_dims:
 
                 # Sent the job to that session
                 call(['tmux', 'send', '-t', tmux_name+'.0',
-                      "CUDA_VISIBLE_DEVICES={0}".format(int(floor(device))),
+                      "CUDA_VISIBLE_DEVICES={0} ".format(int(floor(device))),
                       "python3 ", "parallel_main.py ",
                       data_type, ' ', '1', ' ', dimensions, ' ', hdim,
                       ' ', epochs, ' ', samples, ' ', bsize, ' ', lr, ' ', start_time+str(trial),
