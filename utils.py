@@ -20,12 +20,12 @@ def get_multivariate_results(models, distributions, dimensions,
                              epochs, samples, hyperparameters):
     """ Multivariate distribution results """
     results, activation_type = nested_pickle_dict(), 'relu'
-    for model_name, module in models.items():
+    for idx, (model_name, module) in enumerate(models.items()):
         for dist in distributions:
             if (model_name == 'vae' and dist == 'normal'): # KL-div p and q makes NaN
                 pass
             else:
-                print('\n', model_name, dist, 'MULTIVARIATE')
+                print('\n', model_name, dist, 'MULTIVARIATE', idx, '/', len(models.keys()))
                 gen = data.Distribution(dist_type=dist, dim=dimensions)
                 metrics = model_results(module, epochs, hyperparameters,
                                         gen, samples, dimensions, activation_type)
@@ -38,10 +38,10 @@ def get_mixture_results(models, distributions, dimensions,
                         epochs, samples, n_mixtures, hyperparameters):
     """ Mixture model results """
     results, activation_type = nested_pickle_dict(), 'relu'
-    for model_name, module in models.items():
+    for idx, (model_name, module) in enumerate(models.items()):
         for dist_i in distributions[0:1]: # Just normal and other mixture models at the moment
             for dist_j in distributions:
-                print('\n', model_name, dist_i, dist_j, "MIXTURE")
+                print('\n', model_name, dist_i, dist_j, "MIXTURE", idx, '/', len(models.keys()))
                 gen = data.MixtureDistribution(dist_type=dist_i, mix_type=dist_j,
                                                 n_mixtures=n_mixtures, dim=dimensions)
 
@@ -68,12 +68,12 @@ def get_mnist_results(models, mnist_dim,
     train_iter, test_iter = preprocess_mnist(BATCH_SIZE=bsize)
 
     # Normal passover routine
-    for model_name, module in models.items():
+    for idx, (model_name, module) in enumerate(models.items()):
 
         # Doesn't make sense to consider autoencoder vs. weaker autoencoder
         if model_name == 'autoencoder':
             continue
-        print('\n', model_name, "MNIST")
+        print('\n', model_name, "MNIST", idx, '/', len(models.keys()))
 
         # Model, trainer, metrics
         model = module.Model(image_size=mnist_dim, hidden_dim=dim,
@@ -95,10 +95,10 @@ def get_circle_results(models, dimensions,
     lr, dim, bsize = hyperparameters
     results, activation_type = nested_pickle_dict(), 'sigmoid'
 
-    for model_name, module in models.items():
+    for idx, (model_name, module) in enumerate(models.items()):
         for n_circle in n_circles:
             for mode in modes:
-                print('\n', model_name, n_circle, 'circles', mode, 'modes', 'CIRCLES')
+                print('\n', model_name, n_circle, 'circles', mode, 'modes', 'CIRCLES', idx, '/', len(models.keys()))
                 gen = data.CirclesDatasetGenerator(size=28, n_circles=n_circle, modes=mode,
                                                 random_colors=False, random_sizes=False)
 
