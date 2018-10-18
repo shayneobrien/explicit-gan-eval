@@ -9,3 +9,4 @@ sklearn
 scipy
 opencv-python
 klepto
+tabulate
