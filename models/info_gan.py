@@ -23,7 +23,6 @@ We then use Q(c|x) to maximize the mutual information between c and G(z, c) and
 backpropagate its estimate back to both G and Q.
 
 https://arxiv.org/pdf/1606.03657.pdf
-
 """
 
 import torch, torchvision
@@ -110,6 +109,9 @@ class Model(nn.Module):
         self.G = Generator(image_size, hidden_dim, z_dim, atype, disc_dim, cont_dim)
         self.D = Discriminator(image_size, hidden_dim, output_dim)
         self.Q = Q(image_size, hidden_dim, disc_dim, cont_dim)
+
+        # self.Q.linear.weight = self.D.linear.weight
+        # self.Q.inference.weight = self.D.discriminator.weight
 
 
 class Trainer:
