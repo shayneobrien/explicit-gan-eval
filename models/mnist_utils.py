@@ -30,9 +30,11 @@ def get_the_data_mnist(BATCH_SIZE):
     """ Use greyscale values as sampling probabilities to get back to {0,1} """
     train_img = to_cuda(torch.stack([torch.bernoulli(d[0]) for d in train_dataset]))
     train_label = to_cuda(torch.LongTensor([d[1] for d in train_dataset]))
+    print(train_img.shape)
 
     test_img = to_cuda(torch.stack([torch.bernoulli(d[0]) for d in test_dataset]))
     test_label = to_cuda(torch.LongTensor([d[1] for d in test_dataset]))
+    print(test_img.shape)
 
     """ Create data loaders """
     train = torch.utils.data.TensorDataset(train_img, train_label)

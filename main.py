@@ -114,8 +114,8 @@ if __name__ == "__main__":
         "fgan_total_var": tv_gan,
         "fgan_hellinger": hellinger_gan,
         "fgan_pearson": pearson_gan,
-       "vae": vae,
-       "autoencoder": ae,
+       # "vae": vae,
+       # "autoencoder": ae,
     }
 
     # Distance metrics we will consider

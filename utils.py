@@ -24,23 +24,22 @@ def get_multivariate_results(models, distributions, dimensions,
     results, activation_type = nested_pickle_dict(), 'relu'
     lr, hdim, bsize = hyperparameters
     for idx, (model_name, module) in enumerate(models.items()):
-        # Init model
-        model = module.Model(image_size=dimensions,
-                             hidden_dim=hdim,
-                             z_dim=int(round(max(hdim/4, 1))),
-                             atype=activation_type)
+        # model = module.Model(image_size=dimensions,
+        #                      hidden_dim=hdim,
+        #                      z_dim=int(round(max(hdim/4, 1))),
+        #                      atype=activation_type)
+        #
+        # print(model_name, count_parameters(model))
 
-        print(model_name, count_parameters(model))
-
-        # for dist in distributions:
-        #     if (model_name == 'vae' and dist == 'normal'): # KL-div p and q makes NaN
-        #         pass
-        #     else:
-        #         print('\n', model_name, dist, 'MULTIVARIATE', idx, '/', len(models.keys()))
-        #         gen = data.Distribution(dist_type=dist, dim=dimensions)
-        #         metrics = model_results(module, epochs, hyperparameters,
-        #                                 gen, samples, dimensions, activation_type)
-        #         results[model_name][dist].update(metrics)
+        for dist in distributions:
+            if (model_name == 'vae' and dist == 'normal'): # KL-div p and q makes NaN
+                pass
+            else:
+                print('\n', model_name, dist, 'MULTIVARIATE', idx, '/', len(models.keys()))
+                gen = data.Distribution(dist_type=dist, dim=dimensions)
+                metrics = model_results(module, epochs, hyperparameters,
+                                        gen, samples, dimensions, activation_type)
+                results[model_name][dist].update(metrics)
 
     return results
 
