@@ -110,8 +110,8 @@ class Model(nn.Module):
         self.D = Discriminator(image_size, hidden_dim, output_dim)
         self.Q = Q(image_size, hidden_dim, disc_dim, cont_dim)
 
-        # self.Q.linear.weight = self.D.linear.weight
-        # self.Q.inference.weight = self.D.discriminator.weight
+        self.Q.linear.weight = self.D.linear.weight
+        self.Q.inference.weight = self.D.discriminator.weight
 
 
 class Trainer:
