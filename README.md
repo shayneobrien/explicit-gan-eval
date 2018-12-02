@@ -17,8 +17,7 @@ pip install -r requirements.txt
 ```
 
 # Reproduce figures
-See [notebook](). Be sure to move the downloaded data into your local repository, or this code will not run.
-=======
+See the following [notebook](https://github.com/shayneobrien/explicit-gan-eval/blob/master/notebooks/viz-multivariate.ipynb) for code to run visualizations. Be sure to move the downloaded data into your local repository, or it will not run.
 
 # Running code
 **Run a single job** (e.g. run on GPU 3 one trial of multivariate for 32 dimensional data, 25 epochs, and 1000 samples)
