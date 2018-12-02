@@ -11,6 +11,9 @@ optimally perform. They apply the gradient penalty only close to the real data
 manifold (whereas WGAN GP picks the gradient location on a random line between
 a real and randomly generated fake sample). For further details, see
 Section 2.5 of the original paper.
+
+DRAGAN is very similar to WGANGP, but seems much less stable. I would spend more time on
+WGANGP than DRAGAN.
 """
 
 import torch, torchvision

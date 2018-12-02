@@ -1,5 +1,4 @@
 """ Script to run multiple jobs in parallel across several GPUs """
-
 import os, datetime, time
 from numpy import floor
 from subprocess import call
@@ -34,7 +33,7 @@ if __name__ == "__main__":
                       '2e-2',
                       '2e-3',
                       ]
-                      
+
     # Hyperparam search
     for hdim in hidden_dims:
         for lr in learning_rates:

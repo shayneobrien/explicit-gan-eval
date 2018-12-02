@@ -1,18 +1,3 @@
-"""
-
-    Choose \n
-    (1) dataset: multivariate \n
-    (2) trials (for confidence intervals) 1, 10, 100, etc. \n
-    (3) number of dimensions: 1, 10, 100, 1000, etc. \n
-    (4) number of epochs: 10, 100, 1000, etc. \n
-    (5) number of samples: 1000, 10,000, 100,000, etc. \n
-    (6) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
-
-    debugging e.g.:
-
-         python main.py multivariate 2 3 2 2
-"""
-
 import sys, json, itertools, datetime
 import matplotlib.pyplot as plt
 
@@ -26,6 +11,20 @@ from models.f_gan import forkl_gan, revkl_gan, tv_gan, \
                          js_gan, hellinger_gan, pearson_gan
 
 plt.switch_backend('agg')
+
+"""
+    Choose \n
+    (1) dataset: multivariate, mixture, circles, or mnist \n
+    (2) trials (for confidence intervals) 1, 10, 100, etc. \n
+    (3) number of dimensions: 1, 10, 100, 1000, etc. \n
+    (4) number of epochs: 10, 100, 1000, etc. \n
+    (5) number of samples: 1000, 10,000, 100,000, etc. \n
+    (6) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
+    e.g. python main.py multivariate 2 3 2 2
+         python main.py mixture 2 3 2 10 10
+         python main.py mnist 2 0 2 0
+         python main.py circles 3 0 1 10
+"""
 
 if __name__ == "__main__":
 
@@ -59,6 +58,7 @@ if __name__ == "__main__":
                    # 512,
                    1024,
                    ]
+
     learning_rates = [
                       2e-1,
                       2e-2,
@@ -99,17 +99,13 @@ if __name__ == "__main__":
         "fgan_jensen_shannon": js_gan,
         "fgan_total_var": tv_gan,
         "fgan_hellinger": hellinger_gan,
-        "fgan_pearson": pearson_gan,
-    }
+        "fgan_pearson": pearson_gan}
 
-    # For saving results
     start_time = datetime.datetime.now().strftime("%Y-%m-%d-%s")
     out_dir = data_type + '/' + data_info + '/' + start_time
 
-    # For some number of trials:
     for trial in range(1, trials+1):
 
-        # Output path for the current trial
         trial_path = 'hypertuning/' + out_dir + '/trial_{0}'.format(trial)
         if not os.path.exists(trial_path):
             os.makedirs(trial_path)
@@ -138,8 +134,6 @@ if __name__ == "__main__":
             with open(out_path, 'w') as outfile:
                 json.dump(results, outfile)
 
-        # For each trial, get the "best" performance with respect to hyperparameter setting
-        # according to minimum performance achieved.
         find_best = eval('get_best_performance_' + data_type)
         results = find_best(data_type, start_time, data_info, trial)
 

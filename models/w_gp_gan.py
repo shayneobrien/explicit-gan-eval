@@ -1,5 +1,4 @@
 """ (WGPGAN) https://arxiv.org/abs/1701.07875
-
 Wasserstein GAN with Gradient Penalties ('Improved Training of Wasserstein GANs')
 
 The output of WGPGAN's D is unbounded unless passed through an activation

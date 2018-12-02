@@ -18,6 +18,31 @@ pip install -r requirements.txt
 
 # Reproduce figures
 See [notebook](). Be sure to move the downloaded data into your local repository, or this code will not run.
+=======
+
+# Running code
+**Run a single job** (e.g. run on GPU 3 one trial of multivariate for 32 dimensional data, 25 epochs, and 1000 samples)
+```
+CUDA_VISIBLE_DEVICES=3 python3 main.py multivariate 1 32 25 1000
+```
+
+**Run a batch of jobs** (e.g. 5 jobs named 1 through 5 on GPU 0 using dataset multivariate, 2 trials per job, 32 dimensions, and 10000 samples.)
+```
+bash job.sh 1 5 0 multivariate 2 32 10000
+```
+
+**Parallelize batch of jobs across multiple GPUs on the same machine** (e.g. run 3 trials of multivariate for 128 dimensional data, 25 epochs, 100000 samples. From GPU 3 onward (in case machine is shared), spread these jobs across all other GPUs on the machine at a rate of 16 jobs per GPU)
+```
+python3 parallel_jobs.py multivariate 3 128 25 100000 3 16
+```
+
+**Run all jobs** (this would take several years to finish on a single GPU)
+```
+CUDA_VISIBLE_DEVICES=0 python3 run.py
+```
+
+# Reproduce figures
+See [notebook]().
 ```
 from src.utils import *
 
@@ -32,7 +57,7 @@ graph_multivariate(expected=expected, ci=True, omit_outliers=True, thresh=2.5, s
 # Reproduce data for Table 2 that was presented in Tables 3, 4, and 5
 param_dict = print_confidence_intervals()
 
-# Reproduct subplots from Figures 4, 5, and 6
+# Reproduce subplots from Figures 4, 5, and 6
 graph_fncsamples(param_dict, expected=expected, save=False)
 
 # Reproduce data used for Table 6
@@ -44,7 +69,6 @@ robust = hyperparameter_robustness()
 # Reproduce data from Table 8
 get_trainable_param_counts()
 ```
-
 
 # Running code
 **Run a single job** (e.g. run on GPU 3 one trial of multivariate for 32 dimensional data, 25 epochs, and 1000 samples)

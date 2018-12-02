@@ -6,23 +6,22 @@ From the paper:
 network objective that encourages it to learn interpretable and meaningful
 representations. We do so by maximizing the mutual information between a fixed
 small subset of the GAN’s noise variables and the observations, which turns out
-to be relatively straightforward. Despite its simplicity, we found our method
-to be surprisingly effective: it was able to discover highly semantic and
-meaningful hidden representations on a number of image datasets: digits (MNIST),
-faces (CelebA), and house numbers (SVHN)."
+to be relatively straightforward. Despite its simplicity, we found our method to be
+surprisingly effective: it was able to discover highly semantic and meaningful
+hidden representations on a number of image datasets: digits (MNIST), faces (CelebA),
+and house numbers (SVHN). ""
 
 The Generator input is split into two parts: a traditional "noise" vector (z)
-and a latent "code” vector (c) that targets the salient structured semantic
-features of the data distribution. These vectors are made meaningful by
-maximizing the mutual information lower bound between c and the G(c, z).
-Since mutual information is inefficient to compute directly, we estimate it
-using an auxiliary network Q.
+and a latent "code” vector (c) that targets the salient structured semantic features of
+the data distribution. These vectors are made meaningful by maximizing the mutual
+information lower bound between c and the G(c, z). Since mutual information is
+inefficient to compute directly, we estimate it using an auxiliary network Q.
 
-The auxiliary network Q(c|x) approximates P(c|x), the true posterior. We use
-this to compute the mutual information by sampling c from our assumed prior
-P(c), sampling a noise vector z, using them both to sample  x ~ G(c, z), and
-then passing x to Q(c|x). We then use Q(c|x) to maximize the mutual information
-between c and G(z, c) and backpropagate its estimate back to both G and Q.
+The auxiliary network Q(c|x) approximates P(c|x), the true posterior. We use this to
+compute the mutual information by sampling c from our assumed prior P(c), sampling a
+noise vector z, using them both to sample  x ~ G(c, z), and then passing x to Q(c|x).
+We then use Q(c|x) to maximize the mutual information between c and G(z, c) and
+backpropagate its estimate back to both G and Q.
 """
 
 import torch, torchvision

@@ -8,8 +8,9 @@ from torch.utils.data import TensorDataset, DataLoader
 
 import numpy as np
 from scipy.stats import entropy, wasserstein_distance
+import pandas as pd
 
-
+# Gradient, CUDA
 def to_var(x):
     """ Make a tensor cuda-erized and requires gradient """
     return to_cuda(x).requires_grad_()
@@ -21,6 +22,7 @@ def to_cuda(x):
         x = x.cuda()
     return x
 
+# Loading data
 def get_the_data(generator, samples, batch_size):
     """ Sample data from respective distribution under consideration,
     make a data loader out of it """
@@ -77,7 +79,7 @@ def get_pdf(data, iqr, r, samples):
     # NOTE: this would be problematic for negative data (none of our datasets are)
     bin_width = 2*iqr/np.cbrt(samples)
     bins = int(round(r/bin_width, 0))
-    
+
     # Bin data
     for i in range(data.shape[1]):
         x.append(list(np.histogram(data[:, i], bins=bins, density=True)[0]))
