@@ -1,4 +1,4 @@
-import os, sys, json, itertools
+import os, shutil, sys, json, itertools
 import torch
 import data
 import numpy as np
@@ -85,12 +85,6 @@ def model_results(module, epochs, hyperparameters, gen, samples, dimensions, act
 "Best" results for a given trial according to minimum performance with respect to
 tested hyperparameters for that trial
 """
-
-import os, time, shutil, itertools, json
-import numpy as np
-import scipy.stats
-from collections import defaultdict
-from tqdm import tqdm, tqdm_notebook
 
 
 def crawl_directory(dirname):
@@ -324,7 +318,7 @@ def identify_failed_trials(dirname='../hypertuning/multivariate/'):
 
     filenames, hyperparams = [], []
 
-    for (lr, hdim, bsize) in itertools.product(*[learning_rates, hidden_dims, batch_sizes]):
+    for (lr, hdim, bsize) in product(*[learning_rates, hidden_dims, batch_sizes]):
         hyperparam = (lr * min(batch_sizes)/bsize, hdim, bsize)
         filename = 'results_{0}.json'.format("_".join([str(i) for i in hyperparam]))
         filenames.append(filename)
@@ -579,7 +573,7 @@ def get_trainable_param_counts():
         "fgan_total_var": tv_gan, "fgan_hellinger": hellinger_gan, "fgan_pearson": pearson_gan,
     }
 
-    for hdim in [16, 32, 64, 128]:
+    for hdim in [32, 64, 128, 256, 512]:
         for dimensions in [16, 32, 64, 128]:
             print('Hidden dim: {0} | Data dim: {1}'.format(hdim, dimensions))
             for idx, (model_name, module) in enumerate(models.items()):
