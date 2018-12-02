@@ -579,7 +579,7 @@ def get_trainable_param_counts():
                                      z_dim=int(round(max(hdim/4, 1))),
                                      atype='relu')
 
-                print(model_name, hdim, count_parameters(model))
+                print(model_name, count_parameters(model))
 
             print('\n')
 
