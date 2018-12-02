@@ -5,6 +5,7 @@ env/
 viz/
 .DS_store
 *.pyci
+*.zip
 graphs
 hypertuning
 best
