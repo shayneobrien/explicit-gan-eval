@@ -43,7 +43,7 @@ CUDA_VISIBLE_DEVICES=0 python3 run.py
 ```
 
 # Reproduce figures
-See [notebook]().
+See [notebook](https://github.com/shayneobrien/explicit-gan-eval/blob/master/notebooks/viz-multivariate.ipynb).
 ```
 from src.utils import *
 
