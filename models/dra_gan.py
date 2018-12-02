@@ -1,20 +1,16 @@
-""" (DRAGAN)
+""" (DRAGAN) https://arxiv.org/abs/1705.07215
 Deep Regret Analytic GAN
 
-https://arxiv.org/pdf/1705.07215.pdf
+The output of DRAGAN's D can be interpretted as a probability.
+DRAGAN is similar to WGANGP, but seems less stable.
 
-The output of DRAGAN's D can be interpretted as a probability, similarly to MMGAN
-and NSGAN.
-
-Proposes to study GANs from a regret minimization perspective. This implementation is
-very similar to WGAN GP, in that it is applying a gradient penalty to try and get at
-an improved training objective based on how D and G would optimally perform. They apply
-the gradient penalty only close to the real data manifold (whereas WGAN GP picks the
-gradient location on a random line between a real and randomly generated fake sample).
-For further details, see Section 2.5 of the paper.
-
-DRAGAN is very similar to WGANGP, but seems much less stable. I would spend more time on
-WGANGP than DRAGAN.
+Proposes to study GANs from a regret minimization perspective. This
+model is very similar to WGAN GP, in that it is applying a gradient penalty to
+try and get at an improved training objective based on how D and G would
+optimally perform. They apply the gradient penalty only close to the real data
+manifold (whereas WGAN GP picks the gradient location on a random line between
+a real and randomly generated fake sample). For further details, see
+Section 2.5 of the original paper.
 """
 
 import torch, torchvision

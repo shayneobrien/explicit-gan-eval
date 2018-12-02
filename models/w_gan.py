@@ -1,23 +1,27 @@
-""" (WGAN)
-Wasserstein GAN as laid out in original paper.
+""" (WGAN) https://arxiv.org/abs/1701.07875
+Wasserstein GAN
 
-https://arxiv.org/abs/1701.07875
+The output of WGAN's D is unbounded unless passed through an activation
+function. In this implementation, we include a sigmoid activation function
+as this empirically improves visualizations for binary MNIST.
 
-The output of WGAN's D is unbounded unless passed through an activation function. In this implementation,
-we include a sigmoid activation function as this empirically improves visualizations for binary MNIST.
+WGAN utilizes the Wasserstein distance to produce a value function which has
+better theoretical properties than the vanilla GAN. In particular, the authors
+prove that there exist distributions for which Jenson-Shannon, Kullback-Leibler,
+Reverse Kullback Leibler, and Total Variaton distance metrics where Wasserstein
+does. Furthermore, the Wasserstein distance has guarantees of continuity and
+differentiability in neural network settings where the previously mentioned
+distributions may not. Lastly, they show that that every distribution that
+converges under KL, reverse-KL, TV, and JS divergences also converges under the
+Wasserstein divergence and that a small Wasserstein distance corresponds to a
+small difference in distributions. The downside is that Wasserstein distance
+cannot be tractably computed directly. But if we make sure the discriminator
+(aka Critic because it is not actually classifying) lies in the space of
+1-Lipschitz functions, we can use that to approximate it instead. We crudely
+enforce this via a weight clamping parameter C.
 
-WGAN utilizes the Wasserstein distance to produce a value function whichhas better theoretical properties
-than the vanilla GAN. In particular, the authors prove that there exist distributions for which Jenson-Shannon,
-Kullback-Leibler, Reverse Kullback Leibler, and Total Variaton distance metrics where Wasserstein does. Furthermore,
-the Wasserstein distance has guarantees of continuity and and differentiability in neural network settings where
-the previously mentioned distributions may not. Lastly, they show that that every distribution that converges under
-KL, reverse-KL, TV, and JS divergences also converges under the Wasserstein divergence and that a small Wasserstein
-distance corresponds to a small difference in distributions. The downside is that Wasserstein distance cannot be
-tractably computed directly. But if we make sure the discriminator (aka Critic because it is not actually classifying)
-lies in the space of 1-Lipschitz functions, we can use that to approximate it instead. We crudely enforce this
-via a weight clamping parameter C.
-
-Note that this implementation uses RMSprop optimizer instead of Adam as per the paper.
+Note that this implementation uses Adam optimizer instead of RMSProp as in
+the original paper.
 """
 
 import torch, torchvision

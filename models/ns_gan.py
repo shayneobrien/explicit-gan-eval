@@ -1,19 +1,20 @@
-""" (NS GAN)
-Vanilla GAN using MLP architecture, non-saturating loss as laid out in the original paper.
-Compared to MM GAN, the only change is the generator's loss. In particular:
+""" (NS GAN) https://arxiv.org/abs/1406.2661
+Non-saturating GAN.
+
+From the abstract: 'We propose a new framework for estimating generative models
+via an adversarial process, in which we simultaneously train two models: a
+generative model G that captures the data distribution, and a discriminative
+model D that estimates the probability that a sample came from the training data
+rather than G. The training procedure for G is to maximize the probability of D
+making a mistake.'
+
+Compared to MM GAN, the only change is the generator's loss.
 
 NS GAN: L(G) = -E[log(D(G(z)))]
 MM GAN: L(G) =  E[log(1-D(G(z)))]
 
 In both NS GAN and MM GAN, the output of G can be interpretted as a probability.
-
-https://arxiv.org/abs/1406.2661
-
-From the abstract: 'We propose a new framework for estimating generative models via an
-adversarial process, in which we simultaneously train two models: a generative model G
-that captures the data distribution, and a discriminative model D that estimates
-the probability that a sample came from the training data rather than G. The training
-procedure for G is to maximize the probability of D making a mistake.'
+for G is to maximize the probability of D making a mistake.'
 """
 
 import torch, torchvision

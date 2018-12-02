@@ -1,3 +1,8 @@
+""" Multivariate distribution data generation file.
+
+We also include methods for generating synthetic multivariate, mixture and
+colored circles datasets--these are potential areas of future work. """
+
 try:
    import cPickle as pickle
 except:
@@ -343,12 +348,3 @@ class CirclesDatasetGenerator:
 
         with open(out_file, 'wb') as of:
             pickle.dump(self, of, pickle.HIGHEST_PROTOCOL)
-
-
-if __name__ == "__main__":
-
-    generator = CirclesDatasetGenerator(size=256, n_circles=4, random_colors=True, random_sizes=True, modes=20)
-    x = generator.generate_samples(100)
-    print(x)
-    generator.generate_samples_to_directory(50, './dataset_1')
-    generator.save_generator('./generator1.pickle')

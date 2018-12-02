@@ -1,4 +1,5 @@
-""" (FisherGAN)
+""" (FisherGAN) https://arxiv.org/abs/1606.07536
+Fisher GAN
 
 From the abstract:
 "In this paper we introduce Fisher GAN which fits within the
@@ -19,8 +20,6 @@ between distributions.
 
 The main empirical claims are that FisherGAN yields better
 inception scores and has less computational overhead than WGAN.
-
-https://arxiv.org/pdf/1606.07536.pdf
 """
 
 import torch, torchvision

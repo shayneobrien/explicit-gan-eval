@@ -1,23 +1,19 @@
-""" (MM GAN)
-Vanilla GAN using MLP architecture, minimax loss as laid out in the original paper.
-Compared to NS GAN, the only change is the generator's loss. In particular:
+""" (MMGAN) https://arxiv.org/abs/1406.2661
+Mini-max GAN
 
-MM GAN: L(G) =  E[log(1-D(G(z)))]
+From the abstract: 'We propose a new framework for estimating generative models
+via an adversarial process, in which we simultaneously train two models: a
+generative model G that captures the data distribution, and a discriminative
+model D that estimates the probability that a sample came from the training data
+rather than G. The training procedure for G is to maximize the probability of D
+making a mistake.'
+
+Compared to MM GAN, the only change is the generator's loss.
+
 NS GAN: L(G) = -E[log(D(G(z)))]
-
-It is important to note that early on, G is much worse than D and so training early-on
-is difficult. Adjustments are required for successful training.
+MM GAN: L(G) =  E[log(1-D(G(z)))]
 
 In both NS GAN and MM GAN, the output of G can be interpretted as a probability.
-
-https://arxiv.org/abs/1406.2661
-
-
-From the abstract: 'We propose a new framework for estimating generative models via an adversarial
-process, in which we simultaneously train two models: a generative model G
-that captures the data distribution, and a discriminative model D that estimates
-the probability that a sample came from the training data rather than G. The training
-procedure for G is to maximize the probability of D making a mistake.'
 """
 
 import torch, torchvision

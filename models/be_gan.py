@@ -1,20 +1,11 @@
-""" (BEGAN)
+""" (BEGAN) https://arxiv.org/abs/1703.10717
 Boundary Equilibrium GAN
 
-https://arxiv.org/pdf/1703.10717.pdf
-
-Matching the distributions of the reconstruction losses is a solid approximation
-to matching the generated and real data distributions. While this is the idea of
-BEGAN, it is crucial to note that the reconstruction losses are NOT what we are
-trying to minimize. Instead, we derive the real loss from the Wasserstein
-distance between these reconstruction losses.
-
 BEGAN uses an autoencoder as a discriminator and optimizes a lower bound of the
-Wasserstein distance between auto-encoder loss distributions on realand fake
+Wasserstein distance between auto-encoder loss distributions on real and fake
 data (as opposed to the sample distributions of the generator and real data).
 
 During training:
-
     1) D (here, an autoencoder) reconstructs real images and is optimized to
     minimize this reconstruction loss.
     2) As a byproduct of D's optimization, the reconstruction loss of generated
@@ -22,7 +13,6 @@ During training:
     the generated images.
 
 This setup trains D and G simultaneously while preserving the adversarial setup.
-
 The authors introduce an additional hyperparameter γ ∈ [0,1] to maintain the
 equilibrium between the D and G. Equilibrium between D and G occurs when
 E[loss(D(x))] == E[loss(D(G(z)))]. This γ is useful because an equilibrium is

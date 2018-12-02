@@ -1,5 +1,5 @@
-""" (RaGAN)
-This implementation uses non-saturating (NS) GAN as a case study.
+""" (RaGAN) https://arxiv.org/abs/1807.00734
+Relativistic GAN
 
 Relativistic GANs argue that the GAN generator should decrease the
 discriminator's output probability that real data is real in addition to
@@ -12,14 +12,18 @@ fake data. Generator loss is change such that real data is less likely to be
 classified as real and fake data is more likely to be classified as real.
 
 For computational efficiency, the discriminator estimates the probability that
-the given real data is more realistic than fake data, on average. Otherwise, the
-network would need to consider all combinations of real and fake data in the
+the given real data is more realistic than fake data, on average. Otherwise,
+the network would need to consider all combinations of real and fake data in the
 minibatch. This would require O(m^2) instead of O(m), where m is batch size.
 
-L(D) = -E[log( sigmoid(D(x) - E[D(G(z))]) )] - E[log(1 - sigmoid(D(G(z)) - E[D(x)]))]
-L(G) = -E[log( sigmoid(D(G(z)) - E[D(x)]) )] - E[log(1 - sigmoid(D(x) - E[D(G(z))]))]
+L(D) = -E[log( sigmoid(D(x) - E[D(G(z))]) )]
+        - E[log(1 - sigmoid(D(G(z)) - E[D(x)]))]
+L(G) = -E[log( sigmoid(D(G(z)) - E[D(x)]) )]
+        - E[log(1 - sigmoid(D(x) - E[D(G(z))]))]
 
-https://arxiv.org/pdf/1807.00734.pdf
+This implementation uses non-saturating (NS) GAN as a case study. The actual
+modification proposed herein can be applied to any GAN in which the output of
+the discriminator can be interpretted as a probability.
 """
 
 import torch, torchvision

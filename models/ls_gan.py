@@ -1,18 +1,17 @@
-""" (LS GAN)
+""" (LSGAN) https://arxiv.org/abs/1611.04076
 Least Squares GAN
 
-https://arxiv.org/pdf/1611.04076.pdf
-
-The output of LSGAN's D is unbounded unless passed through an activation function. In this
-implementation, we include a sigmoid activation function as this empirically improves
-visualizations for binary MNIST.
+The output of LSGAN's D is unbounded unless passed through an activation
+function. In this implementation, we include a sigmoid activation function as
+this empirically improves visualizations for binary MNIST.
 
 Tackles the vanishing gradients problem associated with GANs by swapping out
-the cross entropy loss function with the least squares (L2) loss function. The authors
-show that minimizing this objective is equivalent to minimizing the Pearson chi-squared
-divergence. They claim that using the L2 loss function penalizes samples that appear to
-be real to the discriminator, but lie far away from the decision boundary. In this way,
-the generated images are made to appear closer to real data. It also stabilizes training.
+the cross entropy loss function with the least squares (L2) loss function.
+The authors show that minimizing this objective is equivalent to minimizing the
+Pearson chi-squared divergence. They claim that using the L2 loss function
+penalizes samples that appear to be real to the discriminator, but lie far away
+from the decision boundary. In this way, the generated images are made to appear
+closer to real data. It also stabilizes training.
 """
 
 import torch, torchvision

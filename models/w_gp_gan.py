@@ -1,16 +1,19 @@
-""" (WGANGP)
-Wasserstein GAN with Gradient Penalties ('improved methods for WGAN training')
+""" (WGPGAN) https://arxiv.org/abs/1701.07875
 
-https://arxiv.org/pdf/1704.00028.pdf
+Wasserstein GAN with Gradient Penalties ('Improved Training of Wasserstein GANs')
 
-The output of WGANGP's D is unbounded unless passed through an activation function. In this implementation,
-we include a sigmoid activation function as this empirically improves visualizations for binary MNIST.
+The output of WGPGAN's D is unbounded unless passed through an activation
+function. In this implementation, we use a ReLU activation function
+as this empirically improves visualizations for binary MNIST.
 
-WGAN GP roposes a gradient penalty to add to the WGAN discriminator loss as an alternative method for enforcing
-the Lipschitz constraint (previously done via weight clipping). This penalty does not suffer from the biasing
-of the discriminator toward simple funtions due to weight clipping. Additionally, the reformulation of the
-discriminator by adding a gradient penaltyterm makes batch normalization not necessary. This is notable because
-batch normalization implicitly changes the discriminator's problem from mapping one-to-one to many-to-many.
+WGAN GP roposes a gradient penalty to add to the WGAN discriminator loss as an
+alternative method for enforcing the Lipschitz constraint (previously done via
+weight clipping). This penalty does not suffer from the biasing of the
+discriminator toward simple funtions due to weight clipping. Additionally, the
+reformulation of the discriminator by adding a gradient penaltyterm makes batch
+normalization not necessary. This is notable because batch normalization
+implicitly changes the discriminator's problem from mapping one-to-one to
+many-to-many.
 """
 
 import torch, torchvision
