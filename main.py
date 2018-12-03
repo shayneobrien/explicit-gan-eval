@@ -14,16 +14,14 @@ plt.switch_backend('agg')
 
 """
     Choose \n
-    (1) dataset: multivariate, mixture, circles, or mnist \n
-    (2) trials (for confidence intervals) 1, 10, 100, etc. \n
+    (1) dataset: multivariate \n
+    (2) trials: 1, 5, 10, 20, etc. \n
     (3) number of dimensions: 1, 10, 100, 1000, etc. \n
     (4) number of epochs: 10, 100, 1000, etc. \n
     (5) number of samples: 1000, 10,000, 100,000, etc. \n
-    (6) if choosing mixture, choose number of mixtures: 1, 10, 100, etc. \n
-    e.g. python main.py multivariate 2 3 2 2
-         python main.py mixture 2 3 2 10 10
-         python main.py mnist 2 0 2 0
-         python main.py circles 3 0 1 10
+
+    e.g. \n
+    python main.py multivariate 2 3 2 2
 """
 
 if __name__ == "__main__":
@@ -35,9 +33,6 @@ if __name__ == "__main__":
     epochs = int(sys.argv[4])
     samples = int(sys.argv[5])
     data_info = '{0}_dims_{1}_samples'.format(dimensions, samples)
-    if data_type == "mixture":
-        n_mixtures = int(sys.argv[6])
-        data_info += '_{0}_mixtures'.format(n_mixtures)
 
     # Make output directories if they don't exist yet
     for dir in ['hypertuning', 'graphs', 'best', "confidence_intervals"]:

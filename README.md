@@ -72,22 +72,22 @@ get_trainable_param_counts()
 ```
 
 # Running code
-**Run a single job** (e.g. run on GPU 3 one trial of multivariate for 32 dimensional data, 25 epochs, and 1000 samples)
+[Run a single job](https://github.com/shayneobrien/explicit-gan-eval/blob/master/main.py) (e.g. run on GPU 3 one trial of multivariate for 32 dimensional data, 25 epochs, and 1000 samples)
 ```
 CUDA_VISIBLE_DEVICES=3 python3 main.py multivariate 1 32 25 1000
 ```
 
-**Run a batch of jobs** (e.g. 5 jobs named 1 through 5 on GPU 0 using dataset multivariate, 2 trials per job, 32 dimensions, and 10000 samples.)
+[Run a batch of jobs](https://github.com/shayneobrien/explicit-gan-eval/blob/master/job.sh) (e.g. use TMUX to launch 5 jobs on GPU 0 using dataset multivariate, 2 trials per job, 32 dimensions, and 10000 samples.)
 ```
 bash job.sh 1 5 0 multivariate 2 32 10000
 ```
 
-**Parallelize batch of jobs across multiple GPUs on the same machine** (e.g. run 3 trials of multivariate for 128 dimensional data, 25 epochs, 100000 samples. From GPU 3 onward (in case machine is shared), spread these jobs across all other GPUs on the machine at a rate of 16 jobs per GPU)
+[Parallelize a batch of jobs across multiple GPUs on the same machine](https://github.com/shayneobrien/explicit-gan-eval/blob/master/parallel_jobs.py) (e.g. use TMUX to run 3 trials of multivariate for 128 dimensional data, 25 epochs, 100000 samples. From GPU 3 onward (in case machine is shared), spread these jobs across all other GPUs on the machine at a rate of 16 jobs per GPU)
 ```
 python3 parallel_jobs.py multivariate 3 128 25 100000 3 16
 ```
 
-**Run all jobs** (this would take several years to finish on a single GPU)
+[Run all jobs](https://github.com/shayneobrien/explicit-gan-eval/blob/master/run.py) (this would take several years to finish on a single GPU)
 ```
 CUDA_VISIBLE_DEVICES=0 python3 run.py
 ```
