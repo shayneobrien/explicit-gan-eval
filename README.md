@@ -1,6 +1,8 @@
 # Introduction
 Code for reproducing results from	S. O’Brien, M. Groh and A. Dubey. “Evaluating Generative Adversarial Networks on Explicitly Parameterized Distributions”. Presented at *Neural Information Processing Systems (NeurIPS) Workshop on Critiquing and Correcting Trends in Machine Learning*, 2018.
 
+[Paper link (to be uploaded to arXiv)](https://github.com/shayneobrien/explicit-gan-eval/blob/master/paper.pdf)
+
 ![Selected figures from the paper.](repo-figure.png)
 
 # Abstract
