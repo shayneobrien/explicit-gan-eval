@@ -8,9 +8,6 @@ Code for reproducing results from	S. O’Brien, M. Groh and A. Dubey. “Evaluat
 # Abstract
 The true distribution parameterizations of commonly used image datasets are inaccessible. Rather than designing metrics for feature spaces with unknown characterizations, we propose to measure GAN performance by evaluating on explicitly parameterized, synthetic data distributions. As a case study, we examine the performance of 16 GAN variants on six multivariate distributions of varying dimensionalities and training set sizes. In this learning environment, we observe that: GANs exhibit similar performance trends across dimensionalities; learning depends on the underlying distribution and its complexity;  the number of training samples can have a large impact on performance; evaluation and relative comparisons are metric-dependent; diverse sets of hyperparameters can produce a "best" result; and some GANs are more robust to hyperparameter changes than others. These observations both corroborate findings of previous GAN evaluation studies and make novel contributions regarding the relationship between size, complexity, and GAN performance.
 
-# Download results
-Our best results data (41.8 MB) can be downloaded via MIT Dropbox [here](https://www.dropbox.com/sh/4jd6ixsw64xs2jf/AACnSoKyrmfKlfMe140J-ezpa?dl=0). The full dataset of all hyperparameter settings (51.6 GB) is available upon request (email shayneob@mit.edu).
-
 # Initialization
 ```
 git clone https://github.com/shayneobrien/explicit-gan-eval  
@@ -19,9 +16,6 @@ python3 -m venv env
 . env/bin/activate
 pip install -r requirements.txt  
 ```
-
-# Reproduce figures
-See the following [notebook](https://github.com/shayneobrien/explicit-gan-eval/blob/master/notebooks/viz-multivariate.ipynb) for code to run visualizations. Be sure to move the downloaded data into your local repository, or it will not run.
 
 # Running code
 **Run a single job** (e.g. run on GPU 3 one trial of multivariate for 32 dimensional data, 25 epochs, and 1000 samples)
@@ -43,6 +37,9 @@ python3 parallel_jobs.py multivariate 3 128 25 100000 3 16
 ```
 CUDA_VISIBLE_DEVICES=0 python3 run.py
 ```
+
+# Download results
+Our best results data (41.8 MB) can be downloaded via MIT Dropbox [here](https://www.dropbox.com/sh/4jd6ixsw64xs2jf/AACnSoKyrmfKlfMe140J-ezpa?dl=0). The full dataset of all hyperparameter settings (51.6 GB) is available upon request (email shayneob@mit.edu).
 
 # Reproduce figures
 See [notebook](https://github.com/shayneobrien/explicit-gan-eval/blob/master/notebooks/viz-multivariate.ipynb).
